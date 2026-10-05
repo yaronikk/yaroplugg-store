@@ -1,17 +1,10 @@
 import type { Product } from './types'
 
-// Temporary demo item for the first design test. Replace with real inventory later.
 export const products: Product[] = [
-  {
-    id: 'demo-01',
-    name: 'Demo Oversized Hoodie',
-    category: 'Худи',
-    price: 69,
-    description: 'Temporary demo item used to test the YAROPLUGG shopping flow. It will be replaced by your real product tomorrow.',
-    composition: 'Demo',
-    sizes: ['S', 'M', 'L', 'XL'],
-    colors: [{ name: 'Black', hex: '#111111' }],
-    images: ['https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=1200&q=90'],
-    featured: true,
-  },
+  { id:'p1', name:'Essential Hoodie', category:'Худи', price:69, description:'Плотное худи свободного кроя с минималистичным логотипом.', composition:'80% хлопок, 20% полиэстер', sizes:['S','M','L','XL'], colors:[{name:'Black',hex:'#171717'},{name:'Cream',hex:'#e9e2d6'}], images:['https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85'], featured:true },
+  { id:'p2', name:'Heavy Basic Tee', category:'Футболки', price:39, description:'Базовая футболка из плотного хлопка, прямой силуэт.', composition:'100% хлопок', sizes:['S','M','L','XL'], colors:[{name:'White',hex:'#f4f4f2'},{name:'Black',hex:'#171717'}], images:['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85'], featured:true },
+  { id:'p3', name:'Relaxed Cargo', category:'Брюки', price:79, description:'Расслабленные карго с регулируемым низом и вместительными карманами.', composition:'98% хлопок, 2% эластан', sizes:['S','M','L'], colors:[{name:'Olive',hex:'#4c5141'},{name:'Black',hex:'#171717'}], images:['https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=900&q=85'] },
+  { id:'p4', name:'Daily Bomber', category:'Куртки', price:99, description:'Лёгкий бомбер на каждый день с минималистичной фурнитурой.', composition:'100% полиэстер', sizes:['M','L','XL'], colors:[{name:'Black',hex:'#171717'}], images:['https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85'] },
+  { id:'p5', name:'Soft Logo Tee', category:'Футболки', price:35, description:'Мягкая футболка с небольшим вышитым логотипом.', composition:'100% хлопок', sizes:['S','M','L'], colors:[{name:'Grey',hex:'#9b9b96'},{name:'White',hex:'#f4f4f2'}], images:['https://images.unsplash.com/photo-1583743814966-8936f37f4a0e?auto=format&fit=crop&w=900&q=85'] },
+  { id:'p6', name:'Wide Track Pants', category:'Брюки', price:59, description:'Широкие брюки в спортивной эстетике с мягкой посадкой.', composition:'65% хлопок, 35% полиэстер', sizes:['S','M','L','XL'], colors:[{name:'Black',hex:'#171717'},{name:'Grey',hex:'#777772'}], images:['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=85'] },
 ]

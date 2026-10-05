@@ -1,13 +1,41 @@
-# YAROPLUGG STORE — Design A
+# Telegram Fashion Mini App — MVP
 
-Temporary English redesign based on the approved Variant A direction.
+React + TypeScript + Tailwind UI-прототип магазина одежды и базовый Express API.
 
-- Black / white / red visual system
-- Brand-first home screen
-- English UI
-- Shop / Categories / Favorites / Profile navigation
-- Search overlay
-- One temporary demo product for testing
-- Product details, size/color selection, bag, checkout and order confirmation flow
+## Что уже работает в UI
+- главная и каталог;
+- категории;
+- поиск;
+- фильтры по размеру, цвету и цене;
+- карточка товара с фото, описанием, составом, размерами и цветами;
+- корзина и изменение количества;
+- checkout с именем, телефоном и доставкой;
+- оплата при получении;
+- локальная история заказов;
+- Telegram-oriented профиль.
 
-The demo product is temporary and should be replaced with the user's real inventory and photography.
+## Запуск
+Требуется Node.js 20+.
+
+```bash
+npm install
+npm run dev
+```
+
+Открой адрес Vite в браузере.
+
+## Backend
+```bash
+cp server/.env.example server/.env
+npm run server
+```
+
+Перед production нужно подключить PostgreSQL, Telegram Bot API, реальное хранилище изображений и авторизацию администратора.
+
+## Следующий production-шаг
+1. Перенести товары и варианты в PostgreSQL.
+2. Подключить Telegram Bot и валидировать `initData` на сервере.
+3. Сохранять заказы в БД.
+4. Отправлять новые заказы админу через Bot API.
+5. Добавить admin UI.
+6. Подключить реальные фотографии магазина.

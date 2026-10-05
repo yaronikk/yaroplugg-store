@@ -1,243 +1,46 @@
-import React, { useMemo, useState } from 'react'
-import { createRoot } from 'react-dom/client'
-import { Search, ShoppingBag, House, UserRound, Heart, ChevronLeft, Plus, Minus, X, Check, SlidersHorizontal, ArrowUpRight } from 'lucide-react'
+import React,{useMemo,useState} from 'react'
+import {createRoot} from 'react-dom/client'
+import {Search,ShoppingBag,House,UserRound,ChevronLeft,Plus,Minus,X,SlidersHorizontal,Check,PackageOpen,ChevronDown} from 'lucide-react'
 import './index.css'
-import { products } from './data'
-import type { Product, CartItem } from './types'
+import {products} from './data'
+import type {Category,Product,CartItem} from './types'
 
-type Screen = 'shop' | 'categories' | 'favorites' | 'profile'
-type Order = { id: string; total: number; status: string; items: CartItem[] }
+type Screen='home'|'catalog'|'orders'|'profile'
+type Order={id:string;createdAt:string;status:string;total:number;items:CartItem[]}
+const cats:Category[]=['Все','Футболки','Худи','Брюки','Куртки']
+const sizes=['S','M','L','XL']
 
-const categories = ['New', 'Clothing', 'Accessories']
-
-function App() {
-  const [screen, setScreen] = useState<Screen>('shop')
-  const [activeCategory, setActiveCategory] = useState('New')
-  const [selected, setSelected] = useState<Product | null>(null)
-  const [cart, setCart] = useState<CartItem[]>([])
-  const [favorites, setFavorites] = useState<string[]>([])
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [query, setQuery] = useState('')
-  const [showCart, setShowCart] = useState(false)
-  const [showCheckout, setShowCheckout] = useState(false)
-  const [toast, setToast] = useState('')
-  const [orders, setOrders] = useState<Order[]>([])
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    return products.filter((p) => {
-      const matchesQuery = !q || `${p.name} ${p.description}`.toLowerCase().includes(q)
-      const productCategory = String(p.category); const matchesCategory = activeCategory === 'New' || (activeCategory === 'Clothing' && productCategory !== 'Accessories') || activeCategory === 'Accessories'
-      return matchesQuery && matchesCategory
-    })
-  }, [query, activeCategory])
-
-  const favoriteProducts = products.filter((p) => favorites.includes(p.id))
-  const total = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
-  const count = cart.reduce((sum, item) => sum + item.quantity, 0)
-
-  function notify(message: string) {
-    setToast(message)
-    window.setTimeout(() => setToast(''), 1600)
-  }
-
-  function toggleFavorite(id: string) {
-    setFavorites((current) => current.includes(id) ? current.filter((x) => x !== id) : [...current, id])
-  }
-
-  function addToBag(item: CartItem) {
-    setCart((current) => {
-      const existing = current.find((x) => x.product.id === item.product.id && x.size === item.size && x.color === item.color)
-      return existing
-        ? current.map((x) => x === existing ? { ...x, quantity: x.quantity + item.quantity } : x)
-        : [...current, item]
-    })
-    setSelected(null)
-    notify('Added to bag')
-  }
-
-  function createOrder(customer: { name: string; phone: string; delivery: string }) {
-    void customer
-    const order: Order = { id: String(Date.now()).slice(-6), total, status: 'Confirmed', items: cart }
-    setOrders((current) => [order, ...current])
-    setCart([])
-    setShowCheckout(false)
-    setScreen('profile')
-    notify('Order confirmed')
-  }
-
-  return (
-    <div className="app-shell">
-      <main className="store-shell safe-bottom">
-        <header className="topbar">
-          <button className="wordmark-mini" onClick={() => setScreen('shop')} aria-label="YAROPLUGG Store">YAROPLUGG</button>
-          <div className="top-actions">
-            <button className="icon-button" onClick={() => setSearchOpen(true)} aria-label="Search"><Search size={23} strokeWidth={1.7} /></button>
-            <button className="icon-button bag-button" onClick={() => setShowCart(true)} aria-label="Bag">
-              <ShoppingBag size={23} strokeWidth={1.7} />
-              {count > 0 && <span className="bag-badge">{count}</span>}
-            </button>
-          </div>
-        </header>
-
-        {screen === 'shop' && (
-          <ShopHome
-            category={activeCategory}
-            setCategory={setActiveCategory}
-            products={filtered}
-            favorites={favorites}
-            onFavorite={toggleFavorite}
-            onProduct={setSelected}
-            onCategories={() => setScreen('categories')}
-          />
-        )}
-        {screen === 'categories' && (
-          <CategoriesScreen active={activeCategory} setActive={setActiveCategory} onProduct={setSelected} />
-        )}
-        {screen === 'favorites' && (
-          <FavoritesScreen products={favoriteProducts} onProduct={setSelected} onFavorite={toggleFavorite} />
-        )}
-        {screen === 'profile' && (
-          <ProfileScreen orders={orders} />
-        )}
-
-        <nav className="bottom-nav">
-          <NavItem icon={<House size={22} />} label="SHOP" active={screen === 'shop'} onClick={() => setScreen('shop')} />
-          <NavItem icon={<SlidersHorizontal size={22} />} label="CATEGORIES" active={screen === 'categories'} onClick={() => setScreen('categories')} />
-          <NavItem icon={<Heart size={22} />} label="FAVORITES" active={screen === 'favorites'} onClick={() => setScreen('favorites')} badge={favorites.length} />
-          <NavItem icon={<UserRound size={22} />} label="PROFILE" active={screen === 'profile'} onClick={() => setScreen('profile')} />
-        </nav>
-
-        {searchOpen && <SearchOverlay query={query} setQuery={setQuery} onClose={() => setSearchOpen(false)} onProduct={(p) => { setSearchOpen(false); setSelected(p) }} />}
-        {selected && <ProductSheet product={selected} favorite={favorites.includes(selected.id)} onFavorite={() => toggleFavorite(selected.id)} onClose={() => setSelected(null)} onAdd={addToBag} />}
-        {showCart && <BagSheet items={cart} total={total} onClose={() => setShowCart(false)} onChange={setCart} onCheckout={() => { setShowCart(false); setShowCheckout(true) }} />}
-        {showCheckout && <Checkout total={total} onClose={() => setShowCheckout(false)} onDone={createOrder} />}
-        {toast && <div className="toast">{toast}</div>}
-      </main>
-    </div>
-  )
+function App(){
+ const [screen,setScreen]=useState<Screen>('home'),[selected,setSelected]=useState<Product|null>(null),[cart,setCart]=useState<CartItem[]>([]),[query,setQuery]=useState(''),[cat,setCat]=useState<Category>('Все'),[showFilters,setShowFilters]=useState(false),[filterSize,setFilterSize]=useState('Все'),[filterColor,setFilterColor]=useState('Все'),[maxPrice,setMaxPrice]=useState(100),[showCart,setShowCart]=useState(false),[showCheckout,setShowCheckout]=useState(false),[toast,setToast]=useState(''),[orders,setOrders]=useState<Order[]>([])
+ const colors=useMemo(()=>['Все',...Array.from(new Set(products.flatMap(p=>p.colors.map(c=>c.name))))],[products])
+ const filtered=useMemo(()=>products.filter(p=>{
+   const text=p.name.toLowerCase().includes(query.toLowerCase())||p.description.toLowerCase().includes(query.toLowerCase())
+   const size=filterSize==='Все'||p.sizes.includes(filterSize)
+   const color=filterColor==='Все'||p.colors.some(c=>c.name===filterColor)
+   return (cat==='Все'||p.category===cat)&&text&&size&&color&&p.price<=maxPrice
+ }),[cat,query,filterSize,filterColor,maxPrice])
+ const total=cart.reduce((s,i)=>s+i.product.price*i.quantity,0),count=cart.reduce((s,i)=>s+i.quantity,0)
+ function add(item:CartItem){setCart(c=>{const x=c.find(i=>i.product.id===item.product.id&&i.size===item.size&&i.color===item.color);return x?c.map(i=>i===x?{...i,quantity:i.quantity+item.quantity}:i):[...c,item]});notify('Добавлено в корзину')}
+ function notify(v:string){setToast(v);window.setTimeout(()=>setToast(''),1500)}
+ function createOrder(customer:{name:string;phone:string;delivery:string}){const order={id:String(Date.now()).slice(-6),createdAt:new Date().toISOString(),status:'new',total,items:cart};setOrders(o=>[order,...o]);setCart([]);setShowCheckout(false);setScreen('orders');notify('Заказ отправлен')}
+ return <div className="min-h-screen bg-[#f7f6f3] text-neutral-900"><main className="mx-auto max-w-md min-h-screen bg-[#f7f6f3] safe-bottom">
+  <header className="sticky top-0 z-20 glass px-5 py-4 flex items-center justify-between"><div><div className="text-[11px] uppercase tracking-[.22em] text-neutral-500">YOUR BRAND</div><div className="text-xl font-semibold tracking-tight">Essentials</div></div><button onClick={()=>setShowCart(true)} className="relative rounded-full bg-neutral-900 text-white p-3 tap"><ShoppingBag size={19}/>{count>0&&<span className="absolute -right-1 -top-1 bg-white text-neutral-900 border border-neutral-200 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{count}</span>}</button></header>
+  {screen==='home'&&<Home onCatalog={()=>setScreen('catalog')} onProduct={setSelected}/>} 
+  {screen==='catalog'&&<Catalog query={query} setQuery={setQuery} cat={cat} setCat={setCat} products={filtered} onProduct={setSelected} onFilters={()=>setShowFilters(true)}/>} 
+  {screen==='orders'&&<Orders orders={orders}/>} {screen==='profile'&&<Profile/>}
+  <nav className="fixed bottom-0 left-0 right-0 z-30 mx-auto max-w-md border-t border-neutral-200/70 glass px-5 py-3 flex justify-around pb-[calc(12px+env(safe-area-inset-bottom))]"><Nav icon={<House size={20}/>} label="Главная" active={screen==='home'} onClick={()=>setScreen('home')}/><Nav icon={<Search size={20}/>} label="Каталог" active={screen==='catalog'} onClick={()=>setScreen('catalog')}/><Nav icon={<PackageOpen size={20}/>} label="Заказы" active={screen==='orders'} onClick={()=>setScreen('orders')}/><Nav icon={<UserRound size={20}/>} label="Профиль" active={screen==='profile'} onClick={()=>setScreen('profile')}/></nav>
+  {selected&&<ProductModal product={selected} onClose={()=>setSelected(null)} onAdd={add}/>} {showCart&&<Cart items={cart} total={total} onClose={()=>setShowCart(false)} onChange={setCart} onCheckout={()=>{setShowCart(false);setShowCheckout(true)}}/>} {showCheckout&&<Checkout total={total} onClose={()=>setShowCheckout(false)} onDone={createOrder}/>} {showFilters&&<Filters size={filterSize} color={filterColor} maxPrice={maxPrice} colors={colors} onClose={()=>setShowFilters(false)} onApply={(s,c,p)=>{setFilterSize(s);setFilterColor(c);setMaxPrice(p);setShowFilters(false)}}/>} {toast&&<div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-neutral-900 text-white rounded-full px-5 py-3 text-sm shadow-xl">{toast}</div>}
+ </main></div>
 }
-
-function NavItem({ icon, label, active, onClick, badge = 0 }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void; badge?: number }) {
-  return <button onClick={onClick} className={`nav-item ${active ? 'active' : ''}`}>
-    <span className="nav-icon">{icon}{badge > 0 && <span className="nav-badge">{badge}</span>}</span>
-    <span>{label}</span>
-  </button>
-}
-
-function ShopHome({ category, setCategory, products, favorites, onFavorite, onProduct, onCategories }: { category: string; setCategory: (v: string) => void; products: Product[]; favorites: string[]; onFavorite: (id: string) => void; onProduct: (p: Product) => void; onCategories: () => void }) {
-  return <div className="page shop-page">
-    <section className="brand-hero">
-      <div className="hero-topline">
-        <span>CLOTHES</span><span>PEOPLE</span><span>IDEAS</span><span>YAROPLUGG</span><b>+</b>
-      </div>
-      <div className="hero-logo">YAROPLUGG<span>i</span><i /></div>
-      <div className="hero-copy">
-        <div className="hero-title">YAROPLUGG STORE</div>
-        <div className="hero-subtitle">MORE THAN CLOTHES<br />INDEPENDENT BRAND<br />EST. 2023</div>
-      </div>
-      <div className="hero-progress"><span>01 / 03</span><b /><i /><i /></div>
-    </section>
-
-    <div className="category-strip">
-      {categories.map((categoryName) => <button key={categoryName} className={category === categoryName ? 'selected' : ''} onClick={() => setCategory(categoryName)}>{categoryName}</button>)}
-      <button className="more-button" onClick={onCategories}>•••</button>
-    </div>
-
-    <section className="products-section">
-      <div className="section-heading"><span>{category === 'New' ? 'NEW ARRIVALS' : category.toUpperCase()}</span><button onClick={onCategories}>VIEW ALL <ArrowUpRight size={15} /></button></div>
-      <div className="product-grid">
-        {products.slice(0, 1).map((p) => <ProductCard key={p.id} product={p} favorite={favorites.includes(p.id)} onFavorite={() => onFavorite(p.id)} onClick={() => onProduct(p)} />)}
-      </div>
-      {products.length === 0 && <EmptyState title="COMING SOON" text="New pieces are on the way." />}
-    </section>
-  </div>
-}
-
-function CategoriesScreen({ active, setActive, onProduct }: { active: string; setActive: (v: string) => void; onProduct: (p: Product) => void }) {
-  const visible = products.filter((p) => { const productCategory = String(p.category); return active === 'New' || active === 'Clothing' || (active === 'Accessories' && productCategory === 'Accessories') })
-  return <div className="page inner-page">
-    <div className="eyebrow">YAROPLUGG STORE</div>
-    <h1 className="page-title">CATEGORIES</h1>
-    <div className="category-list">{categories.map((name) => <button key={name} onClick={() => setActive(name)} className={active === name ? 'active' : ''}>{name}<ArrowUpRight size={17} /></button>)}</div>
-    <div className="section-heading"><span>{active.toUpperCase()}</span><span className="muted">{visible.length} ITEM{visible.length === 1 ? '' : 'S'}</span></div>
-    <div className="product-grid">{visible.map((p) => <ProductCard key={p.id} product={p} favorite={false} onFavorite={() => {}} onClick={() => onProduct(p)} />)}</div>
-  </div>
-}
-
-function FavoritesScreen({ products, onProduct, onFavorite }: { products: Product[]; onProduct: (p: Product) => void; onFavorite: (id: string) => void }) {
-  return <div className="page inner-page"><div className="eyebrow">YOUR SELECTION</div><h1 className="page-title">FAVORITES</h1>{products.length ? <div className="product-grid">{products.map((p) => <ProductCard key={p.id} product={p} favorite onFavorite={() => onFavorite(p.id)} onClick={() => onProduct(p)} />)}</div> : <EmptyState title="NO FAVORITES" text="Save pieces you love." />}</div>
-}
-
-function ProfileScreen({ orders }: { orders: Order[] }) {
-  return <div className="page inner-page"><div className="eyebrow">YAROPLUGG</div><h1 className="page-title">PROFILE</h1><div className="profile-card"><span>TELEGRAM</span><strong>YOUR ACCOUNT</strong><p>Your Telegram identity will be used for orders. No separate registration needed.</p></div><div className="profile-menu"><div><span>MY ORDERS</span><b>{orders.length}</b></div><div><span>LANGUAGE</span><b>EN</b></div><div><span>SUPPORT</span><ArrowUpRight size={18} /></div></div>{orders.length > 0 && <div className="orders-preview">{orders.map((o) => <div key={o.id}><span>ORDER #{o.id}</span><b>{o.status}</b><strong>€{o.total}</strong></div>)}</div>}</div>
-}
-
-function ProductCard({ product, favorite, onFavorite, onClick }: { product: Product; favorite: boolean; onFavorite: () => void; onClick: () => void }) {
-  return <article className="product-card">
-    <button className="product-image-wrap" onClick={onClick}>
-      <img src={product.images[0]} alt={product.name} />
-      <span className="product-index">01</span>
-    </button>
-    <button className={`heart-button ${favorite ? 'liked' : ''}`} onClick={onFavorite} aria-label="Favorite"><Heart size={18} fill={favorite ? 'currentColor' : 'none'} /></button>
-    <button className="product-meta" onClick={onClick}><span>{product.name.toUpperCase()}</span><b>€{product.price}</b></button>
-  </article>
-}
-
-function SearchOverlay({ query, setQuery, onClose, onProduct }: { query: string; setQuery: (v: string) => void; onClose: () => void; onProduct: (p: Product) => void }) {
-  const results = products.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
-  return <div className="overlay dark-overlay"><div className="search-panel"><button className="sheet-close" onClick={onClose}><X size={20} /></button><div className="eyebrow">SEARCH YAROPLUGG</div><input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search pieces..." />{query && <div className="search-results">{results.map((p) => <button key={p.id} onClick={() => onProduct(p)}><img src={p.images[0]} alt="" /><span>{p.name}</span><b>€{p.price}</b></button>)}</div>}</div></div>
-}
-
-function ProductSheet({ product, favorite, onFavorite, onClose, onAdd }: { product: Product; favorite: boolean; onFavorite: () => void; onClose: () => void; onAdd: (item: CartItem) => void }) {
-  const [size, setSize] = useState(product.sizes[1] || product.sizes[0])
-  const [color, setColor] = useState(product.colors[0].name)
-  return <div className="overlay dark-overlay"><div className="product-sheet"><div className="sheet-image"><img src={product.images[0]} alt={product.name} /><button className="sheet-close" onClick={onClose}><X size={20} /></button><button className={`sheet-heart ${favorite ? 'liked' : ''}`} onClick={onFavorite}><Heart size={20} fill={favorite ? 'currentColor' : 'none'} /></button></div><div className="sheet-body"><div className="product-kicker">{product.category.toUpperCase()}</div><div className="product-heading"><h2>{product.name.toUpperCase()}</h2><strong>€{product.price}</strong></div><p>{product.description}</p><div className="option-block"><span>SIZE</span><div className="size-row">{product.sizes.map((s) => <button key={s} className={size === s ? 'selected' : ''} onClick={() => setSize(s)}>{s}</button>)}</div></div><div className="option-block"><span>COLOR — {color.toUpperCase()}</span><div className="color-row">{product.colors.map((c) => <button key={c.name} aria-label={c.name} onClick={() => setColor(c.name)} style={{ background: c.hex }} className={color === c.name ? 'selected' : ''} />)}</div></div><button className="primary-button" onClick={() => onAdd({ product, size, color, quantity: 1 })}>ADD TO BAG <ArrowUpRight size={18} /></button></div></div></div>
-}
-
-function BagSheet({ items, total, onClose, onChange, onCheckout }: { items: CartItem[]; total: number; onClose: () => void; onChange: (items: CartItem[]) => void; onCheckout: () => void }) {
-  return (
-    <div className="overlay dark-overlay">
-      <div className="bag-sheet">
-        <div className="sheet-header">
-          <div><div className="eyebrow">YAROPLUGG</div><h2>YOUR BAG</h2></div>
-          <button className="sheet-close" onClick={onClose}><X size={20} /></button>
-        </div>
-        {items.length === 0 ? <EmptyState title="YOUR BAG IS EMPTY" text="Find something you like." /> : <>
-          <div className="bag-items">
-            {items.map((item, index) => (
-              <div className="bag-item" key={`${item.product.id}-${item.size}-${item.color}`}>
-                <img src={item.product.images[0]} alt="" />
-                <div className="bag-item-info">
-                  <span>{item.product.name.toUpperCase()}</span>
-                  <small>{item.color} / {item.size}</small>
-                  <div>
-                    <div className="qty">
-                      <button onClick={() => onChange(items.map((x, i) => i === index ? { ...x, quantity: Math.max(1, x.quantity - 1) } : x))}><Minus size={14} /></button>
-                      <b>{item.quantity}</b>
-                      <button onClick={() => onChange(items.map((x, i) => i === index ? { ...x, quantity: x.quantity + 1 } : x))}><Plus size={14} /></button>
-                    </div>
-                    <strong>€{item.product.price * item.quantity}</strong>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="bag-total"><span>TOTAL</span><strong>€{total}</strong></div>
-          <button className="primary-button" onClick={onCheckout}>CHECKOUT <ArrowUpRight size={18} /></button>
-        </>}
-      </div>
-    </div>
-  )
-}
-function Checkout({ total, onClose, onDone }: { total: number; onClose: () => void; onDone: (x: { name: string; phone: string; delivery: string }) => void }) {
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [delivery, setDelivery] = useState('SmartPost / Omniva')
-  return <div className="overlay checkout-overlay"><div className="checkout-page"><button className="back-button" onClick={onClose}><ChevronLeft size={20} /></button><div className="eyebrow">YAROPLUGG STORE</div><h1>CHECKOUT</h1><div className="form-stack"><Field label="NAME" value={name} onChange={setName} placeholder="Your name" /><Field label="PHONE" value={phone} onChange={setPhone} placeholder="+372 ..." /><label><span>DELIVERY</span><select value={delivery} onChange={(e) => setDelivery(e.target.value)}><option>SmartPost / Omniva</option><option>Courier</option><option>Pick-up</option></select></label><div className="payment-box"><span>PAYMENT</span><strong>CASH ON DELIVERY</strong></div></div><div className="checkout-total"><span>TOTAL</span><strong>€{total}</strong></div><button disabled={!name || phone.replace(/\D/g, '').length < 7} className="primary-button" onClick={() => onDone({ name, phone, delivery })}>PLACE ORDER <ArrowUpRight size={18} /></button></div></div>
-}
-
-function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder: string }) { return <label><span>{label}</span><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} /></label> }
-function EmptyState({ title, text }: { title: string; text: string }) { return <div className="empty-state"><Heart size={30} /><strong>{title}</strong><span>{text}</span></div> }
-
-createRoot(document.getElementById('root')!).render(<App />)
+function Nav({icon,label,active,onClick}:{icon:React.ReactNode;label:string;active:boolean;onClick:()=>void}){return <button onClick={onClick} className={`flex flex-col items-center gap-1 text-[10px] ${active?'text-neutral-900':'text-neutral-400'}`}>{icon}<span>{label}</span></button>}
+function Home({onCatalog,onProduct}:{onCatalog:()=>void;onProduct:(p:Product)=>void}){return <div className="px-5 pt-6"><section className="rounded-[28px] bg-neutral-900 text-white p-6 min-h-56 flex flex-col justify-between overflow-hidden relative"><div className="relative z-10"><p className="text-xs uppercase tracking-[.25em] text-neutral-400">new collection</p><h1 className="mt-3 text-4xl font-semibold tracking-tight leading-none">Wear less.<br/>Choose better.</h1></div><button onClick={onCatalog} className="relative z-10 w-fit bg-white text-neutral-900 rounded-full px-5 py-3 text-sm font-semibold tap">Смотреть коллекцию</button><div className="absolute -right-16 -bottom-20 w-56 h-56 rounded-full border-[38px] border-neutral-700/60"/></section><div className="flex items-center justify-between mt-8 mb-4"><h2 className="text-xl font-semibold">Избранное</h2><button onClick={onCatalog} className="text-sm text-neutral-500">Все товары</button></div><div className="grid grid-cols-2 gap-3">{products.filter(p=>p.featured).map(p=><ProductCard key={p.id} p={p} onClick={()=>onProduct(p)}/>)}</div></div>}
+function Catalog({query,setQuery,cat,setCat,products,onProduct,onFilters}:{query:string;setQuery:(v:string)=>void;cat:Category;setCat:(v:Category)=>void;products:Product[];onProduct:(p:Product)=>void;onFilters:()=>void}){return <div className="px-5 pt-5"><h1 className="text-3xl font-semibold tracking-tight">Каталог</h1><div className="mt-4 relative"><Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" size={18}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Найти товар" className="w-full rounded-2xl bg-white border border-neutral-200 pl-11 pr-4 py-3.5 outline-none focus:ring-2 focus:ring-neutral-900/10"/></div><div className="flex gap-2 overflow-x-auto scrollbar-hide py-4">{cats.map(c=><button key={c} onClick={()=>setCat(c)} className={`whitespace-nowrap px-4 py-2 rounded-full text-sm ${cat===c?'bg-neutral-900 text-white':'bg-white border border-neutral-200'}`}>{c}</button>)}<button onClick={onFilters} className="shrink-0 rounded-full bg-white border border-neutral-200 p-2"><SlidersHorizontal size={17}/></button></div><div className="mb-3 text-xs text-neutral-500">Найдено: {products.length}</div><div className="grid grid-cols-2 gap-3">{products.map(p=><ProductCard key={p.id} p={p} onClick={()=>onProduct(p)}/>)}</div>{products.length===0&&<div className="py-20 text-center text-neutral-500">Ничего не нашли</div>}</div>}
+function ProductCard({p,onClick}:{p:Product;onClick:()=>void}){return <button onClick={onClick} className="text-left group"><div className="aspect-[.78] rounded-2xl overflow-hidden bg-neutral-200"><img src={p.images[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition"/></div><div className="pt-3 px-1"><div className="text-sm font-medium">{p.name}</div><div className="mt-1 text-sm text-neutral-500">€{p.price}</div></div></button>}
+function ProductModal({product,onClose,onAdd}:{product:Product;onClose:()=>void;onAdd:(x:CartItem)=>void}){const[size,setSize]=useState(product.sizes[1]||product.sizes[0]),[color,setColor]=useState(product.colors[0].name);return <div className="fixed inset-0 z-40 bg-black/40 flex items-end"><div className="bg-[#f7f6f3] w-full max-w-md mx-auto rounded-t-[30px] max-h-[92vh] overflow-y-auto"><div className="relative"><img src={product.images[0]} alt={product.name} className="w-full aspect-[.9] object-cover"/><button onClick={onClose} className="absolute right-4 top-4 bg-white/90 rounded-full p-2"><X size={19}/></button></div><div className="p-5"><div className="flex justify-between gap-4"><div><div className="text-xs uppercase tracking-widest text-neutral-400">{product.category}</div><h2 className="text-2xl font-semibold mt-1">{product.name}</h2></div><div className="text-xl font-semibold">€{product.price}</div></div><p className="mt-4 text-sm text-neutral-600 leading-6">{product.description}</p><div className="mt-5"><div className="text-sm font-medium mb-2">Размер</div><div className="flex gap-2">{product.sizes.map(s=><button key={s} onClick={()=>setSize(s)} className={`w-11 h-11 rounded-xl border ${size===s?'bg-neutral-900 text-white border-neutral-900':'bg-white border-neutral-200'}`}>{s}</button>)}</div></div><div className="mt-5"><div className="text-sm font-medium mb-2">Цвет · {color}</div><div className="flex gap-3">{product.colors.map(c=><button key={c.name} aria-label={c.name} onClick={()=>setColor(c.name)} style={{background:c.hex}} className={`w-9 h-9 rounded-full border-2 ${color===c.name?'border-neutral-900 ring-2 ring-white ring-offset-2 ring-offset-neutral-300':'border-white'}`}/>)}</div></div><div className="mt-5 text-xs text-neutral-500">Состав: {product.composition}</div><button onClick={()=>{onAdd({product,size,color,quantity:1});onClose()}} className="mt-6 w-full bg-neutral-900 text-white rounded-2xl py-4 font-semibold tap">Добавить в корзину · €{product.price}</button></div></div></div>}
+function Cart({items,total,onClose,onChange,onCheckout}:{items:CartItem[];total:number;onClose:()=>void;onChange:(x:CartItem[])=>void;onCheckout:()=>void}){return <div className="fixed inset-0 z-40 bg-black/40 flex items-end"><div className="bg-[#f7f6f3] w-full max-w-md mx-auto rounded-t-[30px] p-5 max-h-[88vh] overflow-y-auto"><div className="flex justify-between items-center"><h2 className="text-2xl font-semibold">Корзина</h2><button onClick={onClose} className="rounded-full bg-white p-2"><X size={18}/></button></div>{items.length===0?<div className="py-20 text-center"><ShoppingBag className="mx-auto text-neutral-300" size={48}/><p className="mt-4 font-medium">Корзина пуста</p><p className="text-sm text-neutral-500 mt-1">Добавьте что-нибудь из каталога</p></div>:<>{items.map((i,idx)=><div key={`${i.product.id}-${i.size}-${i.color}`} className="flex gap-3 py-4 border-b border-neutral-200"><img src={i.product.images[0]} alt="" className="w-20 h-24 rounded-xl object-cover"/><div className="flex-1"><div className="font-medium">{i.product.name}</div><div className="text-xs text-neutral-500 mt-1">{i.color} · {i.size}</div><div className="flex items-center justify-between mt-4"><div className="flex items-center gap-2 bg-white rounded-full p-1"><button onClick={()=>onChange(items.map((x,j)=>j===idx?{...x,quantity:Math.max(1,x.quantity-1)}:x))} className="p-1"><Minus size={14}/></button><span className="text-sm w-5 text-center">{i.quantity}</span><button onClick={()=>onChange(items.map((x,j)=>j===idx?{...x,quantity:x.quantity+1}:x))} className="p-1"><Plus size={14}/></button></div><b>€{i.product.price*i.quantity}</b></div></div></div>)}<div className="flex justify-between text-lg font-semibold pt-5"><span>Итого</span><span>€{total}</span></div><button onClick={onCheckout} className="mt-4 w-full bg-neutral-900 text-white rounded-2xl py-4 font-semibold">Оформить заказ</button></>}</div></div>}
+function Checkout({total,onClose,onDone}:{total:number;onClose:()=>void;onDone:(x:{name:string;phone:string;delivery:string})=>void}){const[name,setName]=useState(''),[phone,setPhone]=useState(''),[delivery,setDelivery]=useState('SmartPost / Omniva');return <div className="fixed inset-0 z-50 bg-[#f7f6f3] overflow-y-auto"><div className="mx-auto max-w-md p-5 min-h-screen"><button onClick={onClose} className="rounded-full bg-white p-2"><ChevronLeft/></button><h1 className="text-3xl font-semibold mt-6">Оформление</h1><div className="mt-7 space-y-4"><Field label="Имя" value={name} onChange={setName} placeholder="Как к вам обращаться?"/><Field label="Телефон" value={phone} onChange={setPhone} placeholder="+372 ..."/><div><label className="text-sm font-medium">Доставка</label><select value={delivery} onChange={e=>setDelivery(e.target.value)} className="mt-2 w-full bg-white border border-neutral-200 rounded-2xl p-4"><option>SmartPost / Omniva</option><option>Курьер</option><option>Самовывоз</option></select></div><div><label className="text-sm font-medium">Оплата</label><div className="mt-2 rounded-2xl bg-white border border-neutral-200 p-4">Оплата при получении</div></div></div><div className="mt-8 rounded-2xl bg-white p-4 flex justify-between"><span>К оплате</span><b>€{total}</b></div><button disabled={!name||phone.replace(/\D/g,'').length<7} onClick={()=>onDone({name,phone,delivery})} className="mt-4 w-full bg-neutral-900 disabled:bg-neutral-300 text-white rounded-2xl py-4 font-semibold">Подтвердить заказ</button></div></div>}
+function Field({label,value,onChange,placeholder}:{label:string;value:string;onChange:(x:string)=>void;placeholder:string}){return <div><label className="text-sm font-medium">{label}</label><input value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="mt-2 w-full bg-white border border-neutral-200 rounded-2xl p-4 outline-none"/></div>}
+function Filters({size,color,maxPrice,colors,onClose,onApply}:{size:string;color:string;maxPrice:number;colors:string[];onClose:()=>void;onApply:(s:string,c:string,p:number)=>void}){const[s,setS]=useState(size),[c,setC]=useState(color),[p,setP]=useState(maxPrice);return <div className="fixed inset-0 z-50 bg-black/40 flex items-end"><div className="bg-[#f7f6f3] w-full max-w-md mx-auto rounded-t-[30px] p-5"><div className="flex items-center justify-between"><h2 className="text-2xl font-semibold">Фильтры</h2><button onClick={onClose} className="rounded-full bg-white p-2"><X size={18}/></button></div><div className="mt-6"><div className="text-sm font-medium mb-2">Размер</div><div className="flex gap-2">{['Все',...sizes].map(x=><button key={x} onClick={()=>setS(x)} className={`px-4 py-2 rounded-full text-sm ${s===x?'bg-neutral-900 text-white':'bg-white border border-neutral-200'}`}>{x}</button>)}</div></div><div className="mt-6"><div className="text-sm font-medium mb-2">Цвет</div><div className="relative"><select value={c} onChange={e=>setC(e.target.value)} className="w-full bg-white border border-neutral-200 rounded-2xl p-4 appearance-none">{colors.map(x=><option key={x}>{x}</option>)}</select><ChevronDown className="absolute right-4 top-4 pointer-events-none text-neutral-400" size={18}/></div></div><div className="mt-6"><div className="flex justify-between text-sm font-medium"><span>Максимальная цена</span><span>€{p}</span></div><input type="range" min="20" max="100" value={p} onChange={e=>setP(Number(e.target.value))} className="w-full mt-3"/></div><button onClick={()=>onApply(s,c,p)} className="mt-7 w-full bg-neutral-900 text-white rounded-2xl py-4 font-semibold">Показать товары</button></div></div>}
+function Orders({orders}:{orders:Order[]}){return <div className="px-5 pt-6"><h1 className="text-3xl font-semibold">Заказы</h1>{orders.length===0?<div className="mt-8 rounded-3xl bg-white border border-neutral-200 p-6 text-center"><Check className="mx-auto" size={32}/><h2 className="mt-3 font-semibold">Здесь появятся ваши заказы</h2><p className="mt-2 text-sm text-neutral-500">После оформления заказа его статус будет доступен здесь.</p></div>:<div className="mt-5 space-y-3">{orders.map(o=><div key={o.id} className="rounded-3xl bg-white border border-neutral-200 p-5"><div className="flex justify-between"><b>Заказ #{o.id}</b><span className="text-xs rounded-full bg-neutral-100 px-3 py-1">Новый</span></div><div className="mt-3 text-sm text-neutral-500">{o.items.length} поз. · €{o.total}</div></div>)}</div>}</div>}
+function Profile(){return <div className="px-5 pt-6"><h1 className="text-3xl font-semibold">Профиль</h1><div className="mt-6 rounded-3xl bg-neutral-900 text-white p-6"><div className="text-sm text-neutral-400">Telegram</div><div className="text-xl font-semibold mt-1">Ваш аккаунт</div><p className="text-sm text-neutral-400 mt-3">Данные профиля будут автоматически получены из Telegram.</p></div><div className="mt-4 bg-white rounded-2xl p-4">Поддержка магазина</div></div>}
+createRoot(document.getElementById('root')!).render(<App/>)
