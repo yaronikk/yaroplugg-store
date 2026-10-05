@@ -1,0 +1,15 @@
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE TABLE users (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), telegram_id bigint UNIQUE NOT NULL, username text, first_name text, last_name text, phone text, created_at timestamptz DEFAULT now());
+CREATE TABLE categories (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, slug text UNIQUE NOT NULL);
+CREATE TABLE products (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), category_id uuid REFERENCES categories(id), name text NOT NULL, description text, composition text, price_cents integer NOT NULL, active boolean DEFAULT true, created_at timestamptz DEFAULT now());
+CREATE TABLE sizes (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text UNIQUE NOT NULL);
+CREATE TABLE colors (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, hex text NOT NULL);
+CREATE TABLE product_variants (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), product_id uuid REFERENCES products(id) ON DELETE CASCADE, size_id uuid REFERENCES sizes(id), color_id uuid REFERENCES colors(id), stock integer NOT NULL DEFAULT 0, sku text UNIQUE);
+CREATE TABLE product_images (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), product_id uuid REFERENCES products(id) ON DELETE CASCADE, url text NOT NULL, sort_order integer DEFAULT 0);
+CREATE TABLE carts (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid REFERENCES users(id) ON DELETE CASCADE, updated_at timestamptz DEFAULT now());
+CREATE TABLE cart_items (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), cart_id uuid REFERENCES carts(id) ON DELETE CASCADE, variant_id uuid REFERENCES product_variants(id), quantity integer NOT NULL CHECK(quantity>0));
+CREATE TABLE delivery_methods (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, price_cents integer DEFAULT 0, active boolean DEFAULT true);
+CREATE TABLE payment_methods (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, active boolean DEFAULT true);
+CREATE TABLE orders (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), order_number bigserial UNIQUE, user_id uuid REFERENCES users(id), status text NOT NULL DEFAULT 'new', customer_name text NOT NULL, phone text NOT NULL, address text, delivery_method_id uuid REFERENCES delivery_methods(id), payment_method_id uuid REFERENCES payment_methods(id), total_cents integer NOT NULL, idempotency_key text UNIQUE NOT NULL, created_at timestamptz DEFAULT now());
+CREATE TABLE order_items (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), order_id uuid REFERENCES orders(id) ON DELETE CASCADE, product_id uuid REFERENCES products(id), variant_id uuid REFERENCES product_variants(id), product_name text NOT NULL, size_name text, color_name text, unit_price_cents integer NOT NULL, quantity integer NOT NULL CHECK(quantity>0));
+CREATE INDEX idx_orders_user ON orders(user_id);CREATE INDEX idx_variants_product ON product_variants(product_id);
