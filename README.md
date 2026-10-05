@@ -1,12 +1,25 @@
-# YAROPLUGG STORE — Design A
+# YAROPLUGG STORE — V4
 
-English fashion-store prototype for Telegram Mini App.
+Telegram-ready streetwear storefront built with React, TypeScript, Vite and Tailwind CSS.
 
-- Black / white / red direction
-- English UI
-- One temporary product for testing
-- Shop / product / bag / checkout / orders / profile flow
-- Vite + React + TypeScript
-- Build command: `vite build`
+## V4 highlights
+- Uses the supplied YAROPLUGG logo as the primary brand mark.
+- Restrained bottom navigation with minimal icons and labels.
+- Local persistence for bag, favorites and demo orders.
+- Telegram WebApp `ready()` / `expand()` hooks when opened inside Telegram.
+- Lazy-loaded product images and async decoding for faster catalog rendering.
+- Responsive mobile-first layout with safe-area support.
+- Existing demo catalog remains ready for replacement with real product photos.
 
-Important: this version intentionally keeps source files at the project root so a GitHub browser upload cannot flatten the `src` directory and break the Vercel build.
+## Run
+```bash
+npm install
+npm run dev
+```
+
+## Build
+```bash
+npm run build
+```
+
+The current V4 is still a frontend MVP. Production order storage, Telegram `initData` verification, admin authentication, database, image storage and owner notifications should be connected before accepting real orders.
