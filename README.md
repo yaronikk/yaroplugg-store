@@ -1,8 +1,20 @@
-# YAROPLUGG STORE V7
+# YAROPLUGG STORE — V9
 
-V7 polish pass for the Telegram Mini App storefront.
+Browse-only Telegram Mini App for YAROPLUGG.
 
-- Uses `public/logo.png` from the existing repository.
-- Starts with an empty bag using the versioned `yp-cart-v7` storage key.
-- Checkout has a cleaner mobile layout and safe-area spacing.
-- Existing product, favorites, orders and Telegram-ready behavior retained.
+## Current mode
+- Products can be viewed only.
+- No cart.
+- No checkout.
+- No payment.
+- No order placement.
+- Favorites remain available.
+- Product prices and details remain visible.
+
+## Run
+```bash
+npm install
+npm run dev
+```
+
+The existing `public/logo.png` in the GitHub project should remain untouched.
