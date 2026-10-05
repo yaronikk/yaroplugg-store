@@ -20,7 +20,8 @@
     "cors": "latest",
     "dotenv": "latest",
     "zod": "latest",
-    "pg": "latest"
+    "pg": "latest",
+    "@supabase/supabase-js": "latest"
   },
   "devDependencies": {
     "tailwindcss": "latest",
