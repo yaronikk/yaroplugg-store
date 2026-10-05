@@ -14,7 +14,7 @@ function readStorage<T>(key:string,fallback:T):T{try{const raw=localStorage.getI
 function App(){
  const [screen,setScreen]=useState<Screen>('home')
  const [selected,setSelected]=useState<Product|null>(null)
- const [cart,setCart]=useState<CartItem[]>(()=>readStorage('yp-cart-v7',[]))
+ const [cart,setCart]=useState<CartItem[]>(()=>readStorage('yp-cart-v8',[]))
  const [query,setQuery]=useState('')
  const [cat,setCat]=useState<Category>('All')
  const [showFilters,setShowFilters]=useState(false)
@@ -29,7 +29,7 @@ function App(){
  const colors=useMemo(()=>['All',...Array.from(new Set(products.flatMap(p=>p.colors.map(c=>c.name))))],[])
  const filtered=useMemo(()=>products.filter(p=>{const text=p.name.toLowerCase().includes(query.toLowerCase())||p.description.toLowerCase().includes(query.toLowerCase());const size=filterSize==='All'||p.sizes.includes(filterSize);const color=filterColor==='All'||p.colors.some(c=>c.name===filterColor);return(cat==='All'||p.category===cat)&&text&&size&&color&&p.price<=maxPrice}),[cat,query,filterSize,filterColor,maxPrice])
  const total=cart.reduce((s,i)=>s+i.product.price*i.quantity,0),count=cart.reduce((s,i)=>s+i.quantity,0)
- useEffect(()=>{localStorage.setItem('yp-cart-v7',JSON.stringify(cart))},[cart])
+ useEffect(()=>{localStorage.setItem('yp-cart-v8',JSON.stringify(cart))},[cart])
  useEffect(()=>{localStorage.setItem('yp-orders',JSON.stringify(orders))},[orders])
  useEffect(()=>{localStorage.setItem('yp-favorites',JSON.stringify(favorites))},[favorites])
  useEffect(()=>{const tg=(window as any).Telegram?.WebApp;if(tg){tg.ready();tg.expand()}},[])
