@@ -32,3 +32,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.product-media img{transition:none}}
 
 @media (max-width:380px){.site-header{padding:0 16px}.brand-logo{width:126px}.page-pad{padding-left:16px;padding-right:16px}.product-grid{gap:20px 10px}.hero-card{padding:22px}.hero-card h1{font-size:48px}.bottom-nav{width:calc(100% - 20px);padding:7px 8px}.nav-item{font-size:6.5px}}
+
+/* V7 checkout polish */
+.checkout-inner{padding-top:16px;padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+.checkout-header{display:flex;align-items:center;gap:12px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.10)}
+.checkout-header>div:nth-child(2){flex:1}.checkout-header>div:nth-child(2) span{display:block;margin-top:3px;font-size:9px;letter-spacing:.18em;color:#7b7b79}.checkout-step{font-size:9px;letter-spacing:.16em;color:#666}
+.checkout-inner h1{margin:24px 0 8px;font-size:36px;line-height:.95}.checkout-intro{margin:0 0 20px;color:#777;font-size:12px;line-height:1.55;max-width:360px}
+.checkout-card{margin-top:12px;padding:18px;border:1px solid rgba(255,255,255,.09);border-radius:20px;background:#0c0c0c}.form-section-title{font-size:9px;letter-spacing:.22em;color:#f52222;margin-bottom:16px}.form-stack{gap:14px}.form-stack input,.form-stack select,.readonly-field{height:50px;border-radius:13px;background:#111;border-color:rgba(255,255,255,.11)}
+.checkout-summary{margin:18px 0 12px;padding:17px 2px 14px;border-top:1px solid rgba(255,255,255,.12);border-bottom:1px solid rgba(255,255,255,.12)}.checkout-summary>div{display:flex;align-items:center;justify-content:space-between}.checkout-summary span{font-size:10px;letter-spacing:.16em;color:#9a9a98}.checkout-summary b{font-size:19px;font-variant-numeric:tabular-nums}.checkout-summary small{display:block;margin-top:7px;color:#666;font-size:10px}.checkout-submit{margin-top:4px}.disabled-button:disabled{opacity:1;background:#252525;color:#666}
+@media (max-width:380px){.checkout-inner{padding-left:16px;padding-right:16px}.checkout-inner h1{font-size:32px}.checkout-card{padding:16px}}
