@@ -1,7 +1,7 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react'
 import {createRoot} from 'react-dom/client'
 import {createClient, type User} from '@supabase/supabase-js'
-import {Search,House,UserRound,X,SlidersHorizontal,Heart,ChevronDown,ArrowUpRight,ChevronLeft,ChevronRight,ZoomIn,ZoomOut,Plus,Trash2,LogOut,Package,ImagePlus,Pencil,Check,Upload,LoaderCircle} from 'lucide-react'
+import {Search,House,UserRound,X,SlidersHorizontal,Heart,ChevronDown,ArrowUpRight,ChevronLeft,ChevronRight,ZoomIn,ZoomOut,Plus,Minus,Trash2,LogOut,Package,ImagePlus,Pencil,Check,Upload,LoaderCircle} from 'lucide-react'
 import './index.css'
 import {products as demoProducts} from './data'
 import type {Category,Product} from './types'
@@ -55,11 +55,32 @@ function dbProduct(row:any):Product & {lengths:string[]}{
  return {id:row.id,name:row.name,category,price:Number(row.price),description:row.description||'',composition:row.composition||'',sizes:Array.isArray(row.sizes)?row.sizes:[],lengths:Array.isArray(row.lengths)?row.lengths:[],colors,images:images.length?images:(row.image_url?[row.image_url]:[]),featured:Boolean(row.featured)}
 }
 
+const STORE_CACHE_KEY='yp-store-products-v1'
+const STORE_CACHE_TTL=5*60*1000
+
+function readStoreCache():Product[]|null{
+ try{
+  const raw=localStorage.getItem(STORE_CACHE_KEY)
+  if(!raw)return null
+  const parsed=JSON.parse(raw)
+  if(!parsed||!Array.isArray(parsed.items)||Date.now()-Number(parsed.savedAt||0)>STORE_CACHE_TTL)return null
+  return parsed.items as Product[]
+ }catch{return null}
+}
+function writeStoreCache(items:Product[]){try{localStorage.setItem(STORE_CACHE_KEY,JSON.stringify({savedAt:Date.now(),items}))}catch{}}
+
 async function fetchStoreProducts():Promise<Product[]>{
  if(!supabase)return demoProducts
- const {data,error}=await supabase.from('products').select('*, category:categories(name)').eq('is_active',true).order('sort_order',{ascending:true}).order('created_at',{ascending:false})
- if(error||!data)return demoProducts
- return data.length?data.map(dbProduct):demoProducts
+ const {data,error}=await supabase
+  .from('products')
+  .select('id,name,price,description,composition,sizes,lengths,colors,images,image_url,featured,sort_order,created_at,category:categories(name)')
+  .eq('is_active',true)
+  .order('sort_order',{ascending:true})
+  .order('created_at',{ascending:false})
+ if(error||!data)return []
+ const items=data.map(dbProduct)
+ writeStoreCache(items)
+ return items
 }
 
 function App(){
@@ -73,12 +94,14 @@ function App(){
  const [maxPrice,setMaxPrice]=useState(100)
  const [toast,setToast]=useState('')
  const [favorites,setFavorites]=useState<string[]>(()=>readStorage('yp-favorites',[]))
- const [products,setProducts]=useState<Product[]>(demoProducts)
+ const [products,setProducts]=useState<Product[]>(()=>readStoreCache()||demoProducts)
+ const [storeLoading,setStoreLoading]=useState(true)
+ const [storeError,setStoreError]=useState('')
  const colors=useMemo(()=>['All',...Array.from(new Set(products.flatMap(p=>p.colors.map(c=>c.name))))], [products])
  const filtered=useMemo(()=>products.filter(p=>{const text=p.name.toLowerCase().includes(query.toLowerCase())||p.description.toLowerCase().includes(query.toLowerCase());const size=p.category==='Belts'||filterSize==='All'||p.sizes.includes(filterSize);const color=filterColor==='All'||p.colors.some(c=>c.name===filterColor);return(cat==='All'||p.category===cat)&&text&&size&&color&&p.price<=maxPrice}),[products,cat,query,filterSize,filterColor,maxPrice])
  useEffect(()=>{localStorage.setItem('yp-favorites',JSON.stringify(favorites))},[favorites])
  useEffect(()=>{const tg=(window as any).Telegram?.WebApp;if(tg){tg.ready();tg.expand()}},[])
- useEffect(()=>{fetchStoreProducts().then(setProducts)},[])
+ useEffect(()=>{let active=true;(async()=>{setStoreLoading(true);const items=await fetchStoreProducts();if(!active)return;if(items.length){setProducts(items);setStoreError('')}else if(!readStoreCache()){setProducts(demoProducts);setStoreError('Could not refresh the catalog. Showing the local catalog.')}setStoreLoading(false)})().catch(()=>{if(active){setStoreLoading(false);setStoreError('Could not refresh the catalog. Showing the local catalog.')}});return()=>{active=false}},[])
  function notify(v:string){setToast(v);window.setTimeout(()=>setToast(''),1500)}
  function toggleFavorite(id:string){setFavorites(f=>f.includes(id)?f.filter(x=>x!==id):[...f,id])}
  function openCategory(c:Category){setCat(c);setScreen('catalog');window.scrollTo({top:0,behavior:'smooth'})}
@@ -87,7 +110,7 @@ function App(){
   {screen==='home'&&<Home onCatalog={()=>setScreen('catalog')} onCategory={openCategory} onProduct={setSelected} favorites={favorites} onFavorite={toggleFavorite} products={products}/>} 
   {screen==='catalog'&&<Catalog query={query} setQuery={setQuery} cat={cat} setCat={setCat} products={filtered} onProduct={setSelected} onFilters={()=>setShowFilters(true)} favorites={favorites} onFavorite={toggleFavorite}/>} 
   {screen==='favorites'&&<Favorites products={products.filter(p=>favorites.includes(p.id))} onProduct={setSelected} favorites={favorites} onFavorite={toggleFavorite}/>} 
-  {screen==='profile'&&<Profile favorites={favorites}/>} 
+  {screen==='profile'&&<Profile favorites={favorites}/>} {storeLoading&&<div className="store-loading-bar" aria-label="Loading catalog"><span/></div>} {storeError&&<div className="store-refresh-note">{storeError}</div>}
   <nav className="bottom-nav" aria-label="Main navigation"><Nav icon={<House size={17}/>} label="SHOP" active={screen==='home'} onClick={()=>setScreen('home')}/><Nav icon={<Search size={17}/>} label="CATEGORIES" active={screen==='catalog'} onClick={()=>setScreen('catalog')}/><Nav icon={<Heart size={17}/>} label="FAVORITES" active={screen==='favorites'} onClick={()=>setScreen('favorites')}/><Nav icon={<UserRound size={17}/>} label="PROFILE" active={screen==='profile'} onClick={()=>setScreen('profile')}/></nav>
   {selected&&<ProductModal product={selected} onClose={()=>setSelected(null)} onFavorite={()=>{toggleFavorite(selected.id);notify(favorites.includes(selected.id)?'Removed from favorites':'Added to favorites')}} favorite={favorites.includes(selected.id)}/>} {showFilters&&<Filters size={filterSize} color={filterColor} maxPrice={maxPrice} colors={colors} onClose={()=>setShowFilters(false)} onApply={(s,c,p)=>{setFilterSize(s);setFilterColor(c);setMaxPrice(p);setShowFilters(false)}}/>} {toast&&<div className="toast">{toast}</div>}
  </main></div>
@@ -187,6 +210,7 @@ function AdminApp(){
  const [uploading,setUploading]=useState(false)
  const [newUploadedUrls,setNewUploadedUrls]=useState<string[]>([])
  const [removedExistingUrls,setRemovedExistingUrls]=useState<string[]>([])
+ const [stockSavingId,setStockSavingId]=useState<string|null>(null)
 
  useEffect(()=>{
   if(!supabase){setLoading(false);return}
@@ -291,6 +315,17 @@ function AdminApp(){
   setNewUploadedUrls([]);setRemovedExistingUrls([]);setSaving(false);setShowForm(false);setMessage(editing?'Product updated':'Product added');await loadAdminData()
  }
  async function cancelForm(){if(newUploadedUrls.length)await removeStorageUrls(newUploadedUrls);setNewUploadedUrls([]);setRemovedExistingUrls([]);setShowForm(false)}
+ async function updateStock(p:any,next:number){
+  if(!supabase||!user||stockSavingId)return
+  const value=Math.max(0,Math.floor(Number(next)||0))
+  setStockSavingId(p.id);setMessage('')
+  const previous=p.stock??0
+  setAdminProducts(items=>items.map(item=>item.id===p.id?{...item,stock:value}:item))
+  const {error}=await supabase.from('products').update({stock:value,updated_at:new Date().toISOString()}).eq('id',p.id)
+  if(error){setAdminProducts(items=>items.map(item=>item.id===p.id?{...item,stock:previous}:item));setMessage(`Could not update stock: ${error.message}`)}
+  else setMessage(`${p.name} stock updated to ${value}`)
+  setStockSavingId(null)
+ }
  async function deleteProduct(p:any){if(!supabase||!user)return;if(!window.confirm(`Delete ${p.name}?`))return;const urls=Array.isArray(p.images)&&p.images.length?p.images:(p.image_url?[p.image_url]:[]);const {error}=await supabase.from('products').delete().eq('id',p.id);if(error){setMessage(error.message);return}if(urls.length)await removeStorageUrls(urls);setMessage('Product deleted');await loadAdminData()}
  async function importDemo(){
   if(!supabase||!user||adminProducts.length)return
@@ -301,12 +336,17 @@ function AdminApp(){
  }
  if(loading)return <AdminFrame><AdminLoading/></AdminFrame>
  if(!user)return <AdminLogin email={email} password={password} setEmail={setEmail} setPassword={setPassword} error={authError} onSubmit={login}/>
- return <AdminFrame><div className="admin-shell"><header className="admin-header"><div><div className="admin-kicker">YAROPLUGG</div><h1>ADMIN</h1></div><button className="admin-ghost" onClick={logout}><LogOut size={15}/> LOG OUT</button></header><section className="admin-stats"><div><span>PRODUCTS</span><b>{adminProducts.length}</b></div><div><span>ACTIVE</span><b>{adminProducts.filter(p=>p.is_active).length}</b></div><div><span>OUT OF STOCK</span><b>{adminProducts.filter(p=>(p.stock??0)<=0).length}</b></div></section><div className="admin-toolbar"><div><div className="admin-section-label">CATALOG</div><h2>PRODUCTS</h2></div><button className="admin-primary" onClick={startAdd}><Plus size={16}/> ADD PRODUCT</button></div>{message&&<div className="admin-message">{message}</div>}<div className="admin-product-list">{adminProducts.length===0?<div className="admin-empty"><Package size={22}/><b>NO PRODUCTS YET</b><span>Add your first product to the catalog.</span><div className="admin-empty-actions"><button className="admin-primary" onClick={startAdd}><Plus size={15}/> ADD PRODUCT</button><button className="admin-ghost" onClick={importDemo}><Check size={15}/> IMPORT CURRENT CATALOG</button></div></div>:adminProducts.map(p=><AdminProductRow key={p.id} p={p} onEdit={()=>startEdit(p)} onDelete={()=>deleteProduct(p)}/>)}</div>{showForm&&<AdminProductFormView form={form} setForm={setForm} categories={categories} editing={editing} saving={saving} uploading={uploading} onUpload={uploadFiles} onRemoveImage={removeImage} onMoveImage={moveImage} onMakeMain={makeMain} onDrop={handleDrop} onToggleColor={toggleColor} onRemoveColor={removeColor} onAddCustomColor={addCustomColor} onCancel={cancelForm} onClose={cancelForm} onSubmit={saveProduct}/>}</div></AdminFrame>
+ return <AdminFrame><div className="admin-shell"><header className="admin-header"><div><div className="admin-kicker">YAROPLUGG</div><h1>ADMIN</h1></div><button className="admin-ghost" onClick={logout}><LogOut size={15}/> LOG OUT</button></header><section className="admin-stats"><div><span>PRODUCTS</span><b>{adminProducts.length}</b></div><div><span>ACTIVE</span><b>{adminProducts.filter(p=>p.is_active).length}</b></div><div><span>OUT OF STOCK</span><b>{adminProducts.filter(p=>(p.stock??0)<=0).length}</b></div></section><div className="admin-toolbar"><div><div className="admin-section-label">CATALOG</div><h2>PRODUCTS</h2></div><button className="admin-primary" onClick={startAdd}><Plus size={16}/> ADD PRODUCT</button></div>{message&&<div className="admin-message">{message}</div>}<div className="admin-product-list">{adminProducts.length===0?<div className="admin-empty"><Package size={22}/><b>NO PRODUCTS YET</b><span>Add your first product to the catalog.</span><div className="admin-empty-actions"><button className="admin-primary" onClick={startAdd}><Plus size={15}/> ADD PRODUCT</button><button className="admin-ghost" onClick={importDemo}><Check size={15}/> IMPORT CURRENT CATALOG</button></div></div>:adminProducts.map(p=><AdminProductRow key={p.id} p={p} onEdit={()=>startEdit(p)} onDelete={()=>deleteProduct(p)} onStockChange={(next)=>updateStock(p,next)} stockSaving={stockSavingId===p.id}/>)}</div>{showForm&&<AdminProductFormView form={form} setForm={setForm} categories={categories} editing={editing} saving={saving} uploading={uploading} onUpload={uploadFiles} onRemoveImage={removeImage} onMoveImage={moveImage} onMakeMain={makeMain} onDrop={handleDrop} onToggleColor={toggleColor} onRemoveColor={removeColor} onAddCustomColor={addCustomColor} onCancel={cancelForm} onClose={cancelForm} onSubmit={saveProduct}/>}</div></AdminFrame>
 }
 function AdminFrame({children}:{children:React.ReactNode}){return <div className="admin-app">{children}</div>}
 function AdminLoading(){return <div className="admin-loading"><LoaderCircle size={26} className="spin"/><span>LOADING ADMIN</span></div>}
 function AdminLogin({email,password,setEmail,setPassword,error,onSubmit}:{email:string;password:string;setEmail:(v:string)=>void;setPassword:(v:string)=>void;error:string;onSubmit:(e:React.FormEvent)=>void}){return <AdminFrame><div className="admin-login"><div className="admin-login-card"><img src="/logo.png" alt="YAROPLUGG"/><div className="admin-kicker">PRIVATE AREA</div><h1>ADMIN LOGIN</h1><p>Sign in with your YAROPLUGG admin account.</p><form onSubmit={onSubmit}><label>EMAIL<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required autoComplete="email"/></label><label>PASSWORD<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required autoComplete="current-password"/></label>{error&&<div className="admin-error">{error}</div>}<button className="admin-primary" type="submit">SIGN IN</button></form></div></div></AdminFrame>}
-function AdminProductRow({p,onEdit,onDelete}:{p:any;onEdit:()=>void;onDelete:()=>void}){const img=p.image_url||p.images?.[0];const count=Array.isArray(p.images)?p.images.length:(img?1:0);return <div className="admin-product-row">{img?<img src={img} alt=""/>:<div className="admin-image-empty"><ImagePlus size={18}/></div>}<div className="admin-product-main"><b>{p.name}</b><span>{p.category?.name||'Uncategorized'} · €{Number(p.price).toFixed(2)}</span><small>{count} PHOTO{count===1?'':'S'} · {p.stock??0} IN STOCK · {p.is_active?'ACTIVE':'HIDDEN'}</small></div><div className="admin-row-actions"><button type="button" onClick={onEdit} aria-label={`Edit ${p.name}`} title="Edit product"><Pencil size={15}/><span>EDIT</span></button><button type="button" onClick={onDelete} aria-label={`Delete ${p.name}`} title="Delete product"><Trash2 size={15}/><span>DELETE</span></button></div></div>}
+function AdminProductRow({p,onEdit,onDelete,onStockChange,stockSaving}:{p:any;onEdit:()=>void;onDelete:()=>void;onStockChange:(next:number)=>void;stockSaving:boolean}){
+ const img=p.image_url||p.images?.[0];const count=Array.isArray(p.images)?p.images.length:(img?1:0)
+ const [draft,setDraft]=useState(String(p.stock??0))
+ useEffect(()=>setDraft(String(p.stock??0)),[p.stock])
+ function commit(){const value=Math.max(0,Math.floor(Number(draft)||0));setDraft(String(value));if(value!==Number(p.stock??0))onStockChange(value)}
+ return <div className="admin-product-row">{img?<img src={img} alt="" loading="lazy" decoding="async"/>:<div className="admin-image-empty"><ImagePlus size={18}/></div>}<div className="admin-product-main"><b>{p.name}</b><span>{p.category?.name||'Uncategorized'} · €{Number(p.price).toFixed(2)}</span><small>{count} PHOTO{count===1?'':'S'} · {p.is_active?'ACTIVE':'HIDDEN'}</small></div><div className="admin-stock-editor"><span>STOCK</span><div><button type="button" onClick={()=>onStockChange(Math.max(0,Number(p.stock??0)-1))} disabled={stockSaving||Number(p.stock??0)<=0} aria-label={`Decrease stock for ${p.name}`}><Minus size={13}/></button><input value={draft} inputMode="numeric" aria-label={`Stock for ${p.name}`} onChange={e=>setDraft(e.target.value.replace(/[^0-9]/g,''))} onBlur={commit} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();commit()}}} disabled={stockSaving}/><button type="button" onClick={()=>onStockChange(Number(p.stock??0)+1)} disabled={stockSaving} aria-label={`Increase stock for ${p.name}`}><Plus size={13}/></button></div></div><div className="admin-row-actions"><button type="button" onClick={onEdit} aria-label={`Edit ${p.name}`} title="Edit product"><Pencil size={15}/><span>EDIT</span></button><button type="button" onClick={onDelete} aria-label={`Delete ${p.name}`} title="Delete product"><Trash2 size={15}/><span>DELETE</span></button></div></div>}
 function AdminProductFormView({form,setForm,categories,editing,saving,uploading,onUpload,onRemoveImage,onMoveImage,onMakeMain,onDrop,onToggleColor,onRemoveColor,onAddCustomColor,onCancel,onClose,onSubmit}:{form:AdminProductForm;setForm:React.Dispatch<React.SetStateAction<AdminProductForm>>;categories:any[];editing:any;saving:boolean;uploading:boolean;onUpload:(files:File[])=>void;onRemoveImage:(index:number)=>void;onMoveImage:(index:number,direction:-1|1)=>void;onMakeMain:(index:number)=>void;onDrop:(e:React.DragEvent<HTMLDivElement>)=>void;onToggleColor:(color:AdminColor)=>void;onRemoveColor:(name:string)=>void;onAddCustomColor:(name:string,hex:string)=>boolean;onCancel:()=>void;onClose:()=>void;onSubmit:(e:React.FormEvent)=>void}){
  const set=(key:keyof AdminProductForm,val:any)=>setForm(f=>({...f,[key]:val}))
  const [colorSearch,setColorSearch]=useState('')
