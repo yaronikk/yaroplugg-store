@@ -265,12 +265,27 @@ function AdminApp(){
   if(form.images.length>MAX_PRODUCT_IMAGES){setMessage(`Maximum ${MAX_PRODUCT_IMAGES} images per product.`);return}
   setSaving(true);setMessage('')
   const slugBase=form.name.toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||`product-${Date.now()}`
-  let slug=slugBase
-  if(!editing){let n=2;while(adminProducts.some(p=>p.slug===slug)){slug=`${slugBase}-${n++}`}}
+  let slug=editing?.slug||slugBase
+  if(!editing){
+   let n=2;
+   while(adminProducts.some(p=>p.slug===slug)){slug=`${slugBase}-${n++}`}
+  }else if(form.name.trim()!==String(editing.name||'').trim()){
+   slug=slugBase
+   let n=2
+   while(adminProducts.some(p=>p.id!==editing.id&&p.slug===slug)){slug=`${slugBase}-${n++}`}
+  }
   const category=categories.find(c=>c.name===form.category)
   const imageUrls=form.images.map(i=>i.url)
-  const payload={name:form.name.trim(),slug,description:form.description.trim(),composition:form.composition.trim(),price:Number(form.price)||0,category_id:category?.id||null,sizes:isBeltCategory(form.category)?[]:form.sizes,lengths:isBeltCategory(form.category)?form.lengths:[],colors:form.colors,stock:Math.max(0,Number(form.stock)||0),image_url:imageUrls[0]||null,images:imageUrls,is_active:form.isActive,is_new:form.isNew,featured:form.featured,sort_order:Number(form.sortOrder)||0,updated_at:new Date().toISOString()}
-  const result=editing?await supabase.from('products').update(payload).eq('id',editing.id):await supabase.from('products').insert(payload)
+  const stockValue=Number(form.stock)
+  if(!Number.isInteger(stockValue)||stockValue<0){setSaving(false);setMessage('Stock must be a whole number 0 or greater.');return}
+  const payload={name:form.name.trim(),slug,description:form.description.trim(),composition:form.composition.trim(),price:Number(form.price)||0,category_id:category?.id||null,sizes:isBeltCategory(form.category)?[]:form.sizes,lengths:isBeltCategory(form.category)?form.lengths:[],colors:form.colors,stock:stockValue,image_url:imageUrls[0]||null,images:imageUrls,is_active:form.isActive,is_new:form.isNew,featured:form.featured,sort_order:Number(form.sortOrder)||0,updated_at:new Date().toISOString()}
+  let result=editing?await supabase.from('products').update(payload).eq('id',editing.id):await supabase.from('products').insert(payload)
+  if(result.error&&editing){
+   const stockRetry=await supabase.from('products').update({stock:stockValue,updated_at:new Date().toISOString()}).eq('id',editing.id)
+   if(!stockRetry.error){
+    await removeStorageUrls(newUploadedUrls);setNewUploadedUrls([]);setRemovedExistingUrls([]);setSaving(false);setShowForm(false);setMessage('Stock updated. Other changes could not be saved: '+result.error.message);await loadAdminData();return
+   }
+  }
   if(result.error){await removeStorageUrls(newUploadedUrls);setSaving(false);setMessage(result.error.message);return}
   if(removedExistingUrls.length)await removeStorageUrls(removedExistingUrls)
   setNewUploadedUrls([]);setRemovedExistingUrls([]);setSaving(false);setShowForm(false);setMessage(editing?'Product updated':'Product added');await loadAdminData()
