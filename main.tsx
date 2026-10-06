@@ -17,18 +17,37 @@ const supabase=supabaseUrl&&supabaseKey?createClient(supabaseUrl,supabaseKey):nu
 function readStorage<T>(key:string,fallback:T):T{try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):fallback}catch{return fallback}}
 
 const COLOR_HEX:Record<string,string>={black:'#0b0b0b',white:'#f5f5f3',red:'#ef2027',blue:'#2563eb',green:'#16a34a',yellow:'#facc15',orange:'#f97316',purple:'#8b5cf6',pink:'#ec4899',brown:'#8b5e3c',beige:'#d8c3a5',grey:'#808080',gray:'#808080',navy:'#172554',cream:'#f3ead8'}
-function normalizeColors(value:any):AdminColor[]{
- let raw=value
- if(typeof raw==='string'){try{raw=JSON.parse(raw)}catch{raw=raw.split(',').map(x=>x.trim()).filter(Boolean)}}
- if(!Array.isArray(raw))return []
- return raw.map((c:any)=>{
-  if(typeof c==='string'){const name=c.trim();return name?{name,hex:COLOR_HEX[name.toLowerCase()]||'#808080'}:null}
-  const name=String(c?.name??c?.color??'').trim();if(!name)return null
-  const rawHex=String(c?.hex??c?.value??c?.code??'').trim()
-  const hex=/^#[0-9a-fA-F]{6}$/.test(rawHex)?rawHex.toLowerCase():(COLOR_HEX[name.toLowerCase()]||'#808080')
-  return {name,hex}
- }).filter(Boolean) as AdminColor[]
+function parseJsonValue(value:any):any{
+ let current=value
+ for(let i=0;i<4 && typeof current==='string';i++){
+  const text=current.trim()
+  if(!text) return ''
+  try{current=JSON.parse(text)}catch{break}
+ }
+ return current
 }
+function normalizeColors(value:any):AdminColor[]{
+ let raw=parseJsonValue(value)
+ if(raw&&typeof raw==='object'&&!Array.isArray(raw)) raw=[raw]
+ if(typeof raw==='string') raw=raw.split(',').map(x=>x.trim()).filter(Boolean)
+ if(!Array.isArray(raw))return []
+ const get=(obj:any,...keys:string[])=>{for(const key of keys){if(obj?.[key]!==undefined&&obj?.[key]!==null)return obj[key];const found=Object.keys(obj||{}).find(k=>k.toLowerCase()===key.toLowerCase());if(found)return obj[found]}return undefined}
+ return raw.flatMap((item:any)=>{
+  let c=parseJsonValue(item)
+  if(typeof c==='string'){
+   const name=c.trim();return name?[{name,hex:COLOR_HEX[name.toLowerCase()]||'#808080'}]:[]
+  }
+  if(!c||typeof c!=='object')return []
+  let nested=parseJsonValue(get(c,'name','color'))
+  if(nested&&typeof nested==='object'&&!Array.isArray(nested)){c={...nested,...c};if(!get(c,'hex','value','code')&&get(nested,'hex','value','code'))c.hex=get(nested,'hex','value','code')}
+  const name=String(get(c,'name','color')??'').trim()
+  if(!name)return []
+  const rawHex=String(get(c,'hex','value','code')??'').trim()
+  const hex=/^#[0-9a-fA-F]{6}$/.test(rawHex)?rawHex.toLowerCase():(COLOR_HEX[name.toLowerCase()]||'#808080')
+  return [{name,hex}]
+ })
+}
+
 function dbProduct(row:any):Product{
  const category=(row.category?.name||'T-Shirts') as Exclude<Category,'All'>
  const colors=normalizeColors(row.colors)
