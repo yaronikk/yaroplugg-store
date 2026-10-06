@@ -68,8 +68,23 @@ function Filters({size,color,maxPrice,colors,onClose,onApply}:{size:string;color
 function Profile({favorites}:{favorites:string[]}){return <div className="page-pad page-top"><p className="eyebrow red">YAROPLUGG</p><h1 className="page-title">PROFILE</h1><div className="profile-card"><img src="/logo.png" alt="YAROPLUGG"/><div className="field-label">STORE MODE</div><div className="profile-title">Preview only</div><p>Browse the collection, save your favorites and view product details. Online checkout is not available yet.</p></div><div className="support-card">{favorites.length} SAVED FAVORITES</div></div>}
 
 // ---------------- ADMIN ----------------
-type AdminProductForm={name:string;price:string;category:string;description:string;composition:string;sizes:string[];colors:string;stock:string;isActive:boolean;isNew:boolean;featured:boolean;sortOrder:string;imageUrl:string}
-const emptyForm:AdminProductForm={name:'',price:'',category:'T-Shirts',description:'',composition:'',sizes:['S','M','L','XL'],colors:'Black:#0b0b0b',stock:'0',isActive:true,isNew:true,featured:false,sortOrder:'0',imageUrl:''}
+type AdminImage={url:string;existing:boolean}
+type AdminColor={name:string;hex:string}
+type AdminProductForm={name:string;price:string;category:string;description:string;composition:string;sizes:string[];colors:AdminColor[];stock:string;isActive:boolean;isNew:boolean;featured:boolean;sortOrder:string;images:AdminImage[]}
+
+const MAX_PRODUCT_IMAGES=8
+const MAX_IMAGE_SIZE=10*1024*1024
+const ALLOWED_IMAGE_TYPES=['image/jpeg','image/png','image/webp']
+const COLOR_PALETTE:AdminColor[]=[
+ {name:'Black',hex:'#0b0b0b'},{name:'White',hex:'#ffffff'},{name:'Cream',hex:'#e9e2d6'},
+ {name:'Grey',hex:'#8b8b8b'},{name:'Light Grey',hex:'#c8c8c8'},{name:'Red',hex:'#f52222'},
+ {name:'Burgundy',hex:'#6d1020'},{name:'Navy',hex:'#18243a'},{name:'Blue',hex:'#2457a6'},
+ {name:'Green',hex:'#315b3c'},{name:'Olive',hex:'#687044'},{name:'Brown',hex:'#6b4935'},
+ {name:'Beige',hex:'#c9b79c'},{name:'Pink',hex:'#d97893'},{name:'Purple',hex:'#6e4c8f'},
+ {name:'Orange',hex:'#d96b24'},{name:'Yellow',hex:'#d6aa24'}
+]
+
+const emptyForm:AdminProductForm={name:'',price:'',category:'T-Shirts',description:'',composition:'',sizes:['S','M','L','XL'],colors:[{name:'Black',hex:'#0b0b0b'}],stock:'0',isActive:true,isNew:true,featured:false,sortOrder:'0',images:[]}
 
 function AdminApp(){
  const [user,setUser]=useState<User|null>(null)
@@ -85,6 +100,8 @@ function AdminApp(){
  const [saving,setSaving]=useState(false)
  const [message,setMessage]=useState('')
  const [uploading,setUploading]=useState(false)
+ const [newUploadedUrls,setNewUploadedUrls]=useState<string[]>([])
+ const [removedExistingUrls,setRemovedExistingUrls]=useState<string[]>([])
 
  useEffect(()=>{
   if(!supabase){setLoading(false);return}
@@ -93,6 +110,7 @@ function AdminApp(){
   return ()=>listener.subscription.unsubscribe()
  },[])
  useEffect(()=>{if(user)loadAdminData()},[user])
+
  async function loadAdminData(){
   if(!supabase)return
   const [{data:ps,error:pe},{data:cs,error:ce}]=await Promise.all([
@@ -104,17 +122,75 @@ function AdminApp(){
  }
  async function login(e:React.FormEvent){e.preventDefault();setAuthError('');if(!supabase){setAuthError('Supabase is not configured in this deployment.');return}const {error}=await supabase.auth.signInWithPassword({email,password});if(error)setAuthError(error.message)}
  async function logout(){await supabase?.auth.signOut()}
- function startAdd(){setEditing(null);setForm({...emptyForm});setShowForm(true);setMessage('')}
- function startEdit(p:any){setEditing(p);setForm({name:p.name,price:String(p.price),category:p.category?.name||'T-Shirts',description:p.description||'',composition:p.composition||'',sizes:p.sizes||[],colors:(p.colors||[]).map((c:any)=>`${c.name}:${c.hex}`).join(', '),stock:String(p.stock??0),isActive:Boolean(p.is_active),isNew:Boolean(p.is_new),featured:Boolean(p.featured),sortOrder:String(p.sort_order??0),imageUrl:p.image_url||p.images?.[0]||''});setShowForm(true);setMessage('')}
- function parseColors(v:string){return v.split(',').map(x=>x.trim()).filter(Boolean).map(x=>{const [name,...hexParts]=x.split(':');return {name:name.trim(),hex:(hexParts.join(':').trim()||'#0b0b0b')}})}
- async function uploadImage(file:File){if(!supabase||!user)return;setUploading(true);setMessage('');const ext=file.name.split('.').pop()?.toLowerCase()||'jpg';const path=`${crypto.randomUUID()}.${ext}`;const {error}=await supabase.storage.from('product-images').upload(path,file,{contentType:file.type,upsert:false});if(error){setMessage(error.message);setUploading(false);return}const {data}=supabase.storage.from('product-images').getPublicUrl(path);setForm(f=>({...f,imageUrl:data.publicUrl}));setUploading(false)}
- async function saveProduct(e:React.FormEvent){e.preventDefault();if(!supabase||!user)return;setSaving(true);setMessage('');const colors=parseColors(form.colors);const slugBase=form.name.toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||`product-${Date.now()}`;let slug=slugBase;if(!editing){let n=2;while(adminProducts.some(p=>p.slug===slug)){slug=`${slugBase}-${n++}`}}
-  const category=categories.find(c=>c.name===form.category);const payload={name:form.name.trim(),slug,description:form.description.trim(),price:Number(form.price)||0,category_id:category?.id||null,sizes:form.sizes,colors,stock:Math.max(0,Number(form.stock)||0),image_url:form.imageUrl||null,images:form.imageUrl?[form.imageUrl]:[],is_active:form.isActive,is_new:form.isNew,featured:form.featured,sort_order:Number(form.sortOrder)||0,updated_at:new Date().toISOString()}
-  const result=editing?await supabase.from('products').update(payload).eq('id',editing.id):await supabase.from('products').insert(payload)
-  if(result.error){setMessage(result.error.message);setSaving(false);return}
-  setSaving(false);setShowForm(false);setMessage(editing?'Product updated':'Product added');await loadAdminData()
+ function startAdd(){setEditing(null);setForm({...emptyForm,colors:emptyForm.colors.map(c=>({...c})),sizes:[...emptyForm.sizes],images:[]});setNewUploadedUrls([]);setRemovedExistingUrls([]);setShowForm(true);setMessage('')}
+ function startEdit(p:any){
+  const colors=Array.isArray(p.colors)?p.colors.map((c:any)=>({name:String(c.name||'').trim(),hex:String(c.hex||'#0b0b0b').trim()})).filter((c:any)=>c.name):[]
+  const urls=Array.isArray(p.images)&&p.images.length?p.images:(p.image_url?[p.image_url]:[])
+  setEditing(p)
+  setForm({name:p.name,price:String(p.price),category:p.category?.name||'T-Shirts',description:p.description||'',composition:p.composition||'',sizes:p.sizes||[],colors,stock:String(p.stock??0),isActive:Boolean(p.is_active),isNew:Boolean(p.is_new),featured:Boolean(p.featured),sortOrder:String(p.sort_order??0),images:urls.map((url:string)=>({url,existing:true}))})
+  setNewUploadedUrls([]);setRemovedExistingUrls([]);setShowForm(true);setMessage('')
  }
- async function deleteProduct(p:any){if(!supabase||!user)return;if(!window.confirm(`Delete ${p.name}?`))return;const {error}=await supabase.from('products').delete().eq('id',p.id);if(error){setMessage(error.message);return}setMessage('Product deleted');await loadAdminData()}
+ function colorIsSelected(color:AdminColor){return form.colors.some(c=>c.name.toLowerCase()===color.name.toLowerCase())}
+ function toggleColor(color:AdminColor){setForm(f=>({...f,colors:colorIsSelected(color)?f.colors.filter(c=>c.name.toLowerCase()!==color.name.toLowerCase()):[...f.colors,{...color}]}))}
+ function addCustomColor(name:string,hex:string){const clean=name.trim();if(!clean)return false;if(!/^#[0-9a-fA-F]{6}$/.test(hex))return false;if(form.colors.some(c=>c.name.toLowerCase()===clean.toLowerCase()))return false;setForm(f=>({...f,colors:[...f.colors,{name:clean,hex:hex.toLowerCase()}]}));return true}
+ function removeColor(name:string){setForm(f=>({...f,colors:f.colors.filter(c=>c.name!==name)}))}
+ function storagePathFromUrl(url:string){const marker='/storage/v1/object/public/product-images/';const i=url.indexOf(marker);return i>=0?decodeURIComponent(url.slice(i+marker.length)):''}
+ async function removeStorageUrls(urls:string[]){if(!supabase||!urls.length)return;const paths=urls.map(storagePathFromUrl).filter(Boolean);if(paths.length)await supabase.storage.from('product-images').remove(paths)}
+ async function uploadFiles(files:File[]){
+  if(!supabase||!user||!files.length)return
+  const current=form.images.length
+  const available=MAX_PRODUCT_IMAGES-current
+  if(available<=0){setMessage(`Maximum ${MAX_PRODUCT_IMAGES} images per product.`);return}
+  const selected=files.slice(0,available)
+  if(files.length>available)setMessage(`Only ${available} more image${available===1?'':'s'} can be added.`);else setMessage('')
+  const valid=selected.filter(file=>ALLOWED_IMAGE_TYPES.includes(file.type)&&file.size<=MAX_IMAGE_SIZE)
+  if(valid.length!==selected.length){setMessage(`Use JPG, JPEG, PNG or WEBP files up to 10 MB each.`)}
+  if(!valid.length)return
+  setUploading(true)
+  const added:AdminImage[]=[]
+  const addedUrls:string[]=[]
+  for(const file of valid){
+   const ext=file.name.split('.').pop()?.toLowerCase()||'jpg'
+   const path=`${crypto.randomUUID()}.${ext}`
+   const {error}=await supabase.storage.from('product-images').upload(path,file,{contentType:file.type,upsert:false})
+   if(error){setMessage(error.message);continue}
+   const {data}=supabase.storage.from('product-images').getPublicUrl(path)
+   added.push({url:data.publicUrl,existing:false});addedUrls.push(data.publicUrl)
+  }
+  if(added.length){setForm(f=>({...f,images:[...f.images,...added]}));setNewUploadedUrls(v=>[...v,...addedUrls])}
+  setUploading(false)
+ }
+ function removeImage(index:number){
+  const image=form.images[index]
+  if(!image)return
+  setForm(f=>({...f,images:f.images.filter((_,i)=>i!==index)}))
+  if(image.existing)setRemovedExistingUrls(v=>v.includes(image.url)?v:[...v,image.url])
+  else{setNewUploadedUrls(v=>v.filter(url=>url!==image.url));void removeStorageUrls([image.url])}
+ }
+ function moveImage(index:number,direction:-1|1){
+  setForm(f=>{const next=[...f.images];const target=index+direction;if(target<0||target>=next.length)return f;[next[index],next[target]]=[next[target],next[index]];return {...f,images:next}})
+ }
+ function makeMain(index:number){setForm(f=>{if(index===0)return f;const next=[...f.images];const [item]=next.splice(index,1);next.unshift(item);return {...f,images:next}})}
+ function handleDrop(e:React.DragEvent<HTMLDivElement>){e.preventDefault();void uploadFiles(Array.from(e.dataTransfer.files))}
+ async function saveProduct(e:React.FormEvent){
+  e.preventDefault();if(!supabase||!user)return
+  if(!form.name.trim()){setMessage('Product name is required.');return}
+  if(!form.colors.length){setMessage('Select at least one color.');return}
+  if(form.images.length>MAX_PRODUCT_IMAGES){setMessage(`Maximum ${MAX_PRODUCT_IMAGES} images per product.`);return}
+  setSaving(true);setMessage('')
+  const slugBase=form.name.toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||`product-${Date.now()}`
+  let slug=slugBase
+  if(!editing){let n=2;while(adminProducts.some(p=>p.slug===slug)){slug=`${slugBase}-${n++}`}}
+  const category=categories.find(c=>c.name===form.category)
+  const imageUrls=form.images.map(i=>i.url)
+  const payload={name:form.name.trim(),slug,description:form.description.trim(),composition:form.composition.trim(),price:Number(form.price)||0,category_id:category?.id||null,sizes:form.sizes,colors:form.colors,stock:Math.max(0,Number(form.stock)||0),image_url:imageUrls[0]||null,images:imageUrls,is_active:form.isActive,is_new:form.isNew,featured:form.featured,sort_order:Number(form.sortOrder)||0,updated_at:new Date().toISOString()}
+  const result=editing?await supabase.from('products').update(payload).eq('id',editing.id):await supabase.from('products').insert(payload)
+  if(result.error){await removeStorageUrls(newUploadedUrls);setSaving(false);setMessage(result.error.message);return}
+  if(removedExistingUrls.length)await removeStorageUrls(removedExistingUrls)
+  setNewUploadedUrls([]);setRemovedExistingUrls([]);setSaving(false);setShowForm(false);setMessage(editing?'Product updated':'Product added');await loadAdminData()
+ }
+ async function cancelForm(){if(newUploadedUrls.length)await removeStorageUrls(newUploadedUrls);setNewUploadedUrls([]);setRemovedExistingUrls([]);setShowForm(false)}
+ async function deleteProduct(p:any){if(!supabase||!user)return;if(!window.confirm(`Delete ${p.name}?`))return;const urls=Array.isArray(p.images)&&p.images.length?p.images:(p.image_url?[p.image_url]:[]);const {error}=await supabase.from('products').delete().eq('id',p.id);if(error){setMessage(error.message);return}if(urls.length)await removeStorageUrls(urls);setMessage('Product deleted');await loadAdminData()}
  async function importDemo(){
   if(!supabase||!user||adminProducts.length)return
   const rows=demoProducts.map((p,i)=>{const category=categories.find(c=>c.name===p.category);return {name:p.name,slug:`${p.id}-${p.name.toLowerCase().replace(/[^a-z0-9]+/g,'-')}`,description:p.description,composition:p.composition,price:p.price,category_id:category?.id||null,sizes:p.sizes,colors:p.colors,stock:10,image_url:p.images[0]||null,images:p.images,is_active:true,is_new:true,featured:Boolean(p.featured),sort_order:i}})
@@ -124,13 +200,33 @@ function AdminApp(){
  }
  if(loading)return <AdminFrame><AdminLoading/></AdminFrame>
  if(!user)return <AdminLogin email={email} password={password} setEmail={setEmail} setPassword={setPassword} error={authError} onSubmit={login}/>
- return <AdminFrame><div className="admin-shell"><header className="admin-header"><div><div className="admin-kicker">YAROPLUGG</div><h1>ADMIN</h1></div><button className="admin-ghost" onClick={logout}><LogOut size={15}/> LOG OUT</button></header><section className="admin-stats"><div><span>PRODUCTS</span><b>{adminProducts.length}</b></div><div><span>ACTIVE</span><b>{adminProducts.filter(p=>p.is_active).length}</b></div><div><span>OUT OF STOCK</span><b>{adminProducts.filter(p=>(p.stock??0)<=0).length}</b></div></section><div className="admin-toolbar"><div><div className="admin-section-label">CATALOG</div><h2>PRODUCTS</h2></div><button className="admin-primary" onClick={startAdd}><Plus size={16}/> ADD PRODUCT</button></div>{message&&<div className="admin-message">{message}</div>}<div className="admin-product-list">{adminProducts.length===0?<div className="admin-empty"><Package size={22}/><b>NO PRODUCTS YET</b><span>Add your first product to the catalog.</span><div className="admin-empty-actions"><button className="admin-primary" onClick={startAdd}><Plus size={15}/> ADD PRODUCT</button><button className="admin-ghost" onClick={importDemo}><Check size={15}/> IMPORT CURRENT CATALOG</button></div></div>:adminProducts.map(p=><AdminProductRow key={p.id} p={p} onEdit={()=>startEdit(p)} onDelete={()=>deleteProduct(p)}/>)}</div>{showForm&&<AdminProductFormView form={form} setForm={setForm} categories={categories} editing={editing} saving={saving} uploading={uploading} onUpload={uploadImage} onClose={()=>setShowForm(false)} onSubmit={saveProduct}/>}</div></AdminFrame>
+ return <AdminFrame><div className="admin-shell"><header className="admin-header"><div><div className="admin-kicker">YAROPLUGG</div><h1>ADMIN</h1></div><button className="admin-ghost" onClick={logout}><LogOut size={15}/> LOG OUT</button></header><section className="admin-stats"><div><span>PRODUCTS</span><b>{adminProducts.length}</b></div><div><span>ACTIVE</span><b>{adminProducts.filter(p=>p.is_active).length}</b></div><div><span>OUT OF STOCK</span><b>{adminProducts.filter(p=>(p.stock??0)<=0).length}</b></div></section><div className="admin-toolbar"><div><div className="admin-section-label">CATALOG</div><h2>PRODUCTS</h2></div><button className="admin-primary" onClick={startAdd}><Plus size={16}/> ADD PRODUCT</button></div>{message&&<div className="admin-message">{message}</div>}<div className="admin-product-list">{adminProducts.length===0?<div className="admin-empty"><Package size={22}/><b>NO PRODUCTS YET</b><span>Add your first product to the catalog.</span><div className="admin-empty-actions"><button className="admin-primary" onClick={startAdd}><Plus size={15}/> ADD PRODUCT</button><button className="admin-ghost" onClick={importDemo}><Check size={15}/> IMPORT CURRENT CATALOG</button></div></div>:adminProducts.map(p=><AdminProductRow key={p.id} p={p} onEdit={()=>startEdit(p)} onDelete={()=>deleteProduct(p)}/>)}</div>{showForm&&<AdminProductFormView form={form} setForm={setForm} categories={categories} editing={editing} saving={saving} uploading={uploading} onUpload={uploadFiles} onRemoveImage={removeImage} onMoveImage={moveImage} onMakeMain={makeMain} onDrop={handleDrop} onToggleColor={toggleColor} onRemoveColor={removeColor} onAddCustomColor={addCustomColor} onCancel={cancelForm} onClose={cancelForm} onSubmit={saveProduct}/>}</div></AdminFrame>
 }
 function AdminFrame({children}:{children:React.ReactNode}){return <div className="admin-app">{children}</div>}
 function AdminLoading(){return <div className="admin-loading"><LoaderCircle size={26} className="spin"/><span>LOADING ADMIN</span></div>}
 function AdminLogin({email,password,setEmail,setPassword,error,onSubmit}:{email:string;password:string;setEmail:(v:string)=>void;setPassword:(v:string)=>void;error:string;onSubmit:(e:React.FormEvent)=>void}){return <AdminFrame><div className="admin-login"><div className="admin-login-card"><img src="/logo.png" alt="YAROPLUGG"/><div className="admin-kicker">PRIVATE AREA</div><h1>ADMIN LOGIN</h1><p>Sign in with your YAROPLUGG admin account.</p><form onSubmit={onSubmit}><label>EMAIL<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required autoComplete="email"/></label><label>PASSWORD<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required autoComplete="current-password"/></label>{error&&<div className="admin-error">{error}</div>}<button className="admin-primary" type="submit">SIGN IN</button></form></div></div></AdminFrame>}
-function AdminProductRow({p,onEdit,onDelete}:{p:any;onEdit:()=>void;onDelete:()=>void}){const img=p.image_url||p.images?.[0];return <div className="admin-product-row">{img?<img src={img} alt=""/>:<div className="admin-image-empty"><ImagePlus size={18}/></div>}<div className="admin-product-main"><b>{p.name}</b><span>{p.category?.name||'Uncategorized'} · €{Number(p.price).toFixed(2)}</span><small>{p.stock??0} IN STOCK · {p.is_active?'ACTIVE':'HIDDEN'}</small></div><div className="admin-row-actions"><button onClick={onEdit} aria-label="Edit"><Pencil size={15}/></button><button onClick={onDelete} aria-label="Delete"><Trash2 size={15}/></button></div></div>}
-function AdminProductFormView({form,setForm,categories,editing,saving,uploading,onUpload,onClose,onSubmit}:{form:AdminProductForm;setForm:React.Dispatch<React.SetStateAction<AdminProductForm>>;categories:any[];editing:any;saving:boolean;uploading:boolean;onUpload:(file:File)=>void;onClose:()=>void;onSubmit:(e:React.FormEvent)=>void}){const set=(key:keyof AdminProductForm,val:any)=>setForm(f=>({...f,[key]:val}));return <div className="admin-modal"><div className="admin-form-card"><div className="admin-form-head"><div><div className="admin-kicker">{editing?'EDIT PRODUCT':'NEW PRODUCT'}</div><h2>{editing?'EDIT PRODUCT':'ADD PRODUCT'}</h2></div><button onClick={onClose} className="admin-close"><X size={18}/></button></div><form onSubmit={onSubmit} className="admin-form"><label>PRODUCT NAME<input value={form.name} onChange={e=>set('name',e.target.value)} required placeholder="Heavy Basic Tee"/></label><div className="admin-form-grid"><label>PRICE (€)<input type="number" min="0" step="0.01" value={form.price} onChange={e=>set('price',e.target.value)} required/></label><label>CATEGORY<select value={form.category} onChange={e=>set('category',e.target.value)}>{categories.map(c=><option key={c.id}>{c.name}</option>)}</select></label></div><label>DESCRIPTION<textarea value={form.description} onChange={e=>set('description',e.target.value)} rows={3}/></label><label>COMPOSITION<input value={form.composition} onChange={e=>set('composition',e.target.value)} placeholder="100% cotton"/></label><div><div className="admin-field-title">SIZES</div><div className="admin-size-grid">{sizes.map(s=><button type="button" key={s} onClick={()=>set('sizes',form.sizes.includes(s)?form.sizes.filter(x=>x!==s):[...form.sizes,s])} className={form.sizes.includes(s)?'selected':''}>{s}</button>)}</div></div><label>COLORS <span className="admin-help">Name:Hex, separated by commas</span><input value={form.colors} onChange={e=>set('colors',e.target.value)} placeholder="Black:#0b0b0b, Cream:#e9e2d6"/></label><label>STOCK<input type="number" min="0" value={form.stock} onChange={e=>set('stock',e.target.value)} required/></label><div><div className="admin-field-title">PRODUCT PHOTO</div><div className="admin-upload"><div className="admin-upload-preview">{form.imageUrl?<img src={form.imageUrl} alt="Preview"/>:<ImagePlus size={24}/>}</div><div><input id="admin-photo" type="file" accept="image/*" onChange={e=>e.target.files?.[0]&&onUpload(e.target.files[0])} hidden/><label htmlFor="admin-photo" className="admin-upload-button"><Upload size={15}/>{uploading?'UPLOADING…':'UPLOAD PHOTO'}</label><p>JPG, PNG or WEBP. The image is stored in Supabase Storage.</p></div></div></div><div className="admin-toggles"><label><input type="checkbox" checked={form.isActive} onChange={e=>set('isActive',e.target.checked)}/><span>ACTIVE</span></label><label><input type="checkbox" checked={form.isNew} onChange={e=>set('isNew',e.target.checked)}/><span>NEW IN</span></label><label><input type="checkbox" checked={form.featured} onChange={e=>set('featured',e.target.checked)}/><span>FEATURED</span></label></div><div className="admin-form-actions"><button type="button" className="admin-ghost" onClick={onClose}>CANCEL</button><button type="submit" className="admin-primary" disabled={saving||uploading}>{saving?<><LoaderCircle size={15} className="spin"/> SAVING…</>:<><Check size={15}/> SAVE PRODUCT</>}</button></div></form></div></div>}
+function AdminProductRow({p,onEdit,onDelete}:{p:any;onEdit:()=>void;onDelete:()=>void}){const img=p.image_url||p.images?.[0];const count=Array.isArray(p.images)?p.images.length:(img?1:0);return <div className="admin-product-row">{img?<img src={img} alt=""/>:<div className="admin-image-empty"><ImagePlus size={18}/></div>}<div className="admin-product-main"><b>{p.name}</b><span>{p.category?.name||'Uncategorized'} · €{Number(p.price).toFixed(2)}</span><small>{count} PHOTO{count===1?'':'S'} · {p.stock??0} IN STOCK · {p.is_active?'ACTIVE':'HIDDEN'}</small></div><div className="admin-row-actions"><button onClick={onEdit} aria-label={`Edit ${p.name}`}><Pencil size={15}/></button><button onClick={onDelete} aria-label={`Delete ${p.name}`}><Trash2 size={15}/></button></div></div>}
+function AdminProductFormView({form,setForm,categories,editing,saving,uploading,onUpload,onRemoveImage,onMoveImage,onMakeMain,onDrop,onToggleColor,onRemoveColor,onAddCustomColor,onCancel,onClose,onSubmit}:{form:AdminProductForm;setForm:React.Dispatch<React.SetStateAction<AdminProductForm>>;categories:any[];editing:any;saving:boolean;uploading:boolean;onUpload:(files:File[])=>void;onRemoveImage:(index:number)=>void;onMoveImage:(index:number,direction:-1|1)=>void;onMakeMain:(index:number)=>void;onDrop:(e:React.DragEvent<HTMLDivElement>)=>void;onToggleColor:(color:AdminColor)=>void;onRemoveColor:(name:string)=>void;onAddCustomColor:(name:string,hex:string)=>boolean;onCancel:()=>void;onClose:()=>void;onSubmit:(e:React.FormEvent)=>void}){
+ const set=(key:keyof AdminProductForm,val:any)=>setForm(f=>({...f,[key]:val}))
+ const [colorSearch,setColorSearch]=useState('')
+ const [customName,setCustomName]=useState('')
+ const [customHex,setCustomHex]=useState('#888888')
+ const [colorError,setColorError]=useState('')
+ const filteredColors=COLOR_PALETTE.filter(c=>c.name.toLowerCase().includes(colorSearch.toLowerCase()))
+ function addColor(){const ok=onAddCustomColor(customName,customHex);if(!ok){setColorError('Enter a unique color name and a valid HEX value.');return}setCustomName('');setCustomHex('#888888');setColorError('')}
+ return <div className="admin-modal"><div className="admin-form-card"><div className="admin-form-head"><div><div className="admin-kicker">{editing?'EDIT PRODUCT':'NEW PRODUCT'}</div><h2>{editing?'EDIT PRODUCT':'ADD PRODUCT'}</h2></div><button onClick={onClose} className="admin-close" aria-label="Close"><X size={18}/></button></div><form onSubmit={onSubmit} className="admin-form">
+  <label>PRODUCT NAME<input value={form.name} onChange={e=>set('name',e.target.value)} required placeholder="Heavy Basic Tee"/></label>
+  <div className="admin-form-grid"><label>PRICE (€)<input type="number" min="0" step="0.01" value={form.price} onChange={e=>set('price',e.target.value)} required/></label><label>CATEGORY<select value={form.category} onChange={e=>set('category',e.target.value)}>{categories.map(c=><option key={c.id}>{c.name}</option>)}</select></label></div>
+  <label>DESCRIPTION<textarea value={form.description} onChange={e=>set('description',e.target.value)} rows={3}/></label>
+  <label>COMPOSITION<input value={form.composition} onChange={e=>set('composition',e.target.value)} placeholder="100% cotton"/></label>
+  <div><div className="admin-field-title">SIZES</div><div className="admin-size-grid">{sizes.map(s=><button type="button" key={s} onClick={()=>set('sizes',form.sizes.includes(s)?form.sizes.filter(x=>x!==s):[...form.sizes,s])} className={form.sizes.includes(s)?'selected':''}>{s}</button>)}</div></div>
+  <div className="admin-color-section"><div className="admin-field-title">COLORS <span className="admin-help">Choose one or more</span></div><div className="admin-color-selected">{form.colors.length?form.colors.map(c=><span key={c.name} className="admin-color-chip"><i style={{background:c.hex}}/>{c.name}<button type="button" onClick={()=>onRemoveColor(c.name)} aria-label={`Remove ${c.name}`}><X size={12}/></button></span>):<span className="admin-color-empty">No colors selected</span>}</div><div className="admin-color-search"><input value={colorSearch} onChange={e=>setColorSearch(e.target.value)} placeholder="Search colors…" aria-label="Search colors"/></div><div className="admin-color-palette" aria-label="Available colors">{filteredColors.map(c=><button type="button" key={c.name} onClick={()=>onToggleColor(c)} className={form.colors.some(x=>x.name.toLowerCase()===c.name.toLowerCase())?'selected':''}><i style={{background:c.hex}}/><span>{c.name}</span></button>)}</div><div className="admin-custom-color"><input value={customName} onChange={e=>setCustomName(e.target.value)} placeholder="Custom color name" aria-label="Custom color name"/><label className="admin-color-picker"><input type="color" value={customHex} onChange={e=>setCustomHex(e.target.value)} aria-label="Custom color swatch"/><span style={{background:customHex}}/></label><input value={customHex} onChange={e=>setCustomHex(e.target.value)} placeholder="#888888" aria-label="Custom HEX color"/><button type="button" className="admin-ghost" onClick={addColor}><Plus size={14}/> ADD</button></div>{colorError&&<div className="admin-inline-error">{colorError}</div>}</div>
+  <label>STOCK<input type="number" min="0" value={form.stock} onChange={e=>set('stock',e.target.value)} required/></label>
+  <div><div className="admin-field-title">PRODUCT PHOTOS <span className="admin-help">Up to {MAX_PRODUCT_IMAGES} · 10 MB each</span></div><div className="admin-dropzone" onDragOver={e=>e.preventDefault()} onDrop={onDrop}><input id="admin-photos" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple onChange={e=>{if(e.target.files?.length){void onUpload(Array.from(e.target.files));e.currentTarget.value=''}}} hidden/><label htmlFor="admin-photos" className="admin-dropzone-button"><Upload size={15}/> {uploading?'UPLOADING…':'CHOOSE PHOTOS'}</label><span>or drag and drop JPG, PNG or WEBP files here</span><small>First photo is the main product photo. Click MAIN or drag images to reorder.</small></div>{form.images.length>0&&<div className="admin-image-grid">{form.images.map((img,i)=><div key={img.url} className={`admin-image-card ${i===0?'is-main':''}`} draggable onDragStart={e=>e.dataTransfer.setData('text/plain',String(i))} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();const from=Number(e.dataTransfer.getData('text/plain'));if(Number.isInteger(from)&&from!==i){setForm(f=>{const next=[...f.images];const [item]=next.splice(from,1);next.splice(i,0,item);return {...f,images:next}})}}}><img src={img.url} alt={`${form.name||'Product'} photo ${i+1}`}/><div className="admin-image-overlay"><span>{i===0?'MAIN':`PHOTO ${i+1}`}</span><button type="button" onClick={()=>onMakeMain(i)} disabled={i===0}>MAIN</button><button type="button" onClick={()=>onMoveImage(i,-1)} disabled={i===0} aria-label="Move photo left">←</button><button type="button" onClick={()=>onMoveImage(i,1)} disabled={i===form.images.length-1} aria-label="Move photo right">→</button><button type="button" onClick={()=>onRemoveImage(i)} className="remove" aria-label={`Remove photo ${i+1}`}><Trash2 size={13}/></button></div></div>)}</div>}</div>
+  <div className="admin-toggles"><label><input type="checkbox" checked={form.isActive} onChange={e=>set('isActive',e.target.checked)}/><span>ACTIVE</span></label><label><input type="checkbox" checked={form.isNew} onChange={e=>set('isNew',e.target.checked)}/><span>NEW IN</span></label><label><input type="checkbox" checked={form.featured} onChange={e=>set('featured',e.target.checked)}/><span>FEATURED</span></label></div>
+  <div className="admin-form-actions"><button type="button" className="admin-ghost" onClick={onCancel}>CANCEL</button><button type="submit" className="admin-primary" disabled={saving||uploading}>{saving?<><LoaderCircle size={15} className="spin"/> SAVING…</>:<><Check size={15}/> SAVE PRODUCT</>}</button></div>
+ </form></div></div>
+}
 
 const root=document.getElementById('root')!
 createRoot(root).render(window.location.pathname.startsWith('/admin')?<AdminApp/>:<App/>)
