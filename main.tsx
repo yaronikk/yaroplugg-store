@@ -16,9 +16,24 @@ const supabase=supabaseUrl&&supabaseKey?createClient(supabaseUrl,supabaseKey):nu
 
 function readStorage<T>(key:string,fallback:T):T{try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):fallback}catch{return fallback}}
 
+const COLOR_HEX:Record<string,string>={black:'#0b0b0b',white:'#f5f5f3',red:'#ef2027',blue:'#2563eb',green:'#16a34a',yellow:'#facc15',orange:'#f97316',purple:'#8b5cf6',pink:'#ec4899',brown:'#8b5e3c',beige:'#d8c3a5',grey:'#808080',gray:'#808080',navy:'#172554',cream:'#f3ead8'}
+function normalizeColors(value:any):AdminColor[]{
+ let raw=value
+ if(typeof raw==='string'){try{raw=JSON.parse(raw)}catch{raw=raw.split(',').map(x=>x.trim()).filter(Boolean)}}
+ if(!Array.isArray(raw))return []
+ return raw.map((c:any)=>{
+  if(typeof c==='string'){const name=c.trim();return name?{name,hex:COLOR_HEX[name.toLowerCase()]||'#808080'}:null}
+  const name=String(c?.name??c?.color??'').trim();if(!name)return null
+  const rawHex=String(c?.hex??c?.value??c?.code??'').trim()
+  const hex=/^#[0-9a-fA-F]{6}$/.test(rawHex)?rawHex.toLowerCase():(COLOR_HEX[name.toLowerCase()]||'#808080')
+  return {name,hex}
+ }).filter(Boolean) as AdminColor[]
+}
 function dbProduct(row:any):Product{
  const category=(row.category?.name||'T-Shirts') as Exclude<Category,'All'>
- return {id:row.id,name:row.name,category,price:Number(row.price),description:row.description||'',composition:row.composition||'',sizes:row.sizes||[],colors:row.colors||[],images:row.images?.length?row.images:(row.image_url?[row.image_url]:[]),featured:Boolean(row.featured)}
+ const colors=normalizeColors(row.colors)
+ const images=Array.isArray(row.images)?row.images.filter(Boolean):(typeof row.images==='string'?[row.images].filter(Boolean):[])
+ return {id:row.id,name:row.name,category,price:Number(row.price),description:row.description||'',composition:row.composition||'',sizes:Array.isArray(row.sizes)?row.sizes:[],colors,images:images.length?images:(row.image_url?[row.image_url]:[]),featured:Boolean(row.featured)}
 }
 
 async function fetchStoreProducts():Promise<Product[]>{
@@ -124,7 +139,7 @@ function AdminApp(){
  async function logout(){await supabase?.auth.signOut()}
  function startAdd(){setEditing(null);setForm({...emptyForm,colors:emptyForm.colors.map(c=>({...c})),sizes:[...emptyForm.sizes],images:[]});setNewUploadedUrls([]);setRemovedExistingUrls([]);setShowForm(true);setMessage('')}
  function startEdit(p:any){
-  const colors=Array.isArray(p.colors)?p.colors.map((c:any)=>({name:String(c.name||'').trim(),hex:String(c.hex||'#0b0b0b').trim()})).filter((c:any)=>c.name):[]
+  const colors=normalizeColors(p.colors)
   const urls=Array.isArray(p.images)&&p.images.length?p.images:(p.image_url?[p.image_url]:[])
   setEditing(p)
   setForm({name:p.name,price:String(p.price),category:p.category?.name||'T-Shirts',description:p.description||'',composition:p.composition||'',sizes:p.sizes||[],colors,stock:String(p.stock??0),isActive:Boolean(p.is_active),isNew:Boolean(p.is_new),featured:Boolean(p.featured),sortOrder:String(p.sort_order??0),images:urls.map((url:string)=>({url,existing:true}))})
@@ -205,7 +220,7 @@ function AdminApp(){
 function AdminFrame({children}:{children:React.ReactNode}){return <div className="admin-app">{children}</div>}
 function AdminLoading(){return <div className="admin-loading"><LoaderCircle size={26} className="spin"/><span>LOADING ADMIN</span></div>}
 function AdminLogin({email,password,setEmail,setPassword,error,onSubmit}:{email:string;password:string;setEmail:(v:string)=>void;setPassword:(v:string)=>void;error:string;onSubmit:(e:React.FormEvent)=>void}){return <AdminFrame><div className="admin-login"><div className="admin-login-card"><img src="/logo.png" alt="YAROPLUGG"/><div className="admin-kicker">PRIVATE AREA</div><h1>ADMIN LOGIN</h1><p>Sign in with your YAROPLUGG admin account.</p><form onSubmit={onSubmit}><label>EMAIL<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required autoComplete="email"/></label><label>PASSWORD<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required autoComplete="current-password"/></label>{error&&<div className="admin-error">{error}</div>}<button className="admin-primary" type="submit">SIGN IN</button></form></div></div></AdminFrame>}
-function AdminProductRow({p,onEdit,onDelete}:{p:any;onEdit:()=>void;onDelete:()=>void}){const img=p.image_url||p.images?.[0];const count=Array.isArray(p.images)?p.images.length:(img?1:0);return <div className="admin-product-row">{img?<img src={img} alt=""/>:<div className="admin-image-empty"><ImagePlus size={18}/></div>}<div className="admin-product-main"><b>{p.name}</b><span>{p.category?.name||'Uncategorized'} · €{Number(p.price).toFixed(2)}</span><small>{count} PHOTO{count===1?'':'S'} · {p.stock??0} IN STOCK · {p.is_active?'ACTIVE':'HIDDEN'}</small></div><div className="admin-row-actions"><button onClick={onEdit} aria-label={`Edit ${p.name}`}><Pencil size={15}/></button><button onClick={onDelete} aria-label={`Delete ${p.name}`}><Trash2 size={15}/></button></div></div>}
+function AdminProductRow({p,onEdit,onDelete}:{p:any;onEdit:()=>void;onDelete:()=>void}){const img=p.image_url||p.images?.[0];const count=Array.isArray(p.images)?p.images.length:(img?1:0);return <div className="admin-product-row">{img?<img src={img} alt=""/>:<div className="admin-image-empty"><ImagePlus size={18}/></div>}<div className="admin-product-main"><b>{p.name}</b><span>{p.category?.name||'Uncategorized'} · €{Number(p.price).toFixed(2)}</span><small>{count} PHOTO{count===1?'':'S'} · {p.stock??0} IN STOCK · {p.is_active?'ACTIVE':'HIDDEN'}</small></div><div className="admin-row-actions"><button type="button" onClick={onEdit} aria-label={`Edit ${p.name}`} title="Edit product"><Pencil size={15}/><span>EDIT</span></button><button type="button" onClick={onDelete} aria-label={`Delete ${p.name}`} title="Delete product"><Trash2 size={15}/><span>DELETE</span></button></div></div>}
 function AdminProductFormView({form,setForm,categories,editing,saving,uploading,onUpload,onRemoveImage,onMoveImage,onMakeMain,onDrop,onToggleColor,onRemoveColor,onAddCustomColor,onCancel,onClose,onSubmit}:{form:AdminProductForm;setForm:React.Dispatch<React.SetStateAction<AdminProductForm>>;categories:any[];editing:any;saving:boolean;uploading:boolean;onUpload:(files:File[])=>void;onRemoveImage:(index:number)=>void;onMoveImage:(index:number,direction:-1|1)=>void;onMakeMain:(index:number)=>void;onDrop:(e:React.DragEvent<HTMLDivElement>)=>void;onToggleColor:(color:AdminColor)=>void;onRemoveColor:(name:string)=>void;onAddCustomColor:(name:string,hex:string)=>boolean;onCancel:()=>void;onClose:()=>void;onSubmit:(e:React.FormEvent)=>void}){
  const set=(key:keyof AdminProductForm,val:any)=>setForm(f=>({...f,[key]:val}))
  const [colorSearch,setColorSearch]=useState('')
