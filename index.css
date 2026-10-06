@@ -90,3 +90,22 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .photo-lightbox-tools button:disabled{opacity:.35}
 .photo-lightbox-tools span{min-width:48px;text-align:center;font-size:10px;letter-spacing:.1em;color:#fff}
 @media(max-width:640px){.photo-lightbox-tools{top:62px}.photo-lightbox-tools button{height:38px;min-width:38px}.photo-lightbox-count{bottom:16px;font-size:9px}.photo-lightbox-image{max-width:100vw;max-height:82vh}}
+
+/* V18 mobile product CTA polish */
+@media (max-width:600px){
+  .product-sheet-content .favorite-product-button{
+    position:relative;
+    bottom:auto;
+    width:100%;
+    min-height:54px;
+    height:54px;
+    margin:20px 0 0;
+    padding:0 16px;
+    border-radius:16px;
+    font-size:11px;
+    letter-spacing:.04em;
+    box-shadow:none;
+  }
+  .product-sheet-content .favorite-product-button svg{width:17px;height:17px;flex:none}
+  .product-sheet-content .view-only-note{margin-bottom:2px}
+}
