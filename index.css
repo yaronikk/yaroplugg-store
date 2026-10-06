@@ -68,3 +68,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .admin-row-actions button{width:auto;min-width:36px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
 .admin-row-actions button span{font-size:8px;letter-spacing:.08em;font-weight:800}
 @media(max-width:600px){.admin-row-actions button{min-width:36px;padding:0 9px}.admin-row-actions button span{display:none}}
+
+
+/* Full-screen product photo viewer */
+.product-swipe-slide{border:0;padding:0;background:transparent;width:100%;height:100%;display:flex;align-items:center;justify-content:center;cursor:zoom-in}
+.product-swipe-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-lightbox{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.96);display:flex;align-items:center;justify-content:center;padding:24px;touch-action:pan-y}
+.photo-lightbox-image{max-width:94vw;max-height:90vh;width:auto;height:auto;object-fit:contain;display:block;user-select:none;-webkit-user-drag:none}
+.photo-lightbox-close{position:absolute;top:18px;right:18px;width:44px;height:44px;border:1px solid rgba(255,255,255,.28);border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;z-index:2}
+.photo-lightbox-arrow{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;border:1px solid rgba(255,255,255,.28);border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;z-index:2}
+.photo-lightbox-arrow.prev{left:18px}.photo-lightbox-arrow.next{right:18px}
+.photo-lightbox-count{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.18em;color:rgba(255,255,255,.72)}
+@media(max-width:640px){.photo-lightbox{padding:10px}.photo-lightbox-image{max-width:100vw;max-height:86vh}.photo-lightbox-arrow{width:40px;height:40px}.photo-lightbox-arrow.prev{left:10px}.photo-lightbox-arrow.next{right:10px}.photo-lightbox-close{top:10px;right:10px}}
