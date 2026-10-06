@@ -109,3 +109,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
   .product-sheet-content .favorite-product-button svg{width:17px;height:17px;flex:none}
   .product-sheet-content .view-only-note{margin-bottom:2px}
 }
+
+/* V19 belt lengths */
+.admin-length-editor{display:grid;gap:10px}.admin-length-chips{display:flex;flex-wrap:wrap;gap:7px;min-height:34px}.admin-length-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 8px 7px 10px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:#111;color:#ddd;font-size:9px;letter-spacing:.05em}.admin-length-chip button{display:grid;place-items:center;width:20px;height:20px;padding:0;border:0;border-radius:50%;background:#222;color:#aaa}.admin-length-add{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center}.admin-length-add input{min-height:42px}.admin-length-add .admin-ghost{height:42px;padding:0 12px}.view-size{min-width:58px;text-align:center}
+@media(max-width:600px){.admin-length-add{grid-template-columns:1fr}.admin-length-add .admin-ghost{width:100%}}
