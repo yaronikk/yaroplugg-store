@@ -134,3 +134,53 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .admin-text-field textarea{min-height:150px;line-height:1.6;font-size:12px;letter-spacing:.01em}
 .admin-text-field input{font-size:12px;letter-spacing:.01em}
 .admin-text-field textarea::placeholder,.admin-text-field input::placeholder{color:#555}
+
+/* V32 admin typography refresh */
+.admin-app,
+.admin-login,
+.admin-modal{
+  font-family:"Helvetica Neue",Helvetica,Arial,ui-sans-serif,system-ui,sans-serif;
+  letter-spacing:0;
+}
+.admin-app button,
+.admin-app input,
+.admin-app select,
+.admin-app textarea,
+.admin-login button,
+.admin-login input,
+.admin-modal button,
+.admin-modal input,
+.admin-modal select,
+.admin-modal textarea{
+  font-family:inherit;
+}
+.admin-header h1{font-weight:700;letter-spacing:-.045em}
+.admin-toolbar h2,.admin-form-head h2{font-weight:700;letter-spacing:-.035em}
+.admin-kicker,.admin-section-label{font-size:10px;font-weight:700;letter-spacing:.18em}
+.admin-form label,.admin-login-card label{font-size:10px;font-weight:600;letter-spacing:.12em;color:#999}
+.admin-field-title{font-size:10px;font-weight:600;letter-spacing:.12em;color:#999}
+.admin-help,.admin-field-hint{font-size:10px;line-height:1.55;color:#777}
+.admin-form input,.admin-form select,.admin-form textarea{font-size:14px;font-weight:400;line-height:1.5}
+.admin-form input,.admin-form select{min-height:50px;padding-left:14px;padding-right:14px}
+.admin-form textarea{padding:14px;min-height:160px;line-height:1.65}
+.admin-text-field textarea{font-size:14px;line-height:1.65;letter-spacing:0}
+.admin-text-field input{font-size:14px;line-height:1.5;letter-spacing:0}
+.admin-text-field textarea::placeholder,.admin-text-field input::placeholder{font-size:13px;color:#666}
+.admin-form input[type="number"]{font-variant-numeric:tabular-nums}
+.admin-color-chip,.admin-length-chip{font-size:10px}
+.admin-upload-button,.admin-dropzone-button{font-size:10px;font-weight:600;letter-spacing:.08em}
+.admin-upload p,.admin-dropzone>small,.admin-dropzone>span{font-size:10px;line-height:1.5}
+.admin-toggles label{font-size:10px;font-weight:500;letter-spacing:.06em}
+.admin-row-actions button span{font-size:9px;letter-spacing:.06em}
+.admin-product-main b{font-size:15px;font-weight:600}
+.admin-product-main span{font-size:11px}
+.admin-product-main small{font-size:9px;letter-spacing:.1em}
+.admin-stock-editor>span{font-size:8px;letter-spacing:.12em}
+.admin-stock-editor input{font-size:12px}
+.admin-message,.admin-error{font-size:12px;line-height:1.5}
+@media(max-width:600px){
+  .admin-header h1{font-size:34px}
+  .admin-toolbar h2,.admin-form-head h2{font-size:24px}
+  .admin-form label,.admin-login-card label,.admin-field-title{font-size:9px}
+  .admin-form input,.admin-form select,.admin-form textarea,.admin-text-field textarea,.admin-text-field input{font-size:14px}
+}
