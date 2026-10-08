@@ -125,3 +125,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 
 /* V26 product stock/card cleanup */
 @media(max-width:600px){.product-info{padding-top:9px;gap:6px}.product-name,.product-price{font-size:12px}.stock-note{margin-top:14px;margin-bottom:14px;padding:11px 13px}.stock-note b{font-size:17px}}
+
+/* V31 readable product text + preserved line breaks */
+.description{white-space:pre-line}
+.composition{white-space:pre-line}
+.admin-text-field{gap:8px!important}
+.admin-field-hint{display:block;color:#666;font-size:9px;line-height:1.45;letter-spacing:.02em;text-transform:none;margin-top:-2px}
+.admin-text-field textarea{min-height:150px;line-height:1.6;font-size:12px;letter-spacing:.01em}
+.admin-text-field input{font-size:12px;letter-spacing:.01em}
+.admin-text-field textarea::placeholder,.admin-text-field input::placeholder{color:#555}
