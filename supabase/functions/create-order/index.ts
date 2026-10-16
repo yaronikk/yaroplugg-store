@@ -26,25 +26,46 @@ async function verifyTelegramInitData(initData: string, botToken: string) {
   return expectedHash.length === receivedHash.length && [...expectedHash].reduce((match, char, index) => match | (char.charCodeAt(0) ^ receivedHash.charCodeAt(index)), 0) === 0
 }
 
+function getTelegramIdentity(initData: string) {
+  const rawUser = new URLSearchParams(initData).get('user')
+  if (!rawUser) return null
+  try {
+    const user = JSON.parse(rawUser)
+    if (!Number.isSafeInteger(user?.id) || user.id <= 0) return null
+    const username = typeof user.username === 'string' && /^[A-Za-z0-9_]{5,32}$/.test(user.username) ? user.username : null
+    return { id: String(user.id), username }
+  } catch {
+    return null
+  }
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
 
   const url = Deno.env.get('SUPABASE_URL')
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')
+  // The Mini App must be validated with the token of the bot that launched it.
+  // Notifications may be sent by another bot if the owner chooses.
+  const notificationBotToken = Deno.env.get('TELEGRAM_BOT_TOKEN')
+  const webAppBotToken = Deno.env.get('TELEGRAM_WEBAPP_BOT_TOKEN') || notificationBotToken
   const chatId = Deno.env.get('TELEGRAM_CHAT_ID')
-  if (!url || !serviceKey || !botToken || !chatId) return json({ error: 'Order service is not configured' }, 503)
+  if (!url || !serviceKey || !webAppBotToken || !notificationBotToken || !chatId) return json({ error: 'Order service is not configured' }, 503)
 
   try {
     const payload = await request.json()
     const customerName = typeof payload.customerName === 'string' ? payload.customerName.trim() : ''
     const phone = typeof payload.phone === 'string' ? payload.phone.trim() : ''
+    const telegramId = typeof payload.telegramId === 'string' ? payload.telegramId.trim() : ''
     const idempotencyKey = payload.idempotencyKey
     const inputItems = payload.items
     const initData = typeof payload.telegramInitData === 'string' ? payload.telegramInitData : ''
-    if (!await verifyTelegramInitData(initData, botToken)) return json({ error: 'Open the store from the official Telegram Mini App' }, 401)
-    if (customerName.length < 1 || customerName.length > 120 || phone.length < 5 || phone.length > 40 ||
+    if (!await verifyTelegramInitData(initData, webAppBotToken)) return json({ error: 'Telegram Mini App verification failed. Check that TELEGRAM_WEBAPP_BOT_TOKEN belongs to the bot that opened this Mini App.' }, 401)
+    const telegramUser = getTelegramIdentity(initData)
+    if (!telegramUser || !/^\d{5,20}$/.test(telegramId) || telegramId !== telegramUser.id) {
+      return json({ error: 'Enter the Telegram ID shown for your own Telegram account.' }, 400)
+    }
+    if (customerName.length < 1 || customerName.length > 120 || phone.length > 40 ||
       !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(idempotencyKey || '') ||
       !Array.isArray(inputItems) || inputItems.length < 1 || inputItems.length > 30) {
       return json({ error: 'Check the order details and try again' }, 400)
@@ -86,7 +107,15 @@ Deno.serve(async (request) => {
       } else if (!Array.isArray(product.sizes) || !product.sizes.includes(input.size) || input.length) {
         return json({ error: `Choose an available size for ${product.name}` }, 400)
       }
-      const colors = Array.isArray(product.colors) ? product.colors.map((value: any) => typeof value === 'string' ? value : value?.name).filter(Boolean) : []
+      const colors = Array.isArray(product.colors) ? product.colors.map((value: any) => {
+        if (typeof value !== 'string') return typeof value?.name === 'string' ? value.name : ''
+        try {
+          const parsed = JSON.parse(value)
+          return typeof parsed?.name === 'string' ? parsed.name : value
+        } catch {
+          return value
+        }
+      }).filter(Boolean) : []
       if (!colors.includes(input.color)) return json({ error: `Choose an available color for ${product.name}` }, 400)
       const unitPriceCents = Math.round(Number(product.price) * 100)
       totalCents += unitPriceCents * input.quantity
@@ -100,7 +129,15 @@ Deno.serve(async (request) => {
       p_phone: phone,
       p_items: items,
       p_total_cents: totalCents,
+      p_telegram_user_id: telegramId,
+      p_telegram_username: telegramUser.username,
     })
+    if (createError?.code === 'P0001' && createError.message === 'ORDER_RATE_LIMITED') {
+      return json({ error: 'Too many orders from this Telegram account. Please try again later.' }, 429)
+    }
+    if (createError?.code === 'P0001' && createError.message === 'ORDER_IDEMPOTENCY_CONFLICT') {
+      return json({ error: 'This order request has already been used. Please refresh the store and try again.' }, 409)
+    }
     if (createError) throw createError
     const order = Array.isArray(created) ? created[0] : created
     if (!order) throw new Error('Order was not returned')
@@ -108,9 +145,10 @@ Deno.serve(async (request) => {
     let notificationSent = false
     if (order.created) {
       const lines = items.map((item) => `• ${item.product_name} × ${item.quantity}${item.size ? ` · ${item.size}` : ''}${item.length ? ` · ${item.length} cm` : ''} · ${item.color}`).join('\n')
-      const message = `Новый заказ #${order.order_number}\nСтатус: ожидает оплаты\nПокупатель: ${customerName}\nТелефон: ${phone}\n${lines}\nИтого: €${(Number(order.total_cents) / 100).toFixed(2)}`.slice(0, 4000)
+      const telegramContact = `${telegramUser.username ? `@${telegramUser.username}` : 'username не указан'} · ID ${telegramUser.id}`
+      const message = `Новый заказ #${order.order_number}\nСтатус: ожидает оплаты\nПокупатель: ${customerName}${phone ? `\nТелефон: ${phone}` : ''}\nTelegram: ${telegramContact}\n${lines}\nИтого: €${(Number(order.total_cents) / 100).toFixed(2)}`.slice(0, 4000)
       try {
-        const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        const response = await fetch(`https://api.telegram.org/bot${notificationBotToken}/sendMessage`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chat_id: chatId, text: message }),
         })
