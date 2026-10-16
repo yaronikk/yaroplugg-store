@@ -82,7 +82,7 @@ Deno.serve(async (request) => {
       const categoryName = product.category?.name || ''
       const isBelt = categoryName.trim().toLowerCase() === 'belts'
       if (isBelt) {
-        if (!Array.isArray(product.lengths) || !product.lengths.includes(input.length) || input.size) return json({ error: `Choose an available length for ${product.name}` }, 400)
+        if (!Array.isArray(product.lengths) || !product.lengths.map(String).includes(input.length) || input.size) return json({ error: `Choose an available length for ${product.name}` }, 400)
       } else if (!Array.isArray(product.sizes) || !product.sizes.includes(input.size) || input.length) {
         return json({ error: `Choose an available size for ${product.name}` }, 400)
       }
@@ -108,7 +108,7 @@ Deno.serve(async (request) => {
     let notificationSent = false
     if (order.created) {
       const lines = items.map((item) => `• ${item.product_name} × ${item.quantity}${item.size ? ` · ${item.size}` : ''}${item.length ? ` · ${item.length} cm` : ''} · ${item.color}`).join('\n')
-      const message = `Новый заказ #${order.order_number}\nСтатус: ожидает оплаты\nПокупатель: ${customerName}\nТелефон: ${phone}\n${lines}\nИтого: €${(Number(order.total_cents) / 100).toFixed(2)}`
+      const message = `Новый заказ #${order.order_number}\nСтатус: ожидает оплаты\nПокупатель: ${customerName}\nТелефон: ${phone}\n${lines}\nИтого: €${(Number(order.total_cents) / 100).toFixed(2)}`.slice(0, 4000)
       try {
         const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
