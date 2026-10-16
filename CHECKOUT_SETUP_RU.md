@@ -43,7 +43,7 @@ SQL в `database.sql` — устаревшая первоначальная сх
 2. Привяжите папку к нужному проекту: `supabase link --project-ref ВАШ_PROJECT_REF` (Project ref находится в **Project Settings → General**).
 3. Опубликуйте функцию: `supabase functions deploy create-order`.
 
-Функция находится в `supabase/functions/create-order/index.ts`. Оставьте стандартную проверку JWT включённой: клиент вызывает её с публичным Supabase publishable/anon ключом; подпись Telegram и цены проверяются дополнительно внутри функции.
+Функция находится в `supabase/functions/create-order/index.ts`. В настройках `create-order` отключите **Verify JWT with legacy secret**: Telegram Mini App передаёт свои проверяемые `initData`, а проверку подписи и цен выполняет сама функция. Не добавляйте токен бота в браузерный код или переменные Vercel.
 
 ## 6. Проверьте настройки сайта
 
