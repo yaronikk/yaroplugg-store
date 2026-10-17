@@ -33,7 +33,7 @@ begin
     raise exception 'INVALID_TELEGRAM_USER_ID' using errcode = 'P0001';
   end if;
 
-  v_username := nullif(pg_catalog.lower(pg_catalog.trim(coalesce(p_telegram_username, ''))), '');
+  v_username := nullif(pg_catalog.lower(pg_catalog.btrim(coalesce(p_telegram_username, ''))), '');
 
   -- Lock both verified identity keys in a stable order to prevent parallel requests bypassing limits.
   if v_username is null then
@@ -41,14 +41,13 @@ begin
       pg_catalog.hashtextextended('telegram-id:' || p_telegram_user_id::text, 0)
     );
   else
-    v_lock_key_one := pg_catalog.least(
-      'telegram-id:' || p_telegram_user_id::text,
-      'telegram-username:' || v_username
-    );
-    v_lock_key_two := pg_catalog.greatest(
-      'telegram-id:' || p_telegram_user_id::text,
-      'telegram-username:' || v_username
-    );
+    if ('telegram-id:' || p_telegram_user_id::text) < ('telegram-username:' || v_username) then
+      v_lock_key_one := 'telegram-id:' || p_telegram_user_id::text;
+      v_lock_key_two := 'telegram-username:' || v_username;
+    else
+      v_lock_key_one := 'telegram-username:' || v_username;
+      v_lock_key_two := 'telegram-id:' || p_telegram_user_id::text;
+    end if;
     perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(v_lock_key_one, 0));
     perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(v_lock_key_two, 0));
   end if;
@@ -81,7 +80,7 @@ begin
   insert into public.store_orders (
     idempotency_key, customer_name, phone, total_cents, telegram_user_id, telegram_username
   ) values (
-    p_idempotency_key, pg_catalog.trim(p_customer_name), pg_catalog.trim(p_phone), p_total_cents,
+    p_idempotency_key, pg_catalog.btrim(p_customer_name), pg_catalog.btrim(p_phone), p_total_cents,
     p_telegram_user_id, v_username
   )
   on conflict (idempotency_key) do nothing
