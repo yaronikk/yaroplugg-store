@@ -18,7 +18,7 @@ Set these in Vercel:
 
 ## Admin
 
-The admin is protected by Supabase email/password authentication. Authenticated users can manage products in this MVP; keep only your own admin account in Supabase Authentication.
+The admin is protected by Supabase email/password authentication and a trusted `app_metadata.role = "admin"` claim. Only this server-assigned role can open the admin panel or manage products, categories and product images. Assign the role only through trusted Supabase Auth administration tools or a server-side process; never from the storefront client.
 
 The admin supports:
 - product create/edit/delete

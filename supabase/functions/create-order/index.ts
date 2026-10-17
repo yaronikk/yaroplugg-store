@@ -154,12 +154,12 @@ Deno.serve(async (request) => {
         })
         notificationSent = response.ok
         if (!response.ok) console.error('Telegram notification failed', response.status)
-      } catch (error) { console.error('Telegram notification failed', error) }
+      } catch { console.error('Telegram notification request failed') }
     }
 
     return json({ orderNumber: order.order_number, totalCents: order.total_cents, status: order.status, notificationSent })
   } catch (error) {
-    console.error('Order creation failed', error)
+    console.error('Order creation failed')
     return json({ error: 'Could not create the order. Please try again.' }, 500)
   }
 })
