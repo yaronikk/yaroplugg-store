@@ -49,7 +49,10 @@ function normalizeColors(value:any):AdminColor[]{
  })
 }
 
-function stockForProduct(product:Product):number{return Math.max(0,Math.floor(Number((product as Product & {stock?:number}).stock)||0))}\nfunction quantityOfProduct(cart:CartLine[],productId:string):number{return cart.reduce((total,line)=>total+(line.productId===productId?line.quantity:0),0)}\n\nfunction dbProduct(row:any):Product & {lengths:string[];stock:number}{
+function stockForProduct(product:Product):number{return Math.max(0,Math.floor(Number((product as Product & {stock?:number}).stock)||0))}
+function quantityOfProduct(cart:CartLine[],productId:string):number{return cart.reduce((total,line)=>total+(line.productId===productId?line.quantity:0),0)}
+
+function dbProduct(row:any):Product & {lengths:string[];stock:number}{
  const category=(row.category?.name||'T-Shirts') as Exclude<Category,'All'>
  const colors=normalizeColors(row.colors)
  const images=Array.isArray(row.images)?row.images.filter(Boolean):(typeof row.images==='string'?[row.images].filter(Boolean):[])
