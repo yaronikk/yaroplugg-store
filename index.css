@@ -291,3 +291,21 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .product-sheet{height:92dvh}
  .product-sheet-content{padding-top:22px;padding-bottom:20px}
 }
+
+/* Desktop 3D interactions: subtle lift, varied tilt, and depth on product controls. */
+@media (min-width:768px) and (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+ .product-grid{perspective:1400px;perspective-origin:50% 35%}
+ .product-card{transform-origin:center center;will-change:transform}
+ .product-card:nth-child(3n+2):hover{transform:translateY(-5px) rotateX(-1deg) rotateY(1.15deg);filter:drop-shadow(0 16px 18px rgba(0,0,0,.24))}
+ .product-card:nth-child(3n):hover{transform:translateY(-5px) rotateX(1deg) rotateY(-1.15deg);filter:drop-shadow(0 16px 18px rgba(0,0,0,.24))}
+ .product-card:hover .product-media{box-shadow:0 24px 48px rgba(0,0,0,.36),0 0 0 1px rgba(255,255,255,.08)}
+ .product-card:hover .product-media img{transform:scale(1.045) translate3d(0,0,16px)}
+ .product-sheet .product-swipe-slide{perspective:1100px;overflow:hidden}
+ .product-sheet .product-swipe-slide img{transition:transform .65s cubic-bezier(.2,.8,.2,1)}
+ .product-sheet .product-swipe-slide:hover img{transform:scale(1.035) translateZ(14px)}
+ .option-row button,.color-row button{transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease}
+ .option-row button:hover,.color-row button:hover{transform:translateY(-2px) rotateX(5deg);box-shadow:0 8px 18px rgba(0,0,0,.24)}
+ .category-strip button{transition:color .2s ease,transform .2s ease,text-shadow .2s ease}
+ .category-strip button:hover{color:#fff;transform:translateY(-2px);text-shadow:0 4px 16px rgba(255,255,255,.25)}
+ .filter-button:hover{transform:translateY(-2px) rotate(6deg);box-shadow:0 8px 20px rgba(255,255,255,.08)}
+}
