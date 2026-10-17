@@ -382,3 +382,70 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .admin-section-tabs button{min-height:44px;line-height:1;gap:9px;white-space:nowrap}
 .admin-order-attention-badge{display:inline-flex;flex:none;align-items:center;justify-content:center;min-width:21px;height:21px;padding:0 5px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:linear-gradient(180deg,#ff3939,#e51313);color:#fff;font-size:10px;font-weight:800;line-height:1;letter-spacing:0;font-variant-numeric:tabular-nums;box-shadow:0 2px 8px rgba(245,34,34,.22)}
 @media(max-width:600px){.admin-section-tabs{gap:8px}.admin-section-tabs button{flex:1 1 0;min-width:0;padding:0 10px}}
+
+/* Admin orders: explicit centering for counters and status pills */
+.admin-section-tabs button .admin-order-attention-badge{
+  display:grid;
+  place-items:center;
+  align-content:center;
+  justify-content:center;
+  flex:none;
+  min-width:22px;
+  width:auto;
+  height:22px;
+  margin:0;
+  padding:0 5px;
+  box-sizing:border-box;
+  line-height:1;
+  text-align:center;
+  vertical-align:middle;
+  letter-spacing:0;
+  font-variant-numeric:tabular-nums;
+}
+.admin-orders .admin-toolbar h2{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  line-height:1;
+}
+.admin-orders .admin-toolbar h2 .admin-order-count{
+  display:inline-grid;
+  flex:none;
+  place-items:center;
+  min-width:22px;
+  height:22px;
+  margin:0;
+  padding:0 5px;
+  box-sizing:border-box;
+  line-height:1;
+  text-align:center;
+  vertical-align:middle;
+  font-variant-numeric:tabular-nums;
+}
+.admin-order-filters button{line-height:1}
+.admin-order-filters button span{
+  display:inline-flex;
+  flex:none;
+  align-items:center;
+  justify-content:center;
+  min-width:16px;
+  height:16px;
+  margin:0;
+  padding:0 3px;
+  box-sizing:border-box;
+  border-radius:999px;
+  line-height:1;
+  text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+.admin-order-status{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:24px;
+  box-sizing:border-box;
+  line-height:1;
+  text-align:center;
+}
+.admin-order-actions button svg,
+.admin-section-tabs button svg{display:block;flex:none}
