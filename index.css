@@ -376,3 +376,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .admin-order-actions button{padding:0 8px}
  .admin-order-actions button.cancel{grid-column:1/-1;margin-left:0}
 }
+
+/* Admin order alert badge alignment */
+.admin-section-tabs{align-items:center;gap:10px}
+.admin-section-tabs button{min-height:44px;line-height:1;gap:9px;white-space:nowrap}
+.admin-order-attention-badge{display:inline-flex;flex:none;align-items:center;justify-content:center;min-width:21px;height:21px;padding:0 5px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:linear-gradient(180deg,#ff3939,#e51313);color:#fff;font-size:10px;font-weight:800;line-height:1;letter-spacing:0;font-variant-numeric:tabular-nums;box-shadow:0 2px 8px rgba(245,34,34,.22)}
+@media(max-width:600px){.admin-section-tabs{gap:8px}.admin-section-tabs button{flex:1 1 0;min-width:0;padding:0 10px}}
