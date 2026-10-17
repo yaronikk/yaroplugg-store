@@ -1,13 +1,15 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react'
 import {createRoot} from 'react-dom/client'
 import {createClient, type User} from '@supabase/supabase-js'
-import {Search,House,UserRound,X,SlidersHorizontal,Heart,ChevronDown,ArrowUpRight,ChevronLeft,ChevronRight,ZoomIn,ZoomOut,Plus,Minus,Trash2,LogOut,Package,ImagePlus,Pencil,Check,Upload,LoaderCircle,ShoppingBag} from 'lucide-react'
+import {Search,House,UserRound,X,SlidersHorizontal,Heart,ChevronDown,ArrowUpRight,ChevronLeft,ChevronRight,ZoomIn,ZoomOut,Plus,Minus,Trash2,LogOut,Package,ImagePlus,Pencil,Check,Upload,LoaderCircle,ShoppingBag,ClipboardList,CheckCircle2,RotateCcw} from 'lucide-react'
 import './index.css'
 import {products as demoProducts} from './data'
 import type {Category,Product} from './types'
 
 type Screen='home'|'catalog'|'favorites'|'profile'
 type CartLine={productId:string;quantity:number;color:string;size?:string;length?:string}
+type OrderFulfillmentStatus='pending'|'completed'|'not_completed'|'cancelled'
+type AdminSection='products'|'orders'
 const cats=['All','T-Shirts','Hoodies','Pants','Jackets','Belts'] as unknown as Category[]
 const sizes=['S','M','L','XL']
 
@@ -252,6 +254,12 @@ function AdminApp(){
  const [newUploadedUrls,setNewUploadedUrls]=useState<string[]>([])
  const [removedExistingUrls,setRemovedExistingUrls]=useState<string[]>([])
  const [stockSavingId,setStockSavingId]=useState<string|null>(null)
+ const [adminSection,setAdminSection]=useState<AdminSection>('products')
+ const [orders,setOrders]=useState<any[]>([])
+ const [ordersLoading,setOrdersLoading]=useState(false)
+ const [ordersError,setOrdersError]=useState('')
+ const [savingOrderId,setSavingOrderId]=useState<string|null>(null)
+ const [orderFilter,setOrderFilter]=useState<'all'|OrderFulfillmentStatus>('all')
 
  useEffect(()=>{
   if(!supabase){setLoading(false);return}
@@ -260,6 +268,7 @@ function AdminApp(){
   return ()=>listener.subscription.unsubscribe()
  },[])
  useEffect(()=>{if(user)loadAdminData()},[user])
+ useEffect(()=>{if(user&&adminSection==='orders')void loadOrders()},[user,adminSection])
 
  async function loadAdminData(){
   if(!supabase)return
@@ -269,6 +278,23 @@ function AdminApp(){
   ])
   if(pe||ce){setMessage(pe?.message||ce?.message||'Could not load admin data');return}
   setAdminProducts(ps||[]);setCategories(cs||[])
+ }
+ async function loadOrders(){
+  if(!supabase)return
+  if(user?.app_metadata?.role!=='admin'){setOrdersError('Order access is restricted. In Supabase, set app_metadata.role to admin for your admin account, then sign out and sign in again.');return}
+  setOrdersLoading(true);setOrdersError('')
+  const {data,error}=await supabase.from('store_orders').select('id,order_number,customer_name,telegram_user_id,telegram_username,total_cents,status,fulfillment_status,created_at,store_order_items(id,product_name,unit_price_cents,quantity,size,color,length)').order('created_at',{ascending:false})
+  if(error)setOrdersError(error.message)
+  else setOrders(data||[])
+  setOrdersLoading(false)
+ }
+ async function updateOrderFulfillment(orderId:string,status:OrderFulfillmentStatus){
+  if(!supabase||!user||user.app_metadata?.role!=='admin')return
+  setSavingOrderId(orderId);setOrdersError('')
+  const {error}=await supabase.from('store_orders').update({fulfillment_status:status}).eq('id',orderId)
+  if(error)setOrdersError(error.message)
+  else setOrders(current=>current.map(order=>order.id===orderId?{...order,fulfillment_status:status}:order))
+  setSavingOrderId(null)
  }
  async function login(e:React.FormEvent){e.preventDefault();setAuthError('');if(!supabase){setAuthError('Supabase is not configured in this deployment.');return}const {error}=await supabase.auth.signInWithPassword({email,password});if(error)setAuthError(error.message)}
  async function logout(){await supabase?.auth.signOut()}
@@ -377,10 +403,19 @@ function AdminApp(){
  }
  if(loading)return <AdminFrame><AdminLoading/></AdminFrame>
  if(!user)return <AdminLogin email={email} password={password} setEmail={setEmail} setPassword={setPassword} error={authError} onSubmit={login}/>
- return <AdminFrame><div className="admin-shell"><header className="admin-header"><div><div className="admin-kicker">YAROPLUGG</div><h1>ADMIN</h1></div><button className="admin-ghost" onClick={logout}><LogOut size={15}/> LOG OUT</button></header><section className="admin-stats"><div><span>PRODUCTS</span><b>{adminProducts.length}</b></div><div><span>ACTIVE</span><b>{adminProducts.filter(p=>p.is_active).length}</b></div><div><span>OUT OF STOCK</span><b>{adminProducts.filter(p=>(p.stock??0)<=0).length}</b></div></section><div className="admin-toolbar"><div><div className="admin-section-label">CATALOG</div><h2>PRODUCTS</h2></div><button className="admin-primary" onClick={startAdd}><Plus size={16}/> ADD PRODUCT</button></div>{message&&<div className="admin-message">{message}</div>}<div className="admin-product-list">{adminProducts.length===0?<div className="admin-empty"><Package size={22}/><b>NO PRODUCTS YET</b><span>Add your first product to the catalog.</span><div className="admin-empty-actions"><button className="admin-primary" onClick={startAdd}><Plus size={15}/> ADD PRODUCT</button><button className="admin-ghost" onClick={importDemo}><Check size={15}/> IMPORT CURRENT CATALOG</button></div></div>:adminProducts.map(p=><AdminProductRow key={p.id} p={p} onEdit={()=>startEdit(p)} onDelete={()=>deleteProduct(p)} onStockChange={(next)=>updateStock(p,next)} stockSaving={stockSavingId===p.id}/>)}</div>{showForm&&<AdminProductFormView form={form} setForm={setForm} categories={categories} editing={editing} saving={saving} uploading={uploading} onUpload={uploadFiles} onRemoveImage={removeImage} onMoveImage={moveImage} onMakeMain={makeMain} onDrop={handleDrop} onToggleColor={toggleColor} onRemoveColor={removeColor} onAddCustomColor={addCustomColor} onCancel={cancelForm} onClose={cancelForm} onSubmit={saveProduct}/>}</div></AdminFrame>
+ return <AdminFrame><div className="admin-shell"><header className="admin-header"><div><div className="admin-kicker">YAROPLUGG</div><h1>ADMIN</h1></div><button className="admin-ghost" onClick={logout}><LogOut size={15}/> LOG OUT</button></header><nav className="admin-section-tabs" aria-label="Admin sections"><button type="button" className={adminSection==='products'?'active':''} onClick={()=>setAdminSection('products')}><Package size={15}/> PRODUCTS</button><button type="button" className={adminSection==='orders'?'active':''} onClick={()=>setAdminSection('orders')}><ClipboardList size={15}/> ORDERS{orders.length>0&&<span>{orders.length}</span>}</button></nav>{message&&<div className="admin-message">{message}</div>}{adminSection==='products'?<><section className="admin-stats"><div><span>PRODUCTS</span><b>{adminProducts.length}</b></div><div><span>ACTIVE</span><b>{adminProducts.filter(p=>p.is_active).length}</b></div><div><span>OUT OF STOCK</span><b>{adminProducts.filter(p=>(p.stock??0)<=0).length}</b></div></section><div className="admin-toolbar"><div><div className="admin-section-label">CATALOG</div><h2>PRODUCTS</h2></div><button className="admin-primary" onClick={startAdd}><Plus size={16}/> ADD PRODUCT</button></div><div className="admin-product-list">{adminProducts.length===0?<div className="admin-empty"><Package size={22}/><b>NO PRODUCTS YET</b><span>Add your first product to the catalog.</span><div className="admin-empty-actions"><button className="admin-primary" onClick={startAdd}><Plus size={15}/> ADD PRODUCT</button><button className="admin-ghost" onClick={importDemo}><Check size={15}/> IMPORT CURRENT CATALOG</button></div></div>:adminProducts.map(p=><AdminProductRow key={p.id} p={p} onEdit={()=>startEdit(p)} onDelete={()=>deleteProduct(p)} onStockChange={(next)=>updateStock(p,next)} stockSaving={stockSavingId===p.id}/>)}</div></>:<AdminOrders orders={orders} loading={ordersLoading} error={ordersError} filter={orderFilter} setFilter={setOrderFilter} savingOrderId={savingOrderId} onRefresh={loadOrders} onUpdateStatus={updateOrderFulfillment}/>}{showForm&&<AdminProductFormView form={form} setForm={setForm} categories={categories} editing={editing} saving={saving} uploading={uploading} onUpload={uploadFiles} onRemoveImage={removeImage} onMoveImage={moveImage} onMakeMain={makeMain} onDrop={handleDrop} onToggleColor={toggleColor} onRemoveColor={removeColor} onAddCustomColor={addCustomColor} onCancel={cancelForm} onClose={cancelForm} onSubmit={saveProduct}/>}</div></AdminFrame>
 }
 function AdminFrame({children}:{children:React.ReactNode}){return <div className="admin-app">{children}</div>}
 function AdminLoading(){return <div className="admin-loading"><LoaderCircle size={26} className="spin"/><span>LOADING ADMIN</span></div>}
+type AdminOrdersProps={orders:any[];loading:boolean;error:string;filter:'all'|OrderFulfillmentStatus;setFilter:(value:'all'|OrderFulfillmentStatus)=>void;savingOrderId:string|null;onRefresh:()=>void;onUpdateStatus:(orderId:string,status:OrderFulfillmentStatus)=>void}
+function AdminOrders({orders,loading,error,filter,setFilter,savingOrderId,onRefresh,onUpdateStatus}:AdminOrdersProps){
+ const filters:Array<{value:'all'|OrderFulfillmentStatus;label:string}>= [{value:'all',label:'ALL'},{value:'pending',label:'NEW'},{value:'completed',label:'COMPLETED'},{value:'not_completed',label:'NOT COMPLETED'},{value:'cancelled',label:'CANCELLED'}]
+ const filtered=filter==='all'?orders:orders.filter(order=>(order.fulfillment_status||'pending')===filter)
+ function formatDate(value:string){const date=new Date(value);return Number.isNaN(date.getTime())?'':date.toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+ function statusLabel(value:string){return value==='completed'?'COMPLETED':value==='not_completed'?'NOT COMPLETED':value==='cancelled'?'CANCELLED':'NEW ORDER'}
+ function cancelOrder(order:any){if(window.confirm(`Cancel order #${order.order_number}? It will remain in the order history.`))onUpdateStatus(order.id,'cancelled')}
+ return <section className="admin-orders"><div className="admin-toolbar"><div><div className="admin-section-label">STORE MANAGEMENT</div><h2>ORDERS <span className="admin-order-count">{orders.length}</span></h2></div><button type="button" className="admin-ghost" onClick={onRefresh} disabled={loading}><RotateCcw size={14} className={loading?'spin':''}/> REFRESH</button></div><p className="admin-orders-note">Order handling status is separate from payment. New orders are still awaiting payment.</p><div className="admin-order-filters">{filters.map(item=><button type="button" key={item.value} className={filter===item.value?'active':''} onClick={()=>setFilter(item.value)}>{item.label}<span>{item.value==='all'?orders.length:orders.filter(order=>(order.fulfillment_status||'pending')===item.value).length}</span></button>)}</div>{error&&<div className="admin-message">{error}</div>}{loading?<div className="admin-loading inline"><LoaderCircle size={22} className="spin"/><span>LOADING ORDERS</span></div>:filtered.length===0?<div className="admin-empty admin-orders-empty"><Package size={22}/><b>{orders.length?'NO ORDERS IN THIS STATUS':'NO ORDERS YET'}</b><span>New orders from the storefront will appear here.</span></div>:<div className="admin-order-list">{filtered.map(order=>{const status=(order.fulfillment_status||'pending') as OrderFulfillmentStatus;const username=typeof order.telegram_username==='string'&&/^[A-Za-z0-9_]{5,32}$/.test(order.telegram_username)?order.telegram_username:null;const items=Array.isArray(order.store_order_items)?order.store_order_items:[];return <article className={`admin-order-card status-${status}`} key={order.id}><header className="admin-order-header"><div><span>ORDER</span><b>#{order.order_number}</b></div><time>{formatDate(order.created_at)}</time></header><div className="admin-order-customer"><b>{order.customer_name}</b><div>{username?<a href={`https://t.me/${username}`} target="_blank" rel="noreferrer">@{username}</a>:null}{order.telegram_user_id&&<span>TELEGRAM ID · {order.telegram_user_id}</span>}</div></div><div className="admin-order-payment"><span>PAYMENT</span><b>{order.status==='pending_payment'?'AWAITING PAYMENT':String(order.status||'').replaceAll('_',' ').toUpperCase()}</b></div><div className="admin-order-items">{items.map((item:any)=><div key={item.id}><span><b>{item.quantity}×</b> {item.product_name}{[item.size,item.length?item.length+' cm':null,item.color].filter(Boolean).length>0&&<small>{[item.size,item.length?item.length+' cm':null,item.color].filter(Boolean).join(' · ')}</small>}</span><b>€{((Number(item.unit_price_cents)||0)*(Number(item.quantity)||0)/100).toFixed(2)}</b></div>)}</div><footer className="admin-order-footer"><div><span>ORDER TOTAL</span><b>€{(Number(order.total_cents||0)/100).toFixed(2)}</b></div><span className={`admin-order-status status-${status}`}>{statusLabel(status)}</span></footer>{status!=='cancelled'&&<div className="admin-order-actions"><button type="button" className={status==='completed'?'selected':''} disabled={savingOrderId===order.id||status==='completed'} onClick={()=>onUpdateStatus(order.id,'completed')}><CheckCircle2 size={15}/>{savingOrderId===order.id?'SAVING…':'COMPLETED'}</button><button type="button" className={status==='not_completed'?'selected':''} disabled={savingOrderId===order.id||status==='not_completed'} onClick={()=>onUpdateStatus(order.id,'not_completed')}><X size={15}/>{savingOrderId===order.id?'SAVING…':'NOT COMPLETED'}</button><button type="button" className="cancel" disabled={savingOrderId===order.id} onClick={()=>cancelOrder(order)}><Trash2 size={14}/> CANCEL ORDER</button></div>}</article>})}</div>}</section>
+}
 function AdminLogin({email,password,setEmail,setPassword,error,onSubmit}:{email:string;password:string;setEmail:(v:string)=>void;setPassword:(v:string)=>void;error:string;onSubmit:(e:React.FormEvent)=>void}){return <AdminFrame><div className="admin-login"><div className="admin-login-card"><img src="/logo.png" alt="YAROPLUGG"/><div className="admin-kicker">PRIVATE AREA</div><h1>ADMIN LOGIN</h1><p>Sign in with your YAROPLUGG admin account.</p><form onSubmit={onSubmit}><label>EMAIL<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required autoComplete="email"/></label><label>PASSWORD<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required autoComplete="current-password"/></label>{error&&<div className="admin-error">{error}</div>}<button className="admin-primary" type="submit">SIGN IN</button></form></div></div></AdminFrame>}
 function AdminProductRow({p,onEdit,onDelete,onStockChange,stockSaving}:{p:any;onEdit:()=>void;onDelete:()=>void;onStockChange:(next:number)=>void;stockSaving:boolean}){
  const img=p.image_url||p.images?.[0];const count=Array.isArray(p.images)?p.images.length:(img?1:0)
