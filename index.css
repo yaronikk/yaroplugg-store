@@ -217,3 +217,77 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .product-card,.product-media img,.product-info,.favorite-button,.hero-card,.hero-image-button img,.primary-dark,.primary-red,.icon-button,.bag-button{transition:none!important}
  .product-media:after{display:none}
 }
+
+/* Desktop storefront layout. Mobile and Telegram Mini App sizes keep their existing layout. */
+@media(min-width:768px){
+ .app-shell{padding:0 28px;background:radial-gradient(ellipse at 50% 0%,rgba(255,255,255,.035),transparent 42%),#070707}
+ .store-shell{max-width:1440px;padding-bottom:104px;background:transparent}
+ .safe-bottom{padding-bottom:110px}
+ .site-header{height:92px;padding:0 36px}
+ .brand-logo{width:176px;max-height:46px}
+ .header-actions{gap:12px}
+ .icon-button{width:46px;height:46px}
+ .page-pad{padding:38px 44px 48px}
+ .page-top{padding-top:46px}
+ .hero-card{aspect-ratio:2.35/1;max-height:510px;margin-bottom:44px;border-radius:34px}
+ .category-strip{gap:34px}
+ .category-strip button{font-size:12px;padding-bottom:16px}
+ .section-head{margin:34px 0 18px}
+ .section-head h2,.catalog-head h1,.page-title{font-size:34px}
+ .section-head p,.catalog-head p,.eyebrow{font-size:10px}
+ .product-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:38px 24px}
+ .product-media{border-radius:22px}
+ .product-name,.product-price{font-size:15px}
+ .product-info{padding:12px 2px 0}
+ .catalog-head{margin-bottom:22px}
+ .catalog-head h1{font-size:38px}
+ .search-box{max-width:680px}
+ .catalog-meta{font-size:12px}
+ .bottom-nav{left:50%;bottom:22px;width:auto;max-width:none;display:flex;gap:6px;padding:10px 12px;border-radius:999px}
+ .nav-item{flex-direction:row;gap:8px;padding:8px 14px;border-radius:999px;font-size:9px;letter-spacing:.12em;transition:background-color .2s ease,color .2s ease}
+ .nav-item.is-active{background:rgba(255,255,255,.08)}
+ .nav-icon-wrap,.nav-icon{height:20px}
+ .modal-backdrop{align-items:center;justify-content:center;padding:24px}
+ .sheet{width:min(640px,calc(100vw - 48px));max-height:88dvh;margin:auto;border-radius:28px;border-top:1px solid rgba(255,255,255,.14)}
+ .product-sheet{width:min(1080px,calc(100vw - 64px));height:min(780px,88dvh);max-height:88dvh;min-height:0;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);border-radius:30px}
+ .modal-media{min-height:0;height:100%}
+ .product-swipe-gallery,.product-swipe-slide{height:100%}
+ .product-swipe-slide img{height:100%;aspect-ratio:auto;object-fit:cover}
+ .product-sheet-content{min-height:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;padding:34px clamp(26px,3vw,44px) 32px}
+ .product-sheet-content .primary-red{position:static;box-shadow:none;padding-bottom:0}
+ .product-sheet-content .primary-dark{width:100%;margin-top:24px}
+ .product-sheet-content .favorite-product-button{margin-top:12px}
+ .sheet-content .primary-red{margin-top:12px}
+ .product-title-row h2{font-size:30px}
+ .modal-price{font-size:24px}
+ .option-block{margin-top:24px}
+ .product-options-grid{gap:22px}
+ .cart-sheet{width:min(660px,calc(100vw - 48px));max-height:88dvh;padding:28px 34px}
+ .cart-lines{max-height:32dvh}
+ .cart-line{grid-template-columns:88px minmax(0,1fr);gap:16px;padding-bottom:16px}
+ .cart-line>img{width:88px;height:104px}
+ .cart-line-info b{font-size:14px}
+ .cart-line-info>span{font-size:12px}
+ .cart-total span{font-size:11px}
+ .cart-total b{font-size:19px}
+ .checkout-fields{gap:14px}
+ .checkout-fields label{font-size:10px}
+ .checkout-fields input{height:48px}
+ .checkout-disclaimer,.checkout-error{font-size:11px}
+ .filter-sheet{width:min(560px,calc(100vw - 48px));padding:28px 32px}
+ .profile-card{max-width:720px;padding:30px}
+ .support-card{max-width:720px;font-size:14px}
+}
+@media(min-width:1100px){
+ .product-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:44px 28px}
+ .page-pad{padding-right:56px;padding-left:56px}
+ .hero-card{aspect-ratio:2.55/1}
+}
+@media(min-width:1500px){
+ .store-shell{max-width:1520px}
+ .product-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:48px 30px}
+}
+@media(max-height:680px) and (min-width:768px){
+ .product-sheet{height:92dvh}
+ .product-sheet-content{padding-top:22px;padding-bottom:20px}
+}
