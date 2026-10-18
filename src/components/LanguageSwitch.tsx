@@ -1,0 +1,2 @@
+import {useI18n,type Language} from '../i18n'
+export function LanguageSwitch(){const {language,setLanguage}=useI18n();return <label className="language-switch"><span className="sr-only">Language</span><select aria-label="Language" value={language} onChange={e=>setLanguage(e.target.value as Language)}><option value="ru">RU</option><option value="et">ET</option><option value="en">EN</option></select></label>}
