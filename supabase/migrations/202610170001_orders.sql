@@ -27,6 +27,8 @@ alter table public.store_order_items enable row level security;
 
 -- Orders are created only by the Edge Function using the service role.
 revoke all on public.store_orders, public.store_order_items from anon, authenticated;
+-- The Edge Function also needs server-only read access to revalidate catalog data.
+grant select on table public.products, public.categories to service_role;
 
 create or replace function public.create_store_order(
   p_idempotency_key uuid,

@@ -1,0 +1,59 @@
+-- ROLLBACK PLAN for migrations 202610200001–202610200005.
+-- This file is intentionally documentation-only. Do not run it as a single script.
+-- First stop writes/orders, take an additional backup, and review each statement.
+-- Restore the four snapshot tables from backup_20261019 before reverting order/product
+-- columns if post-migration orders or stock changes must be discarded. A snapshot
+-- restore overwrites changes made after 2026-10-19 and must be performed deliberately.
+--
+-- Reversible schema changes (only after confirming data has been exported):
+-- 202610200005: restore prior admin_update_store_order(uuid,text,text), then remove
+--   history table, manager_note and thumbnail_urls. History/notes/thumbnails are not
+--   in the requested snapshot and are lost unless separately exported.
+-- 202610200004: remove reviews and localized category names. Reviews are not in the
+--   requested snapshot and are lost unless separately exported.
+-- 202610200003: remove resale trigger/function, resale columns and category_type.
+--   Resale values are not in the requested snapshot; recover them only from a separate
+--   export. Restoring products from the snapshot also resets inventory to snapshot time.
+-- 202610200002: restore old order RPC and constraints, remove checkout/rate-limit fields,
+--   restore status='pending_payment' and the original phone NOT NULL/check constraint.
+--   New orders/contacts/status/payment data are not represented in the snapshot.
+-- 202610200001: remove the two admin read policies and revert the grant only after
+--   checking the pre-migration grants. Do not blindly revoke grants needed by the app.
+--
+-- The snapshot tables contain full row copies, but restoring all four safely requires
+--   matching schema versions and handling identity sequences, foreign keys, and any
+--   writes since the snapshot. Compare counts and IDs first. In a reviewed transaction,
+--   disable/re-enable constraints only as necessary, restore parent rows before items,
+--   then set order_number's identity sequence to max(order_number). Never run a blanket
+--   TRUNCATE/INSERT automatically from this file.
+--
+-- Review-only SQL building blocks (uncomment/adapt individually; not a complete rollback):
+-- BEGIN;
+-- DROP POLICY IF EXISTS "Admins can read store orders" ON public.store_orders;
+-- DROP POLICY IF EXISTS "Admins can read store order items" ON public.store_order_items;
+-- DROP POLICY IF EXISTS "Admins can read order status history" ON public.store_order_status_history;
+-- DROP POLICY IF EXISTS "Public can read published reviews" ON public.reviews;
+-- DROP POLICY IF EXISTS "Admins can create reviews" ON public.reviews;
+-- DROP POLICY IF EXISTS "Admins can update reviews" ON public.reviews;
+-- DROP POLICY IF EXISTS "Admins can delete reviews" ON public.reviews;
+-- DROP TRIGGER IF EXISTS sync_resale_product_status_before_update ON public.products;
+-- DROP FUNCTION IF EXISTS public.sync_resale_product_status();
+-- DROP TABLE IF EXISTS public.store_order_status_history;
+-- DROP TABLE IF EXISTS public.reviews;
+-- ALTER TABLE public.products DROP COLUMN IF EXISTS thumbnail_urls;
+-- ALTER TABLE public.store_orders DROP COLUMN IF EXISTS manager_note;
+-- ALTER TABLE public.products DROP COLUMN IF EXISTS resale_status, DROP COLUMN IF EXISTS defects,
+--   DROP COLUMN IF EXISTS measurements, DROP COLUMN IF EXISTS size_label, DROP COLUMN IF EXISTS condition,
+--   DROP COLUMN IF EXISTS brand;
+-- ALTER TABLE public.categories DROP COLUMN IF EXISTS category_type, DROP COLUMN IF EXISTS name_ru,
+--   DROP COLUMN IF EXISTS name_et, DROP COLUMN IF EXISTS name_en;
+-- ALTER TABLE public.store_orders DROP COLUMN IF EXISTS terms_accepted_at, DROP COLUMN IF EXISTS contact_hash,
+--   DROP COLUMN IF EXISTS ip_hash, DROP COLUMN IF EXISTS stock_reserved, DROP COLUMN IF EXISTS payment_status,
+--   DROP COLUMN IF EXISTS language, DROP COLUMN IF EXISTS source, DROP COLUMN IF EXISTS comment,
+--   DROP COLUMN IF EXISTS delivery_address, DROP COLUMN IF EXISTS delivery_city, DROP COLUMN IF EXISTS delivery_method,
+--   DROP COLUMN IF EXISTS contact_value, DROP COLUMN IF EXISTS contact_type;
+-- COMMIT;
+--
+-- This does not restore the previous RPC bodies/permissions or the phone/status checks;
+-- recover those definitions from migrations 202610170001 and 202610170002 and apply
+-- only after restoring/validating data. Migration 202610200005 replaced the admin RPC.

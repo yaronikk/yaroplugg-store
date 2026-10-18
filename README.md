@@ -1,33 +1,30 @@
 # YAROPLUGG STORE
 
-Telegram fashion storefront + Supabase admin MVP.
+Vite + React + TypeScript storefront with Supabase-backed catalog/admin and Telegram Mini App support.
 
-## Environment variables
+## Local setup
 
-Set these in Vercel:
+1. Copy `.env.example` to `.env.local`.
+2. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` from the Supabase project. Never put service-role keys or bot tokens in client variables.
+3. Install with `pnpm install --frozen-lockfile`.
+4. Run `pnpm dev`, `pnpm typecheck`, `pnpm test`, and `pnpm build` as needed.
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_PUBLISHABLE_KEY`
+## Structure
 
-## Supabase setup
+- `src/App.tsx` and `src/components/`: storefront screens and UI.
+- `src/admin/`: existing product administration screens.
+- `src/lib/`: Supabase client, formatting/storage helpers, platform detection.
+- `src/config.ts`: TODO placeholders for verified shop details; not yet wired into screens.
+- `supabase/functions/` and `supabase/migrations/`: project-side Supabase code.
 
-1. Run the original database SQL that creates `categories` and `products`.
-2. Run `supabase.sql` from this project to add admin fields, RLS policies and the `product-images` Storage bucket.
-3. In Supabase Authentication, create the single admin user that will be used for `/admin`.
-4. Open `https://your-domain/admin` and sign in.
+The storefront reads its catalog from Supabase; demo products are not bundled or imported. The old `database.sql` was a stale separate schema; do not apply it to the live project. See `CHECKOUT_SETUP_RU.md` for the existing checkout setup notes.
 
-## Admin
+## Delivery configuration
 
-The admin is protected by Supabase email/password authentication and a trusted `app_metadata.role = "admin"` claim. Only this server-assigned role can open the admin panel or manage products, categories and product images. Assign the role only through trusted Supabase Auth administration tools or a server-side process; never from the storefront client.
+Default delivery is agreed with the shop owner at €0; the manager confirms the final delivery cost directly. Keep this exact method in `SHOP.delivery` in `src/config.ts` and the Supabase Functions → Secrets value for `SHOP_DELIVERY_METHODS_JSON`:
 
-The admin supports:
-- product create/edit/delete
-- price, category, description, composition
-- sizes, colors, stock
-- active/new/featured flags
-- product image upload to Supabase Storage
-- importing the current demo catalog into Supabase
+```json
+[{"id":"manager","ru":"Согласуется с менеджером","et":"Lepitakse kokku halduriga","en":"Arranged with the manager","priceEur":0}]
+```
 
-## Store
-
-The public storefront reads active products from Supabase. If the database has no products yet, it temporarily falls back to the bundled demo catalog until the admin imports/adds products.
+The remaining manager, bot, Mini App, social, email, legal, and site details are TODO until verified. Do not include secret values in this repository.
