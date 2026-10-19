@@ -28,6 +28,7 @@ update public.store_orders set
 
 alter table public.store_orders alter column contact_type set not null;
 alter table public.store_orders alter column contact_value set not null;
+alter table public.store_orders alter column status set default 'new';
 alter table public.store_orders alter column source set default 'web';
 alter table public.store_orders alter column source set not null;
 alter table public.store_orders alter column language set default 'en';
