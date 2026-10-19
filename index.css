@@ -389,3 +389,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .sold-intro{margin:12px 0 22px;color:#777;font-size:12px;line-height:1.5}.sold-stamp{position:absolute;left:10px;top:10px;z-index:3;padding:7px 9px;border:1px solid rgba(255,255,255,.55);border-radius:999px;background:rgba(7,7,7,.82);color:#fff;font-size:8px;font-weight:850;letter-spacing:.18em}.is-sold-card .product-media img{filter:grayscale(.2)}
 .admin-section-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:380px){.bottom-nav{padding:7px 6px}.nav-item{font-size:6px;letter-spacing:.08em}}
+
+
+/* SOLD count is intentionally quiet; keep incoming-order badge prominent. */
+.admin-section-tabs .admin-sold-count{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.07);color:#92928f;font-size:8px;font-weight:600;line-height:1;letter-spacing:0;box-shadow:none}
