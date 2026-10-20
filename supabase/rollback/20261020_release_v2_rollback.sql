@@ -1,0 +1,41 @@
+-- Manual rollback guide for the unapplied release/v2 migrations 202610200001-006.
+-- Do not execute before a reviewed backup and confirmation that no release/v2
+-- application version is using these schema objects. This file is intentionally
+-- not an automatic migration: data preservation requires an operator decision.
+--
+-- Irreversible or lossy effects: stock quantities changed by reservations and
+-- cancellations; status transitions/history; product resale statuses; category
+-- translations; reviews; thumbnail URLs; and personal data already anonymized
+-- by anonymize_old_orders(). Restore these only from a verified backup. Dropping
+-- the new order fields also loses order comments/contact metadata.
+--
+-- Before running any DROP statements, export/restore the original policy
+-- definitions from the pre-release schema. The known live database had a legacy
+-- products_public_select_sold policy; do not recreate it from memory because its
+-- predicate exposed sold rows without the intended active-product guarantee.
+-- This file is an intentionally non-executable rollback checklist. It raises
+-- immediately if run, because the old RPC and grants cannot safely be inferred.
+-- Prepare a reviewed restore script from a verified schema backup first.
+do $$ begin raise exception 'Manual rollback only: review this file and restore pre-release schema from backup'; end $$;
+
+-- 1. If pg_cron was available, unschedule jobs named
+--    release-stale-reservations and anonymize-old-orders.
+-- 2. Restore the pre-release create_store_order and admin_update_store_order
+--    definitions, constraints, indexes, grants, and RLS policies from backup.
+--    Do not restore products_public_select_sold without reviewing its predicate;
+--    preserve the active-only policy for hidden drafts.
+-- 3. Remove release-only functions: admin_release_stale_reservations(),
+--    release_stale_reservations(), anonymize_old_orders(), and the release
+--    overloads of create_store_order/admin_update_store_order.
+-- 4. Remove trigger sync_resale_product_status_before_update and function
+--    sync_resale_product_status(). Keep products.is_sold because it predated v2.
+-- 5. After exports and confirmation that no v2 app uses them, remove the v2
+--    columns: products.resale_status, brand, condition, size_label, measurements,
+--    defects, thumbnail_urls; categories.category_type/name_ru/name_et/name_en;
+--    store_orders.contact_type/contact_value/comment/source/language/
+--    payment_status/stock_reserved/ip_hash/contact_hash/terms_accepted_at/
+--    manager_note. Restore original constraints and columns from backup.
+-- 6. Drop store_order_status_history and reviews only after exporting any data.
+--
+-- Never remove the backup_20261019 schema. Roll back the site separately in
+-- Vercel. Database rollback cannot recover PII already anonymized after 12 months.

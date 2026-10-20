@@ -1,141 +1,59 @@
--- Roll back the 2026-10 storefront rollout to the earlier YAROPLUGG schema.
--- Applied live through Supabase MCP on 2026-10-19 after verifying:
---   store_orders, store_order_items, store_order_status_history, reviews are empty;
---   products/categories match backup_20261019 exactly after excluding rollout columns.
--- The backup_20261019 schema is intentionally retained.
--- This removes rollout-only schema and restores the legacy Telegram-only order RPC.
--- To recover removed catalog fields, use the retained backup snapshot; dropped review/history
--- tables were empty. Existing order data was zero at rollback time.
-begin;
-drop trigger if exists sync_resale_product_status_before_update on public.products;
-drop function if exists public.sync_resale_product_status();
-drop function if exists public.admin_update_store_order(uuid,text,text,text);
-drop function if exists public.create_store_order(uuid,text,text,jsonb,integer,bigint,text,text,text,text,text,text,text,text,text,text,text,boolean);
-drop table if exists public.store_order_status_history;
-drop table if exists public.reviews;
-alter table public.products drop column if exists brand, drop column if exists condition, drop column if exists size_label, drop column if exists measurements, drop column if exists defects, drop column if exists resale_status, drop column if exists thumbnail_urls;
-alter table public.categories drop column if exists category_type, drop column if exists name_ru, drop column if exists name_et, drop column if exists name_en;
-alter table public.store_orders drop constraint if exists store_orders_contact_type_check, drop constraint if exists store_orders_payment_status_check, drop constraint if exists store_orders_source_check, drop constraint if exists store_orders_status_check;
-alter table public.store_orders drop column if exists contact_type, drop column if exists contact_value, drop column if exists delivery_method, drop column if exists delivery_city, drop column if exists delivery_address, drop column if exists comment, drop column if exists source, drop column if exists language, drop column if exists payment_status, drop column if exists stock_reserved, drop column if exists ip_hash, drop column if exists contact_hash, drop column if exists terms_accepted_at, drop column if exists manager_note;
-alter table public.store_orders alter column phone set not null;
-alter table public.store_orders alter column status set default 'pending_payment';
-alter table public.store_orders add constraint store_orders_status_check check(status='pending_payment');
-revoke all on table public.store_orders, public.store_order_items from anon,authenticated;
-grant select on table public.store_orders, public.store_order_items to authenticated;
-grant update(fulfillment_status) on table public.store_orders to authenticated;
-grant delete on table public.store_orders to authenticated;
-commit;
-
--- Restore the anti-spam 7-argument create_store_order RPC from the baseline migration:
--- Apply the same order limits to the verified Telegram ID and verified username.
--- Limits: at most 3 new orders in 10 minutes and 10 in 24 hours.
-create index if not exists store_orders_telegram_username_created_at_idx
-  on public.store_orders (lower(telegram_username), created_at desc)
-  where telegram_username is not null;
-
-create or replace function public.create_store_order(
-  p_idempotency_key uuid,
-  p_customer_name text,
-  p_phone text,
-  p_items jsonb,
-  p_total_cents integer,
-  p_telegram_user_id bigint,
-  p_telegram_username text
-) returns table(order_id uuid, order_number bigint, total_cents integer, status text, created boolean)
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_order_id uuid;
-  v_order_number bigint;
-  v_total_cents integer;
-  v_status text;
-  v_existing_telegram_user_id bigint;
-  v_recent_count bigint;
-  v_daily_count bigint;
-  v_username text;
-  v_lock_key_one text;
-  v_lock_key_two text;
-begin
-  if p_telegram_user_id is null or p_telegram_user_id <= 0 then
-    raise exception 'INVALID_TELEGRAM_USER_ID' using errcode = 'P0001';
-  end if;
-
-  v_username := nullif(pg_catalog.lower(pg_catalog.btrim(coalesce(p_telegram_username, ''))), '');
-
-  -- Lock both verified identity keys in a stable order to prevent parallel requests bypassing limits.
-  if v_username is null then
-    perform pg_catalog.pg_advisory_xact_lock(
-      pg_catalog.hashtextextended('telegram-id:' || p_telegram_user_id::text, 0)
-    );
-  else
-    if ('telegram-id:' || p_telegram_user_id::text) < ('telegram-username:' || v_username) then
-      v_lock_key_one := 'telegram-id:' || p_telegram_user_id::text;
-      v_lock_key_two := 'telegram-username:' || v_username;
-    else
-      v_lock_key_one := 'telegram-username:' || v_username;
-      v_lock_key_two := 'telegram-id:' || p_telegram_user_id::text;
-    end if;
-    perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(v_lock_key_one, 0));
-    perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(v_lock_key_two, 0));
-  end if;
-
-  -- Idempotent retries return the same order and do not consume the rate limit.
-  select o.id, o.order_number, o.total_cents, o.status, o.telegram_user_id
-    into v_order_id, v_order_number, v_total_cents, v_status, v_existing_telegram_user_id
-    from public.store_orders as o
-    where o.idempotency_key = p_idempotency_key;
-  if found then
-    if v_existing_telegram_user_id is distinct from p_telegram_user_id then
-      raise exception 'ORDER_IDEMPOTENCY_CONFLICT' using errcode = 'P0001';
-    end if;
-    return query select v_order_id, v_order_number, v_total_cents, v_status, false;
-    return;
-  end if;
-
-  select
-    count(*) filter (where o.created_at >= now() - interval '10 minutes'),
-    count(*) filter (where o.created_at >= now() - interval '24 hours')
-    into v_recent_count, v_daily_count
-    from public.store_orders as o
-    where o.telegram_user_id = p_telegram_user_id
-      or (v_username is not null and pg_catalog.lower(o.telegram_username) = v_username);
-
-  if v_recent_count >= 3 or v_daily_count >= 10 then
-    raise exception 'ORDER_RATE_LIMITED' using errcode = 'P0001';
-  end if;
-
-  insert into public.store_orders (
-    idempotency_key, customer_name, phone, total_cents, telegram_user_id, telegram_username
-  ) values (
-    p_idempotency_key, pg_catalog.btrim(p_customer_name), pg_catalog.btrim(p_phone), p_total_cents,
-    p_telegram_user_id, v_username
-  )
-  on conflict (idempotency_key) do nothing
-  returning id, store_orders.order_number into v_order_id, v_order_number;
-
-  if v_order_id is null then
-    select o.id, o.order_number, o.total_cents, o.status, o.telegram_user_id
-      into v_order_id, v_order_number, v_total_cents, v_status, v_existing_telegram_user_id
-      from public.store_orders as o
-      where o.idempotency_key = p_idempotency_key;
-    if v_existing_telegram_user_id is distinct from p_telegram_user_id then
-      raise exception 'ORDER_IDEMPOTENCY_CONFLICT' using errcode = 'P0001';
-    end if;
-    return query select v_order_id, v_order_number, v_total_cents, v_status, false;
-    return;
-  end if;
-
-  insert into public.store_order_items(order_id, product_id, product_name, unit_price_cents, quantity, size, color, length)
-  select v_order_id, (item->>'product_id')::uuid, item->>'product_name',
-    (item->>'unit_price_cents')::integer, (item->>'quantity')::integer,
-    nullif(item->>'size',''), nullif(item->>'color',''), nullif(item->>'length','')
-  from jsonb_array_elements(p_items) as x(item);
-
-  return query select v_order_id, v_order_number, p_total_cents, 'pending_payment'::text, true;
-end;
-$$;
-
-revoke all on function public.create_store_order(uuid,text,text,jsonb,integer,bigint,text) from public,anon,authenticated;
-grant execute on function public.create_store_order(uuid,text,text,jsonb,integer,bigint,text) to service_role;
+-- ROLLBACK PLAN for migrations 202610200001–202610200005.
+-- This file is intentionally documentation-only. Do not run it as a single script.
+-- First stop writes/orders, take an additional backup, and review each statement.
+-- Restore the four snapshot tables from backup_20261019 before reverting order/product
+-- columns if post-migration orders or stock changes must be discarded. A snapshot
+-- restore overwrites changes made after 2026-10-19 and must be performed deliberately.
+--
+-- Reversible schema changes (only after confirming data has been exported):
+-- 202610200005: restore prior admin_update_store_order(uuid,text,text), then remove
+--   history table, manager_note and thumbnail_urls. History/notes/thumbnails are not
+--   in the requested snapshot and are lost unless separately exported.
+-- 202610200004: remove reviews and localized category names. Reviews are not in the
+--   requested snapshot and are lost unless separately exported.
+-- 202610200003: remove resale trigger/function, resale columns and category_type.
+--   Resale values are not in the requested snapshot; recover them only from a separate
+--   export. Restoring products from the snapshot also resets inventory to snapshot time.
+-- 202610200002: restore old order RPC and constraints, remove checkout/rate-limit fields,
+--   restore status='pending_payment' and the original phone NOT NULL/check constraint.
+--   New orders/contacts/status/payment data are not represented in the snapshot.
+-- 202610200001: remove the two admin read policies and revert the grant only after
+--   checking the pre-migration grants. Do not blindly revoke grants needed by the app.
+--
+-- The snapshot tables contain full row copies, but restoring all four safely requires
+--   matching schema versions and handling identity sequences, foreign keys, and any
+--   writes since the snapshot. Compare counts and IDs first. In a reviewed transaction,
+--   disable/re-enable constraints only as necessary, restore parent rows before items,
+--   then set order_number's identity sequence to max(order_number). Never run a blanket
+--   TRUNCATE/INSERT automatically from this file.
+--
+-- Review-only SQL building blocks (uncomment/adapt individually; not a complete rollback):
+-- BEGIN;
+-- DROP POLICY IF EXISTS "Admins can read store orders" ON public.store_orders;
+-- DROP POLICY IF EXISTS "Admins can read store order items" ON public.store_order_items;
+-- DROP POLICY IF EXISTS "Admins can read order status history" ON public.store_order_status_history;
+-- DROP POLICY IF EXISTS "Public can read published reviews" ON public.reviews;
+-- DROP POLICY IF EXISTS "Admins can create reviews" ON public.reviews;
+-- DROP POLICY IF EXISTS "Admins can update reviews" ON public.reviews;
+-- DROP POLICY IF EXISTS "Admins can delete reviews" ON public.reviews;
+-- DROP TRIGGER IF EXISTS sync_resale_product_status_before_update ON public.products;
+-- DROP FUNCTION IF EXISTS public.sync_resale_product_status();
+-- DROP TABLE IF EXISTS public.store_order_status_history;
+-- DROP TABLE IF EXISTS public.reviews;
+-- ALTER TABLE public.products DROP COLUMN IF EXISTS thumbnail_urls;
+-- ALTER TABLE public.store_orders DROP COLUMN IF EXISTS manager_note;
+-- ALTER TABLE public.products DROP COLUMN IF EXISTS resale_status, DROP COLUMN IF EXISTS defects,
+--   DROP COLUMN IF EXISTS measurements, DROP COLUMN IF EXISTS size_label, DROP COLUMN IF EXISTS condition,
+--   DROP COLUMN IF EXISTS brand;
+-- ALTER TABLE public.categories DROP COLUMN IF EXISTS category_type, DROP COLUMN IF EXISTS name_ru,
+--   DROP COLUMN IF EXISTS name_et, DROP COLUMN IF EXISTS name_en;
+-- ALTER TABLE public.store_orders DROP COLUMN IF EXISTS terms_accepted_at, DROP COLUMN IF EXISTS contact_hash,
+--   DROP COLUMN IF EXISTS ip_hash, DROP COLUMN IF EXISTS stock_reserved, DROP COLUMN IF EXISTS payment_status,
+--   DROP COLUMN IF EXISTS language, DROP COLUMN IF EXISTS source, DROP COLUMN IF EXISTS comment,
+--   DROP COLUMN IF EXISTS delivery_address, DROP COLUMN IF EXISTS delivery_city, DROP COLUMN IF EXISTS delivery_method,
+--   DROP COLUMN IF EXISTS contact_value, DROP COLUMN IF EXISTS contact_type;
+-- COMMIT;
+--
+-- This does not restore the previous RPC bodies/permissions or the phone/status checks;
+-- recover those definitions from migrations 202610170001 and 202610170002 and apply
+-- only after restoring/validating data. Migration 202610200005 replaced the admin RPC.
