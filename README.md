@@ -1,32 +1,33 @@
 # YAROPLUGG STORE
 
-React and Vite storefront for Telegram Mini App and regular browsers, with Supabase catalog, orders and admin tools.
+Telegram fashion storefront + Supabase admin MVP.
 
-## Local setup
+## Environment variables
 
-1. Use Node.js 24 and pnpm 11 (`.nvmrc` and `packageManager` pin the expected versions).
-2. Copy `.env.example` to `.env.local` and set the public Supabase URL and publishable key.
-3. Run `pnpm install --frozen-lockfile`, then `pnpm dev`.
-4. Before review, run `pnpm typecheck`, `pnpm test`, and `pnpm build`.
+Set these in Vercel:
 
-## Project layout
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
 
-- `src/`: storefront, admin, language dictionaries, analytics and shared utilities.
-- `api/`: Vercel product metadata, sitemap and admin routes.
-- `supabase/functions/`: server-side order creation.
-- `supabase/migrations/`: ordered database changes for the next release.
-- `supabase/rollback/`: rollback reference files; inspect each file before applying.
-- `public/`: web assets, robots rules and 404 page.
-- `RELEASE.md`: staged deployment checklist and environment variable names.
+## Supabase setup
 
-## Orders
+1. Run the original database SQL that creates `categories` and `products`.
+2. Run `supabase.sql` from this project to add admin fields, RLS policies and the `product-images` Storage bucket.
+3. In Supabase Authentication, create the single admin user that will be used for `/admin`.
+4. Open `https://your-domain/admin` and sign in.
 
-There is no online payment or delivery selection in checkout. The store manager confirms delivery and payment with the buyer. Prices, stock and reservation updates are checked on the server. Browser orders require Cloudflare Turnstile; Telegram Mini App orders use verified Telegram `initData`.
+## Admin
 
-## Environment
+The admin is protected by Supabase email/password authentication and a trusted `app_metadata.role = "admin"` claim. Only this server-assigned role can open the admin panel or manage products, categories and product images. Assign the role only through trusted Supabase Auth administration tools or a server-side process; never from the storefront client.
 
-See `.env.example` for client and deployment variable names. Keep service-role credentials, Telegram bot tokens and the Turnstile secret in Supabase Edge Function secrets. Do not commit secret values or paste them into chat. `SHOP_SITE_URL` is used for canonical product links, sitemap links, order notifications and the Edge Function origin allowlist.
+The admin supports:
+- product create/edit/delete
+- price, category, description, composition
+- sizes, colors, stock
+- active/new/featured flags
+- product image upload to Supabase Storage
+- importing the current demo catalog into Supabase
 
-## Shop details
+## Store
 
-Verified manager, Telegram bot, Instagram/Vinted, contact and seller details are intentionally left blank until supplied by the store owner. An unset Instagram URL hides the Instagram link. Analytics stays disabled unless both Umami variables are configured.
+The public storefront reads active products from Supabase. If the database has no products yet, it temporarily falls back to the bundled demo catalog until the admin imports/adds products.

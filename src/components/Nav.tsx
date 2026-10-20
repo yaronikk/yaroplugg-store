@@ -1,2 +1,0 @@
-import React from 'react'
-export function Nav({icon,label,active,onClick,badge=0,ariaLabel}:{icon:React.ReactNode;label:string;active:boolean;onClick:()=>void;badge?:number;ariaLabel?:string}){const displayBadge=badge>99?'99+':String(badge);return <button onClick={onClick} className={`nav-item ${active?'is-active':''}`} aria-label={ariaLabel||label}><span className="nav-icon-wrap"><span className="nav-icon">{icon}</span>{badge>0&&<span className="nav-badge" aria-hidden="true">{displayBadge}</span>}</span><span>{label}</span></button>}
