@@ -294,3 +294,48 @@ button,a,input,select,textarea{touch-action:manipulation}button{min-height:44px}
 .admin-order-search{display:flex;align-items:center;gap:9px;padding:0 12px;border:1px solid #303030;border-radius:12px;margin:10px 0 16px}.admin-order-search input{flex:1;min-width:0;background:transparent;border:0;color:#fff;outline:none}.admin-manager-note{display:flex;align-items:end;gap:10px;margin:12px 0}.admin-manager-note label{flex:1;font-size:11px;letter-spacing:.12em;color:#aaa}.admin-manager-note textarea{display:block;width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #333;background:#0d0d0d;color:#fff;resize:vertical}.admin-order-history{margin:10px 0;color:#aaa;font-size:11px}.admin-order-history summary{cursor:pointer;padding:10px 0}.admin-order-history li{margin:6px 0}.admin-order-history time{color:#858585}.admin-order-search input{min-height:44px}
 
 @media (min-width:760px){html.telegram-mini-app .app-shell{padding:0}html.telegram-mini-app .store-shell{width:100%;margin:0;border:0;border-radius:0}html.telegram-mini-app .site-header{padding:12px 20px}html.telegram-mini-app .page-pad{padding:20px}html.telegram-mini-app .bottom-nav{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(calc(100% - 24px),456px);padding:8px 10px;display:grid;grid-template-columns:repeat(5,1fr)}html.telegram-mini-app .product-sheet{width:100%;display:block;border-radius:28px 28px 0 0}html.telegram-mini-app .product-sheet .modal-media{position:relative;max-height:none}html.telegram-mini-app .product-sheet .modal-media img{max-height:none;aspect-ratio:.88}}
+
+/* Keep the wide browser storefront while Telegram remains phone-sized. */
+@media (min-width:760px){
+ html:not(.telegram-mini-app) .store-shell{max-width:1280px}
+ html:not(.telegram-mini-app) .site-header{height:92px;padding:0 34px}
+ html:not(.telegram-mini-app) .brand-logo{width:176px;max-height:46px}
+ html:not(.telegram-mini-app) .hero-card{aspect-ratio:2.35/1;max-height:510px;min-height:0;border-radius:34px;margin-bottom:44px}
+ html:not(.telegram-mini-app) .category-strip{gap:34px}
+ html:not(.telegram-mini-app) .category-strip button{font-size:12px;padding-bottom:16px}
+ html:not(.telegram-mini-app) .product-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:38px 24px}
+ html:not(.telegram-mini-app) .product-media{border-radius:22px}
+ html:not(.telegram-mini-app) .product-name,html:not(.telegram-mini-app) .product-price{font-size:15px}
+ html:not(.telegram-mini-app) .product-info{padding:12px 2px 0}
+ html:not(.telegram-mini-app) .bottom-nav{position:fixed;left:50%;bottom:22px;width:auto;max-width:none;display:flex;gap:6px;padding:10px 12px;border-radius:999px}
+ html:not(.telegram-mini-app) .nav-item{flex-direction:row;gap:8px;padding:8px 14px;border-radius:999px;font-size:9px;letter-spacing:.12em}
+ html:not(.telegram-mini-app) .nav-item.is-active{background:rgba(255,255,255,.08)}
+ html:not(.telegram-mini-app) .modal-backdrop{align-items:center;justify-content:center;padding:24px}
+ html:not(.telegram-mini-app) .sheet{width:min(640px,calc(100vw - 48px));max-height:88dvh;margin:auto;border-radius:28px}
+ html:not(.telegram-mini-app) .product-sheet{width:min(1080px,calc(100vw - 64px));height:min(780px,88dvh);max-height:88dvh;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);border-radius:30px}
+ html:not(.telegram-mini-app) .modal-media{height:100%}
+ html:not(.telegram-mini-app) .product-swipe-gallery,html:not(.telegram-mini-app) .product-swipe-slide{height:100%}
+ html:not(.telegram-mini-app) .product-swipe-slide img{height:100%;aspect-ratio:auto}
+ html:not(.telegram-mini-app) .product-sheet-content{min-height:0;max-height:100%;overflow-y:auto;padding:34px clamp(26px,3vw,44px) 32px}
+ html:not(.telegram-mini-app) .product-sheet-content .primary-red{position:static;box-shadow:none;padding-bottom:0}
+ html:not(.telegram-mini-app) .cart-sheet,html:not(.telegram-mini-app) .filter-sheet{width:min(660px,calc(100vw - 48px));max-height:88dvh;padding:28px 32px}
+ html:not(.telegram-mini-app) .cart-line{grid-template-columns:88px minmax(0,1fr);gap:16px;padding-bottom:16px}
+ html:not(.telegram-mini-app) .cart-line>img{width:88px;height:104px}
+ html:not(.telegram-mini-app) .checkout-inner{width:min(100%,720px)}
+ html.telegram-mini-app .store-shell{max-width:480px}
+ html.telegram-mini-app .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 12px}
+ html.telegram-mini-app .hero-card{aspect-ratio:3/2;max-height:none;min-height:0;border-radius:30px;margin-bottom:30px}
+ html.telegram-mini-app .modal-backdrop{align-items:flex-end;justify-content:initial;padding:0}
+ html.telegram-mini-app .sheet{width:min(100%,480px);max-height:94dvh;margin:0 auto;border-radius:28px 28px 0 0}
+ html.telegram-mini-app .cart-sheet,html.telegram-mini-app .filter-sheet{width:100%;max-width:480px;padding:18px 20px 24px}
+ html.telegram-mini-app .checkout-inner{width:min(100%,480px)}
+}
+@media (min-width:1100px){
+ html:not(.telegram-mini-app) .product-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:44px 28px}
+ html:not(.telegram-mini-app) .page-pad{padding-right:56px;padding-left:56px}
+ html:not(.telegram-mini-app) .hero-card{aspect-ratio:2.55/1}
+}
+@media (min-width:1500px){
+ html:not(.telegram-mini-app) .store-shell{max-width:1520px}
+ html:not(.telegram-mini-app) .product-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:48px 30px}
+}
