@@ -11,6 +11,11 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
   headers: { ...corsHeaders, 'Content-Type': 'application/json' },
 })
 
+async function sha256(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+}
+
 async function verifyTelegramInitData(initData: string, botToken: string) {
   const params = new URLSearchParams(initData)
   const receivedHash = params.get('hash')
@@ -56,6 +61,9 @@ Deno.serve(async (request) => {
     const payload = await request.json()
     const customerName = typeof payload.customerName === 'string' ? payload.customerName.trim() : ''
     const phone = typeof payload.phone === 'string' ? payload.phone.trim() : ''
+    const comment = typeof payload.comment === 'string' ? payload.comment.trim().slice(0, 1000) : ''
+    const termsAccepted = payload.termsAccepted === true
+    const language = ['ru', 'et', 'en'].includes(payload.language) ? payload.language : 'en'
     const telegramId = typeof payload.telegramId === 'string' ? payload.telegramId.trim() : ''
     const idempotencyKey = payload.idempotencyKey
     const inputItems = payload.items
@@ -65,7 +73,7 @@ Deno.serve(async (request) => {
     if (!telegramUser || !/^\d{5,20}$/.test(telegramId) || telegramId !== telegramUser.id) {
       return json({ error: 'Enter the Telegram ID shown for your own Telegram account.' }, 400)
     }
-    if (customerName.length < 1 || customerName.length > 120 || phone.length > 40 ||
+    if (customerName.length < 1 || customerName.length > 120 || phone.length > 40 || !termsAccepted ||
       !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(idempotencyKey || '') ||
       !Array.isArray(inputItems) || inputItems.length < 1 || inputItems.length > 30) {
       return json({ error: 'Check the order details and try again' }, 400)
@@ -123,6 +131,9 @@ Deno.serve(async (request) => {
     }
     if (!Number.isSafeInteger(totalCents) || totalCents < 1) return json({ error: 'Invalid order total' }, 400)
 
+    const forwardedFor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || ''
+    const ipHash = forwardedFor ? await sha256(forwardedFor) : ''
+    const contactHash = await sha256(`telegram:${telegramId}`)
     const { data: created, error: createError } = await supabase.rpc('create_store_order', {
       p_idempotency_key: idempotencyKey,
       p_customer_name: customerName,
@@ -131,12 +142,32 @@ Deno.serve(async (request) => {
       p_total_cents: totalCents,
       p_telegram_user_id: telegramId,
       p_telegram_username: telegramUser.username,
+      p_contact_type: 'telegram',
+      p_contact_value: telegramId,
+      p_comment: comment,
+      p_source: 'miniapp',
+      p_language: language,
+      p_ip_hash: ipHash,
+      p_contact_hash: contactHash,
+      p_terms_accepted: termsAccepted,
     })
     if (createError?.code === 'P0001' && createError.message === 'ORDER_RATE_LIMITED') {
-      return json({ error: 'Too many orders from this Telegram account. Please try again later.' }, 429)
+      return json({ error: 'Too many orders from this Telegram account. Please try again later.', code: 'RATE_LIMITED' }, 429)
     }
     if (createError?.code === 'P0001' && createError.message === 'ORDER_IDEMPOTENCY_CONFLICT') {
-      return json({ error: 'This order request has already been used. Please refresh the store and try again.' }, 409)
+      return json({ error: 'This order request has already been used. Please refresh the store and try again.', code: 'INVALID_ORDER' }, 409)
+    }
+    if (createError?.code === 'P0001' && createError.message === 'INVALID_ORDER') {
+      return json({ error: 'Check the order details and accept the purchase terms.', code: 'INVALID_ORDER' }, 400)
+    }
+    if (createError?.code === 'P0001' && createError.message === 'INSUFFICIENT_STOCK') {
+      return json({ error: 'One or more items are no longer available in the requested quantity.', code: 'OUT_OF_STOCK' }, 409)
+    }
+    if (createError?.code === 'P0001' && createError.message === 'PRODUCT_UNAVAILABLE') {
+      return json({ error: 'A product is no longer available.', code: 'PRODUCT_UNAVAILABLE' }, 409)
+    }
+    if (createError?.code === 'P0001' && createError.message === 'PRICE_CHANGED') {
+      return json({ error: 'The price has changed. Refresh the store and try again.', code: 'PRICE_CHANGED' }, 409)
     }
     if (createError) throw createError
     const order = Array.isArray(created) ? created[0] : created
