@@ -18,8 +18,8 @@ async function verifyTelegramInitData(initData: string, botToken: string) {
   if (!receivedHash || !Number.isFinite(authDate) || Date.now() / 1000 - authDate > 86400 || authDate > Date.now() / 1000 + 60) return false
   const checkString = [...params.entries()].filter(([key]) => key !== 'hash').sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => `${key}=${value}`).join('\n')
   const encoder = new TextEncoder()
-  const key = await crypto.subtle.importKey('raw', encoder.encode(botToken), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-  const secret = await crypto.subtle.sign('HMAC', key, encoder.encode('WebAppData'))
+  const key = await crypto.subtle.importKey('raw', encoder.encode('WebAppData'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const secret = await crypto.subtle.sign('HMAC', key, encoder.encode(botToken))
   const signingKey = await crypto.subtle.importKey('raw', secret, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
   const digest = new Uint8Array(await crypto.subtle.sign('HMAC', signingKey, encoder.encode(checkString)))
   const expectedHash = [...digest].map((byte) => byte.toString(16).padStart(2, '0')).join('')
