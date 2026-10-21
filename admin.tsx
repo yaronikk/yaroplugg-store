@@ -7,7 +7,6 @@ import type {Category,Product} from './types'
 type OrderStatus='new'|'contacted'|'reserved'|'shipped'|'completed'|'cancelled'
 type PaymentStatus='pending_payment'|'paid'|'refunded'
 type AdminSection='products'|'sold'|'orders'
-type AdminColor={name:string;hex:string}
 
 const supabaseUrl=import.meta.env.VITE_SUPABASE_URL as string|undefined
 const supabaseKey=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string|undefined
