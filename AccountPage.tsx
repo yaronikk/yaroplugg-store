@@ -22,7 +22,7 @@ const text = {
   en: {
     myAccount:'MY ACCOUNT', loading:'LOADING ACCOUNT', notConfigured:'Account service is not configured in this deployment.',
     create:'CREATE YOUR ACCOUNT', welcome:'WELCOME BACK', intro:'Sign in to manage your Yaroplugg profile.',
-    telegram:'CONTINUE WITH TELEGRAM', orEmail:'OR USE EMAIL', name:'NAME', email:'EMAIL', password:'PASSWORD',
+    telegram:'CONTINUE WITH TELEGRAM', linkTelegram:'CONNECT TELEGRAM ACCOUNT', orEmail:'OR USE EMAIL', name:'NAME', email:'EMAIL', password:'PASSWORD',
     save:'SAVE PROFILE', saving:'SAVING…', details:'PROFILE DETAILS', signIn:'SIGN IN', createAccount:'CREATE ACCOUNT',
     newHere:'NEW HERE? CREATE AN ACCOUNT', haveAccount:'ALREADY HAVE AN ACCOUNT? SIGN IN', signOut:'SIGN OUT',
     footnote:'Marketplace accounts are separate from the store administrator login.',
@@ -34,7 +34,7 @@ const text = {
   ru: {
     myAccount:'МОЙ АККАУНТ', loading:'ЗАГРУЗКА АККАУНТА', notConfigured:'Сервис аккаунтов пока не настроен в этой версии сайта.',
     create:'СОЗДАТЬ АККАУНТ', welcome:'С ВОЗВРАЩЕНИЕМ', intro:'Войдите, чтобы управлять своим профилем Yaroplugg.',
-    telegram:'ВОЙТИ ЧЕРЕЗ TELEGRAM', orEmail:'ИЛИ ЧЕРЕЗ EMAIL', name:'ИМЯ', email:'EMAIL', password:'ПАРОЛЬ',
+    telegram:'ВОЙТИ ЧЕРЕЗ TELEGRAM', linkTelegram:'ПОДКЛЮЧИТЬ TELEGRAM', orEmail:'ИЛИ ЧЕРЕЗ EMAIL', name:'ИМЯ', email:'EMAIL', password:'ПАРОЛЬ',
     save:'СОХРАНИТЬ ПРОФИЛЬ', saving:'СОХРАНЕНИЕ…', details:'ДАННЫЕ ПРОФИЛЯ', signIn:'ВОЙТИ', createAccount:'СОЗДАТЬ АККАУНТ',
     newHere:'ВПЕРВЫЕ ЗДЕСЬ? СОЗДАТЬ АККАУНТ', haveAccount:'УЖЕ ЕСТЬ АККАУНТ? ВОЙТИ', signOut:'ВЫЙТИ',
     footnote:'Аккаунт Marketplace отдельный от входа администратора магазина.',
@@ -46,7 +46,7 @@ const text = {
   et: {
     myAccount:'MINU KONTO', loading:'KONTO LAADIMINE', notConfigured:'Kontoteenus pole selles versioonis seadistatud.',
     create:'LOO KONTO', welcome:'TERE TULEMAST TAGASI', intro:'Logi sisse, et hallata oma Yaropluggi profiili.',
-    telegram:'JÄTKA TELEGRAMIGA', orEmail:'VÕI KASUTA E-POSTI', name:'NIMI', email:'E-POST', password:'PAROOL',
+    telegram:'JÄTKA TELEGRAMIGA', linkTelegram:'ÜHENDA TELEGRAM', orEmail:'VÕI KASUTA E-POSTI', name:'NIMI', email:'E-POST', password:'PAROOL',
     save:'SALVESTA PROFIIL', saving:'SALVESTAMINE…', details:'PROFIILI ANDMED', signIn:'LOGI SISSE', createAccount:'LOO KONTO',
     newHere:'UUS KASUTAJA? LOO KONTO', haveAccount:'KONTO ON JUBA OLEMAS? LOGI SISSE', signOut:'LOGI VÄLJA',
     footnote:'Marketplace konto on poe administraatori sisselogimisest eraldi.',
@@ -140,6 +140,22 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
     }
   }
 
+
+  async function linkTelegram() {
+    if (!supabase || !user || busy) return
+    setBusy(true)
+    setError('')
+    setMessage('')
+    const { error: linkError } = await supabase.auth.linkIdentity({
+      provider: 'custom:telegram',
+      options: { redirectTo: window.location.origin },
+    })
+    if (linkError) {
+      setError(linkError.message)
+      setBusy(false)
+    }
+  }
+
   async function saveProfile(event: React.FormEvent) {
     event.preventDefault()
     if (!supabase || !user || busy) return
@@ -207,6 +223,12 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
               {identityProviders.map(provider => <span key={provider}><ShieldCheck size={13} /> {provider === 'custom:telegram' ? 'TELEGRAM' : provider.toUpperCase()}</span>)}
             </div>
           </div>
+
+          {!identityProviders.includes('custom:telegram') && !identityProviders.includes('telegram') && (
+            <button className="account-telegram" type="button" onClick={linkTelegram} disabled={busy}>
+              <span className="account-telegram-mark">➤</span> {t.linkTelegram}
+            </button>
+          )}
           <form className="account-card account-form" onSubmit={saveProfile}>
             <h2>{t.details}</h2>
             <label>{t.displayName}<input value={displayName} onChange={event => setDisplayName(event.target.value)} maxLength={80} autoComplete="name" required /></label>
