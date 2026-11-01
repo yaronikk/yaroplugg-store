@@ -315,11 +315,11 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
                 {telegramUsername && <a href={`https://t.me/${encodeURIComponent(telegramUsername)}`} target="_blank" rel="noreferrer">@{telegramUsername}</a>}
               </div>
             </div>
-            <div className="account-avatar-actions">
-              <button type="button" onClick={() => avatarInputRef.current?.click()} disabled={avatarBusy}><Camera size={13} /> {avatarBusy ? t.uploadingAvatar : avatarUrl ? t.changeAvatar : t.uploadAvatar}</button>
-              {profile?.avatar_url && ownAvatarStoragePath(profile.avatar_url) && <button type="button" onClick={removeAvatar} disabled={avatarBusy}><Trash2 size={13} /> {t.removeAvatar}</button>}
-              <span>JPG, PNG, WebP · max 3 MB</span>
-            </div>
+            {profile?.avatar_url && ownAvatarStoragePath(profile.avatar_url) && (
+              <div className="account-avatar-actions">
+                <button type="button" onClick={removeAvatar} disabled={avatarBusy}><Trash2 size={13} /> {t.removeAvatar}</button>
+              </div>
+            )}
             <div className="account-identities">
               {identityProviders.map(provider => <span key={provider}><ShieldCheck size={13} /> {provider === 'custom:telegram' ? 'TELEGRAM' : provider.toUpperCase()}</span>)}
             </div>
