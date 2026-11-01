@@ -430,3 +430,40 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .telegram-webapp .cart-sheet { max-height: min(88dvh, calc(var(--tg-viewport-height, 100dvh) - 20px)); }
 .telegram-webapp .checkout-fields input { min-width: 0; height: 44px; font-size: 16px !important; line-height: normal; -webkit-appearance: none; appearance: none; transform: none; transition: none; }
 .telegram-webapp .checkout-fields label { min-width: 0; }
+
+
+/* Account and authentication */
+.account-page{padding-top:28px;display:grid;gap:16px;min-height:55vh}
+.account-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.account-heading .eyebrow{margin:0 0 7px}
+.account-heading h1{margin:0;font-size:30px;letter-spacing:-.06em}
+.account-card{padding:20px;border:1px solid rgba(255,255,255,.10);border-radius:20px;background:#0d0d0d}
+.account-auth-intro h2,.account-form h2{margin:0 0 8px;font-size:17px;letter-spacing:-.03em}
+.account-auth-intro p{margin:0 0 18px;color:#888;font-size:11px;line-height:1.5}
+.account-telegram,.account-primary,.account-secondary{min-height:48px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:9px;padding:0 16px;font-size:10px;font-weight:800;letter-spacing:.09em}
+.account-telegram{width:100%;border:1px solid #249bd7;background:#168bd0;color:#fff}
+.account-telegram-mark{font-size:17px;transform:rotate(-25deg)}
+.account-or{display:flex;align-items:center;gap:12px;margin:20px 0;color:#666;font-size:8px;letter-spacing:.16em}
+.account-or:before,.account-or:after{content:"";height:1px;flex:1;background:rgba(255,255,255,.10)}
+.account-form{display:grid;gap:14px}
+.account-form label{display:grid;gap:7px;color:#888;font-size:8px;letter-spacing:.15em}
+.account-form input{width:100%;min-height:46px;padding:0 13px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:#111;color:#fff;font-size:13px;letter-spacing:normal;outline:none}
+.account-form input:focus{border-color:rgba(245,34,34,.7)}
+.account-primary{width:100%;border:0;background:#f52222;color:#fff}
+.account-primary:disabled,.account-telegram:disabled,.account-secondary:disabled{opacity:.55;cursor:not-allowed}
+.account-mode-switch{width:100%;margin-top:18px;border:0;background:transparent;color:#aaa;font-size:9px;font-weight:700;letter-spacing:.08em}
+.account-message,.account-error{display:flex;align-items:flex-start;gap:8px;padding:12px 14px;border-radius:13px;font-size:11px;line-height:1.5}
+.account-message{border:1px solid rgba(45,190,120,.25);background:rgba(45,190,120,.08);color:#a9e4c6}
+.account-error{border:1px solid rgba(245,34,34,.25);background:rgba(245,34,34,.08);color:#ffaaaa;overflow-wrap:anywhere}
+.account-profile-top{display:flex;align-items:center;gap:14px}
+.account-avatar{width:64px;height:64px;flex:none;border-radius:50%;object-fit:cover;background:#1b1b1b}
+.account-avatar-placeholder{display:grid;place-items:center;color:#777}
+.account-profile-copy{min-width:0;display:grid;gap:5px}
+.account-profile-copy strong{font-size:16px}
+.account-profile-copy span,.account-profile-copy a{font-size:11px;color:#888;overflow-wrap:anywhere}
+.account-profile-copy a{color:#70bfff;text-decoration:none}
+.account-identities{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}
+.account-identities span{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid rgba(255,255,255,.1);border-radius:999px;color:#aaa;font-size:8px;letter-spacing:.1em}
+.account-secondary{width:100%;border:1px solid rgba(255,255,255,.13);background:#111;color:#ddd}
+.account-state{min-height:130px;display:flex;align-items:center;justify-content:center;gap:10px;color:#888;font-size:10px;letter-spacing:.14em}
+.account-footnote{margin:0;color:#555;font-size:9px;line-height:1.5;text-align:center}
