@@ -492,6 +492,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .seller-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .seller-form-grid label{display:grid;gap:7px;color:#888;font-size:8px;letter-spacing:.13em}
 .seller-form-grid input,.seller-form-grid select,.seller-form-grid textarea{width:100%;min-height:42px;padding:10px 12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:#151515;color:#eee;font:inherit;font-size:12px;letter-spacing:normal;outline:none}
+.seller-form-grid select{appearance:none;-webkit-appearance:none;padding-right:38px;background-color:#151515;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23909090' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;background-size:16px 16px;cursor:pointer}
 .seller-form-grid textarea{resize:vertical;line-height:1.5}
 .seller-form-grid input:focus,.seller-form-grid select:focus,.seller-form-grid textarea:focus{border-color:rgba(245,34,34,.65)}
 .seller-form-wide{grid-column:1/-1}
