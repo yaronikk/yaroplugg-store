@@ -21,7 +21,7 @@ export default function SellerPanel({supabase,user,language}:Props){
  const [title,setTitle]=useState('')
  const [description,setDescription]=useState('')
  const [price,setPrice]=useState('')
- const [category,setCategory]=useState(t.categories[0])
+ const [category,setCategory]=useState('clothing')
  const [brand,setBrand]=useState('')
  const [size,setSize]=useState('')
  const [condition,setCondition]=useState('good')
@@ -37,7 +37,7 @@ export default function SellerPanel({supabase,user,language}:Props){
   setListings((data||[]) as Listing[])
  }
  useEffect(()=>{let active=true;(async()=>{try{await refresh()}catch(e){if(active)setError(e instanceof Error?e.message:t.error)}finally{if(active)setLoading(false)}})();return()=>{active=false}},[user.id])
- function reset(){setEditing(null);setTitle('');setDescription('');setPrice('');setCategory(t.categories[0]);setBrand('');setSize('');setCondition('good');setDefects('');setFiles([]);setExistingImages([]);setShowForm(false)}
+ function reset(){setEditing(null);setTitle('');setDescription('');setPrice('');setCategory('clothing');setBrand('');setSize('');setCondition('good');setDefects('');setFiles([]);setExistingImages([]);setShowForm(false)}
  function startEdit(item:Listing){setEditing(item);setTitle(item.title);setDescription(item.description);setPrice(String(item.price));setCategory(item.category);setBrand(item.brand||'');setSize(item.size_label||'');setCondition(item.item_condition);setDefects(item.defects||'');setExistingImages(item.images||[]);setFiles([]);setShowForm(true)}
  async function submit(event:React.FormEvent){
   event.preventDefault();setError('');setMessage('')
@@ -82,7 +82,7 @@ export default function SellerPanel({supabase,user,language}:Props){
    <div className="seller-form-grid">
     <label>{t.name}<input value={title} onChange={e=>setTitle(e.target.value)} maxLength={100} required minLength={3}/></label>
     <label>{t.price}<input type="number" value={price} onChange={e=>setPrice(e.target.value)} min="0.01" step="0.01" required/></label>
-    <label>{t.category}<select value={category} onChange={e=>setCategory(e.target.value)}>{t.categories.map(x=><option key={x}>{x}</option>)}</select></label>
+    <label>{t.category}<select value={category} onChange={e=>setCategory(e.target.value)}>{t.categories.map((x,i)=><option key={x} value={['clothing','shoes','accessories'][i]}>{x}</option>)}</select></label>
     <label>{t.brand}<input value={brand} onChange={e=>setBrand(e.target.value)} maxLength={80}/></label>
     <label>{t.size}<input value={size} onChange={e=>setSize(e.target.value)} maxLength={40}/></label>
     <label>{t.condition}<select value={condition} onChange={e=>setCondition(e.target.value)}><option value="new_with_tags">{t.conditionOptions[0]}</option><option value="excellent">{t.conditionOptions[1]}</option><option value="good">{t.conditionOptions[2]}</option><option value="defects">{t.conditionOptions[3]}</option></select></label>
