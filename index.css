@@ -457,7 +457,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .account-error{border:1px solid rgba(245,34,34,.25);background:rgba(245,34,34,.08);color:#ffaaaa;overflow-wrap:anywhere}
 .account-profile-top{display:flex;align-items:center;gap:14px}
 .account-avatar{width:64px;height:64px;flex:none;border-radius:50%;object-fit:cover;background:#1b1b1b}
-.account-avatar-placeholder{display:grid;place-items:center;color:#777}
+.account-avatar-placeholder{display:grid;place-items:center;color:#e8e8e8;background:linear-gradient(145deg,#292929,#171717);font-size:25px;font-weight:650;letter-spacing:-.06em;text-transform:uppercase}
 .account-profile-copy{min-width:0;display:grid;gap:5px}
 .account-profile-copy strong{font-size:16px}
 .account-profile-copy span,.account-profile-copy a{font-size:11px;color:#888;overflow-wrap:anywhere}
