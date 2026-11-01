@@ -306,7 +306,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
           <div className="account-card account-profile-card">
             <div className="account-profile-top">
               <div className="account-avatar-wrap">
-                {avatarUrl && !avatarLoadFailed ? <img className="account-avatar" src={avatarUrl} alt="" referrerPolicy="no-referrer" onError={() => setAvatarLoadFailed(true)} /> : <div className="account-avatar account-avatar-placeholder" aria-label={avatarInitial}>{avatarInitial}</div>}
+                {avatarUrl && !avatarLoadFailed ? <img className="account-avatar" src={avatarUrl} alt="" referrerPolicy="no-referrer" onError={() => setAvatarLoadFailed(true)} /> : <div className="account-avatar account-avatar-placeholder" aria-label={avatarInitial}><span className="account-avatar-initial">{avatarInitial}</span></div>}
                 <button className="account-avatar-edit" type="button" onClick={() => avatarInputRef.current?.click()} disabled={avatarBusy} aria-label={t.uploadAvatar}><Camera size={14} /></button>
                 <input ref={avatarInputRef} className="account-avatar-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadAvatar} />
               </div>
