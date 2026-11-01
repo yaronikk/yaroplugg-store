@@ -617,3 +617,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .seller-photo-lightbox>img{max-width:min(92vw,1000px);max-height:86vh;object-fit:contain;border-radius:10px;box-shadow:0 18px 70px #000b}
 .seller-photo-lightbox>button{position:absolute;top:20px;right:22px;width:42px;height:42px;border:1px solid #ffffff40;border-radius:50%;background:#171717;color:white;font-size:25px;cursor:pointer}
 @media(max-width:560px){.seller-photo-grid-preview{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.seller-photo-picker-featured{min-height:130px}.seller-photo-thumb-actions button{width:23px;height:23px}}
+
+
+/* Hide native number steppers in marketplace price and size fields. */
+.seller-price-wrap input[type="number"],.seller-belt-size input[type="number"]{-moz-appearance:textfield;appearance:textfield}
+.seller-price-wrap input[type="number"]::-webkit-inner-spin-button,.seller-price-wrap input[type="number"]::-webkit-outer-spin-button,.seller-belt-size input[type="number"]::-webkit-inner-spin-button,.seller-belt-size input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
