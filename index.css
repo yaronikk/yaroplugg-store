@@ -472,7 +472,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 /* Self-service marketplace profile avatars */
 .account-avatar-wrap{position:relative;flex:none;width:64px;height:64px}
 .account-avatar-wrap .account-avatar{display:block;width:64px;height:64px}
-.account-avatar-wrap .account-avatar-placeholder{display:grid;place-items:center}
+.account-avatar-wrap .account-avatar-placeholder{display:grid;place-items:center};position:relative;overflow:hidden}
+.account-avatar-initial{position:absolute;inset:0;display:grid;place-items:center;line-height:1}
 .account-avatar-edit{position:absolute;right:-4px;bottom:-4px;display:grid;place-items:center;width:27px;height:27px;border:2px solid #0d0d0d;border-radius:50%;background:#f52222;color:#fff}
 .account-avatar-input{display:none!important}
 .account-avatar-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:12px}
