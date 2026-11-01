@@ -519,3 +519,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .seller-listing-actions{display:flex;gap:5px}
 .seller-listing-actions button{display:grid;place-items:center;width:30px;height:30px;border:1px solid rgba(255,255,255,.12);border-radius:50%;background:#171717;color:#ddd}
 @media(max-width:560px){.seller-panel{padding:15px}.seller-form-grid{grid-template-columns:1fr}.seller-form-wide{grid-column:auto}.seller-photo-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.seller-listing{grid-template-columns:54px minmax(0,1fr) auto}.seller-listing>img{width:54px;height:64px}.seller-listing-actions{flex-direction:column}}
+
+
+/* Marketplace seller listing filters */
+.seller-list-filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;border-bottom:1px solid var(--line,#2a2a2a);padding-bottom:12px}.seller-list-filters button{display:flex;align-items:center;gap:8px;background:transparent;border:1px solid var(--line,#333);color:inherit;padding:9px 13px;font:inherit;font-size:11px;letter-spacing:.06em;cursor:pointer}.seller-list-filters button.active{border-color:var(--accent,#d71920);color:var(--accent,#d71920)}.seller-list-filters button span{opacity:.65;font-variant-numeric:tabular-nums}
