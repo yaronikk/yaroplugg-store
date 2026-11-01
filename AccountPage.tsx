@@ -286,6 +286,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
   }
 
   const avatarUrl = profile?.avatar_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? ''
+  const avatarInitial = (profile?.display_name || displayName || metadataName(user || ({} as User)) || 'Y').trim().charAt(0).toUpperCase()
   const identityProviders = Array.from(new Set((user?.identities || []).map(identity => identity.provider)))
 
   useEffect(() => { setAvatarLoadFailed(false) }, [avatarUrl])
@@ -305,7 +306,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
           <div className="account-card account-profile-card">
             <div className="account-profile-top">
               <div className="account-avatar-wrap">
-                {avatarUrl && !avatarLoadFailed ? <img className="account-avatar" src={avatarUrl} alt="" referrerPolicy="no-referrer" onError={() => setAvatarLoadFailed(true)} /> : <div className="account-avatar account-avatar-placeholder"><UserRound size={26} /></div>}
+                {avatarUrl && !avatarLoadFailed ? <img className="account-avatar" src={avatarUrl} alt="" referrerPolicy="no-referrer" onError={() => setAvatarLoadFailed(true)} /> : <div className="account-avatar account-avatar-placeholder" aria-label={avatarInitial}>{avatarInitial}</div>}
                 <button className="account-avatar-edit" type="button" onClick={() => avatarInputRef.current?.click()} disabled={avatarBusy} aria-label={t.uploadAvatar}><Camera size={14} /></button>
                 <input ref={avatarInputRef} className="account-avatar-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadAvatar} />
               </div>
