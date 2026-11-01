@@ -537,3 +537,60 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .seller-legit-badge{display:inline-flex;align-items:center;width:max-content;margin-top:5px;padding:4px 8px;border:1px solid;border-radius:999px;font-size:9px;font-weight:900;letter-spacing:.1em}
 .seller-legit-badge.is-legit{color:#9cf2b7;background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.45)}.seller-legit-badge.is-rep{color:#ffaaaa;background:rgba(245,34,34,.11);border-color:rgba(245,34,34,.4)}
 @media(prefers-reduced-motion:reduce){.seller-legit-switch,.seller-legit-switch .seller-legit-knob{transition:none}}
+
+
+/* Seller listing form — separated editorial sections and a real animated switch. */
+.seller-form{gap:18px;padding:clamp(16px,3vw,26px);border-radius:18px;background:#0c0c0c}
+.seller-form-intro{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:2px 2px 18px;border-bottom:1px solid rgba(255,255,255,.09)}
+.seller-form-intro h3{margin:6px 0 4px;color:#f5f5f5;font-size:20px;letter-spacing:-.045em}
+.seller-form-intro p,.seller-section-heading p{margin:0;color:#777;font-size:11px;line-height:1.55;letter-spacing:normal}
+.seller-section-kicker{color:#e34b4b;font-size:8px;font-weight:850;letter-spacing:.18em}
+.seller-form-close{display:grid;place-items:center;flex:none;width:32px;height:32px;border:1px solid rgba(255,255,255,.12);border-radius:50%;background:#151515;color:#aaa;font-size:20px}
+.seller-form-section{display:grid;gap:16px;padding:18px;border:1px solid rgba(255,255,255,.075);border-radius:14px;background:linear-gradient(145deg,#111,#0e0e0e)}
+.seller-section-heading{display:flex;align-items:flex-start;gap:12px}
+.seller-section-heading>.seller-section-kicker{display:grid;place-items:center;flex:none;width:27px;height:27px;border:1px solid rgba(245,34,34,.24);border-radius:8px;background:rgba(245,34,34,.07)}
+.seller-section-heading h4{margin:1px 0 4px;color:#eee;font-size:12px;font-weight:800;letter-spacing:.015em}
+.seller-form-grid{gap:16px}
+.seller-form-grid label,.seller-description-field{gap:8px;color:#a3a3a3;font-size:9px;font-weight:750;letter-spacing:.1em}
+.seller-form-grid input,.seller-form-grid select,.seller-form-grid textarea{min-height:46px;border-radius:10px;background:#090909;border-color:rgba(255,255,255,.12);font-size:13px}
+.seller-form-grid-main{grid-template-columns:minmax(0,1.7fr) minmax(150px,.7fr)}
+.seller-price-wrap{position:relative}
+.seller-price-wrap input{padding-right:38px}
+.seller-price-wrap>span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#888;font-size:12px;pointer-events:none}
+.seller-form-grid label input::placeholder,.seller-description-field textarea::placeholder{color:#555}
+.seller-description-field{display:grid}
+.seller-description-field textarea{width:100%;min-height:120px;padding:13px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:#090909;color:#eee;font:inherit;font-size:13px;letter-spacing:normal;line-height:1.6;resize:vertical}
+.seller-description-field textarea:focus{outline:none;border-color:rgba(245,34,34,.65)}
+.seller-color-section{display:grid;gap:13px}
+.seller-color-section .admin-color-selected{display:flex;flex-wrap:wrap;gap:7px}
+.seller-auth-section{gap:14px}
+.seller-legit-switch-v2{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:14px 15px;border:1px solid;border-radius:13px;text-align:left;cursor:pointer;transition:background .3s,border-color .3s,box-shadow .3s}
+.seller-legit-switch-v2.is-legit{background:linear-gradient(110deg,rgba(28,170,91,.15),rgba(18,65,39,.14));border-color:rgba(57,205,119,.38);box-shadow:inset 0 0 24px rgba(41,180,99,.04)}
+.seller-legit-switch-v2.is-rep{background:linear-gradient(110deg,rgba(205,37,37,.14),rgba(70,20,20,.12));border-color:rgba(245,75,75,.35);box-shadow:inset 0 0 24px rgba(210,35,35,.04)}
+.seller-legit-state{display:flex;align-items:center;gap:9px;min-width:0;color:#eee}
+.seller-legit-state strong{font-size:12px;letter-spacing:.14em}
+.seller-legit-state-dot{width:8px;height:8px;border-radius:50%;background:#f04b4b;box-shadow:0 0 10px currentColor;transition:background .25s}
+.is-legit .seller-legit-state-dot{background:#45db83}
+.seller-legit-description{grid-column:1/-1;color:#8b8b8b;font-size:10px;letter-spacing:normal}
+.seller-legit-track{position:relative;width:52px;height:29px;padding:3px;border:1px solid rgba(255,255,255,.2);border-radius:999px;background:rgba(0,0,0,.35);transition:background .3s,border-color .3s}
+.seller-legit-knob-v2{display:block;width:21px;height:21px;border-radius:50%;background:linear-gradient(145deg,#fff,#cfcfcf);box-shadow:0 2px 7px #0009;transform:translateX(0);transition:transform .32s cubic-bezier(.22,.8,.25,1),box-shadow .3s}
+.seller-legit-switch-v2.is-legit .seller-legit-track{background:rgba(34,197,94,.3);border-color:rgba(69,219,131,.55)}
+.seller-legit-switch-v2.is-legit .seller-legit-knob-v2{transform:translateX(23px);box-shadow:0 0 12px rgba(69,219,131,.35)}
+.seller-legit-switch-v2.is-rep .seller-legit-track{background:rgba(245,34,34,.2);border-color:rgba(245,75,75,.4)}
+.seller-legit-switch-v2:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.seller-photo-field{gap:12px}
+.seller-photo-picker{min-height:58px;border-radius:12px;background:#090909;font-size:10px;letter-spacing:.08em}
+.seller-form-actions{position:sticky;bottom:10px;z-index:2;padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(12,12,12,.94);backdrop-filter:blur(14px)}
+.seller-form-actions .account-primary{min-height:48px}
+.seller-form-actions .account-secondary{min-height:48px}
+@media(max-width:560px){
+ .seller-form{padding:13px;gap:13px}
+ .seller-form-section{padding:14px;gap:13px}
+ .seller-form-grid-main{grid-template-columns:minmax(0,1fr)}
+ .seller-form-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+ .seller-form-actions{grid-template-columns:minmax(0,1fr)}
+ .seller-form-actions .account-secondary{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+ .seller-legit-switch-v2,.seller-legit-track,.seller-legit-knob-v2,.seller-legit-state-dot{transition:none}
+}
