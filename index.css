@@ -480,3 +480,42 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .account-avatar-actions button{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border:1px solid rgba(255,255,255,.13);border-radius:999px;background:#111;color:#ddd;font-size:8px;font-weight:750;letter-spacing:.06em}
 .account-avatar-actions button:disabled{opacity:.55}
 .account-avatar-actions span{color:#666;font-size:8px;letter-spacing:.04em}
+
+/* Marketplace seller panel */
+.seller-panel{display:grid;gap:16px;padding:20px;border:1px solid rgba(255,255,255,.10);border-radius:20px;background:#0d0d0d}
+.seller-panel-heading,.seller-panel-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.seller-panel-heading h2{margin:0;font-size:18px;letter-spacing:-.04em}
+.seller-panel-heading p:last-child{margin:6px 0 0;color:#888;font-size:11px}
+.seller-panel-toolbar h3{margin:0;font-size:12px;letter-spacing:.08em}
+.seller-panel-toolbar button{display:flex;align-items:center;gap:7px;min-height:36px;padding:0 13px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:#171717;color:#eee;font-size:9px;font-weight:750;letter-spacing:.06em}
+.seller-form{display:grid;gap:15px;padding:15px;border:1px solid rgba(255,255,255,.09);border-radius:15px;background:#101010}
+.seller-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.seller-form-grid label{display:grid;gap:7px;color:#888;font-size:8px;letter-spacing:.13em}
+.seller-form-grid input,.seller-form-grid select,.seller-form-grid textarea{width:100%;min-height:42px;padding:10px 12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:#151515;color:#eee;font:inherit;font-size:12px;letter-spacing:normal;outline:none}
+.seller-form-grid textarea{resize:vertical;line-height:1.5}
+.seller-form-grid input:focus,.seller-form-grid select:focus,.seller-form-grid textarea:focus{border-color:rgba(245,34,34,.65)}
+.seller-form-wide{grid-column:1/-1}
+.seller-photo-field{display:grid;gap:9px;color:#888;font-size:8px;letter-spacing:.13em}
+.seller-photo-picker{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:1px dashed rgba(255,255,255,.2);border-radius:11px;color:#ddd;cursor:pointer}
+.seller-photo-picker input{display:none}
+.seller-photo-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.seller-photo-grid button{position:relative;aspect-ratio:1;padding:0;overflow:hidden;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:#171717}
+.seller-photo-grid img{width:100%;height:100%;object-fit:cover}
+.seller-photo-grid button span{position:absolute;top:3px;right:4px;display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:#111;color:white;font-size:15px}
+.seller-form-actions{display:grid;grid-template-columns:1fr auto;gap:9px}
+.seller-form-actions .account-secondary{width:auto;min-height:44px}
+.seller-empty{padding:28px 12px;border:1px dashed rgba(255,255,255,.12);border-radius:13px;color:#777;text-align:center;font-size:11px}
+.seller-list{display:grid;gap:9px}
+.seller-listing{display:grid;grid-template-columns:64px minmax(0,1fr) auto;align-items:center;gap:11px;padding:9px;border:1px solid rgba(255,255,255,.09);border-radius:13px;background:#101010}
+.seller-listing>img{width:64px;height:72px;object-fit:cover;border-radius:8px;background:#1b1b1b}
+.seller-listing-info{display:grid;gap:4px;min-width:0}
+.seller-listing-info strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.seller-listing-info>span{font-size:11px;color:#ddd}
+.seller-listing-info p{margin:3px 0 0;color:#ffaaaa;font-size:10px;line-height:1.4}
+.seller-status{width:max-content;padding:4px 7px;border:1px solid rgba(255,255,255,.12);border-radius:999px;color:#aaa;font-size:7px;letter-spacing:.08em}
+.seller-status.approved{border-color:rgba(45,190,120,.25);color:#8ed9ad}
+.seller-status.rejected{border-color:rgba(245,34,34,.25);color:#ffaaaa}
+.seller-status.sold{color:#999}
+.seller-listing-actions{display:flex;gap:5px}
+.seller-listing-actions button{display:grid;place-items:center;width:30px;height:30px;border:1px solid rgba(255,255,255,.12);border-radius:50%;background:#171717;color:#ddd}
+@media(max-width:560px){.seller-panel{padding:15px}.seller-form-grid{grid-template-columns:1fr}.seller-form-wide{grid-column:auto}.seller-photo-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.seller-listing{grid-template-columns:54px minmax(0,1fr) auto}.seller-listing>img{width:54px;height:64px}.seller-listing-actions{flex-direction:column}}
