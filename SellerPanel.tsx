@@ -4,12 +4,20 @@ import { CheckCircle2, ImagePlus, LoaderCircle, Plus, Trash2, Package, RotateCcw
 
 type Props = { supabase: any; user: User; language: 'en'|'ru'|'et' }
 type Listing = { id:string; title:string; description:string; price:number; category:string; brand:string; size_label:string; item_condition:string; defects:string; images:string[]; status:string; moderation_reason:string|null; created_at:string }
+type StoreCategory = { id:string; name:string; slug:string }
 const words = {
- en:{title:'SELLER PANEL',intro:'Create listings and manage your items.',new:'NEW LISTING',my:'MY LISTINGS',name:'TITLE',desc:'DESCRIPTION',price:'PRICE · EUR',category:'CATEGORY',brand:'BRAND',size:'SIZE',condition:'CONDITION',defects:'DEFECTS (OPTIONAL)',photos:'PHOTOS · 3–10',submit:'SUBMIT FOR REVIEW',save:'SAVE CHANGES',loading:'LOADING…',empty:'No listings yet.',pending:'UNDER REVIEW',approved:'PUBLISHED',rejected:'CHANGES REQUIRED',sold:'SOLD',remove:'DELETE',markSold:'MARK AS SOLD',resubmit:'RESUBMIT',uploading:'UPLOADING PHOTOS…',success:'Listing sent for moderation.',needPhotos:'Please add 3–10 photos.',conditionOptions:['New with tags','Excellent','Good','Has defects'],categories:['Clothing','Shoes','Accessories'],error:'Could not save listing.'},
- ru:{title:'ПАНЕЛЬ ПРОДАВЦА',intro:'Создавай объявления и управляй своими вещами.',new:'НОВОЕ ОБЪЯВЛЕНИЕ',my:'МОИ ОБЪЯВЛЕНИЯ',name:'НАЗВАНИЕ',desc:'ОПИСАНИЕ',price:'ЦЕНА · EUR',category:'КАТЕГОРИЯ',brand:'БРЕНД',size:'РАЗМЕР',condition:'СОСТОЯНИЕ',defects:'ДЕФЕКТЫ (НЕОБЯЗАТЕЛЬНО)',photos:'ФОТОГРАФИИ · 3–10',submit:'ОТПРАВИТЬ НА ПРОВЕРКУ',save:'СОХРАНИТЬ ИЗМЕНЕНИЯ',loading:'ЗАГРУЗКА…',empty:'Объявлений пока нет.',pending:'НА ПРОВЕРКЕ',approved:'ОПУБЛИКОВАНО',rejected:'НУЖНЫ ИЗМЕНЕНИЯ',sold:'ПРОДАНО',remove:'УДАЛИТЬ',markSold:'ОТМЕТИТЬ ПРОДАННЫМ',resubmit:'ОТПРАВИТЬ ПОВТОРНО',uploading:'ЗАГРУЖАЕМ ФОТО…',success:'Объявление отправлено на модерацию.',needPhotos:'Добавь от 3 до 10 фотографий.',conditionOptions:['Новое с бирками','Отличное','Хорошее','Есть дефекты'],categories:['Одежда','Обувь','Аксессуары'],error:'Не удалось сохранить объявление.'},
- et:{title:'MÜÜJA PANEEL',intro:'Loo kuulutusi ja halda oma tooteid.',new:'UUS KUULUTUS',my:'MINU KUULUTUSED',name:'PEALKIRI',desc:'KIRJELDUS',price:'HIND · EUR',category:'KATEGOORIA',brand:'BRÄND',size:'SUURUS',condition:'SEISUKORD',defects:'DEFEKTID (VALIKULINE)',photos:'FOTOD · 3–10',submit:'SAADA KONTROLLI',save:'SALVESTA MUUDATUSED',loading:'LAADIMINE…',empty:'Kuulutusi veel pole.',pending:'KONTROLLIMISEL',approved:'AVALDATUD',rejected:'VAJAB MUUDATUSI',sold:'MÜÜDUD',remove:'KUSTUTA',markSold:'MÄRGI MÜÜDuks',resubmit:'SAADA UUESTI',uploading:'FOTOSID LAADITAKSE…',success:'Kuulutus saadeti modereerimisele.',needPhotos:'Lisa 3–10 fotot.',conditionOptions:['Uus siltidega','Suurepärane','Hea','Defektidega'],categories:['Riided','Jalanõud','Aksessuaarid'],error:'Kuulutuse salvestamine ebaõnnestus.'}
+ en:{title:'SELLER PANEL',intro:'Create listings and manage your items.',new:'NEW LISTING',my:'MY LISTINGS',name:'TITLE',desc:'DESCRIPTION',price:'PRICE · EUR',category:'CATEGORY',brand:'BRAND',size:'SIZE',condition:'CONDITION',defects:'DEFECTS (OPTIONAL)',photos:'PHOTOS · 3–10',submit:'SUBMIT FOR REVIEW',save:'SAVE CHANGES',loading:'LOADING…',empty:'No listings yet.',pending:'UNDER REVIEW',approved:'PUBLISHED',rejected:'CHANGES REQUIRED',sold:'SOLD',remove:'DELETE',markSold:'MARK AS SOLD',resubmit:'RESUBMIT',uploading:'UPLOADING PHOTOS…',success:'Listing sent for moderation.',needPhotos:'Please add 3–10 photos.',conditionOptions:['New with tags','Excellent','Good','Has defects'],error:'Could not save listing.'},
+ ru:{title:'ПАНЕЛЬ ПРОДАВЦА',intro:'Создавай объявления и управляй своими вещами.',new:'НОВОЕ ОБЪЯВЛЕНИЕ',my:'МОИ ОБЪЯВЛЕНИЯ',name:'НАЗВАНИЕ',desc:'ОПИСАНИЕ',price:'ЦЕНА · EUR',category:'КАТЕГОРИЯ',brand:'БРЕНД',size:'РАЗМЕР',condition:'СОСТОЯНИЕ',defects:'ДЕФЕКТЫ (НЕОБЯЗАТЕЛЬНО)',photos:'ФОТОГРАФИИ · 3–10',submit:'ОТПРАВИТЬ НА ПРОВЕРКУ',save:'СОХРАНИТЬ ИЗМЕНЕНИЯ',loading:'ЗАГРУЗКА…',empty:'Объявлений пока нет.',pending:'НА ПРОВЕРКЕ',approved:'ОПУБЛИКОВАНО',rejected:'НУЖНЫ ИЗМЕНЕНИЯ',sold:'ПРОДАНО',remove:'УДАЛИТЬ',markSold:'ОТМЕТИТЬ ПРОДАННЫМ',resubmit:'ОТПРАВИТЬ ПОВТОРНО',uploading:'ЗАГРУЖАЕМ ФОТО…',success:'Объявление отправлено на модерацию.',needPhotos:'Добавь от 3 до 10 фотографий.',conditionOptions:['Новое с бирками','Отличное','Хорошее','Есть дефекты'],error:'Не удалось сохранить объявление.'},
+ et:{title:'MÜÜJA PANEEL',intro:'Loo kuulutusi ja halda oma tooteid.',new:'UUS KUULUTUS',my:'MINU KUULUTUSED',name:'PEALKIRI',desc:'KIRJELDUS',price:'HIND · EUR',category:'KATEGOORIA',brand:'BRÄND',size:'SUURUS',condition:'SEISUKORD',defects:'DEFEKTID (VALIKULINE)',photos:'FOTOD · 3–10',submit:'SAADA KONTROLLI',save:'SALVESTA MUUDATUSED',loading:'LAADIMINE…',empty:'Kuulutusi veel pole.',pending:'KONTROLLIMISEL',approved:'AVALDATUD',rejected:'VAJAB MUUDATUSI',sold:'MÜÜDUD',remove:'KUSTUTA',markSold:'MÄRGI MÜÜDuks',resubmit:'SAADA UUESTI',uploading:'FOTOSID LAADITAKSE…',success:'Kuulutus saadeti modereerimisele.',needPhotos:'Lisa 3–10 fotot.',conditionOptions:['Uus siltidega','Suurepärane','Hea','Defektidega'],error:'Kuulutuse salvestamine ebaõnnestus.'}
 }
 const statusKey:Record<string,'pending'|'approved'|'rejected'|'sold'>={pending:'pending',approved:'approved',rejected:'rejected',sold:'sold'}
+const categoryLabel=(name:string,language:'en'|'ru'|'et')=>{
+ const labels:Record<string,{ru:string;et:string}>={
+  'T-Shirts':{ru:'Футболки',et:'T-särgid'},'Hoodies':{ru:'Худи',et:'Pusad'},'Pants':{ru:'Брюки',et:'Püksid'},
+  'Accessories':{ru:'Аксессуары',et:'Aksessuaarid'},'Jackets':{ru:'Куртки',et:'Joped'},'Belts':{ru:'Ремни',et:'Vööd'}
+ }
+ return language==='en'?name:(labels[name]?.[language]||name)
+}
 export default function SellerPanel({supabase,user,language}:Props){
  const t=words[language]
  const [listings,setListings]=useState<Listing[]>([])
@@ -21,7 +29,9 @@ export default function SellerPanel({supabase,user,language}:Props){
  const [title,setTitle]=useState('')
  const [description,setDescription]=useState('')
  const [price,setPrice]=useState('')
- const [category,setCategory]=useState('clothing')
+ const [category,setCategory]=useState('')
+ const [categories,setCategories]=useState<StoreCategory[]>([])
+ const [categoriesLoading,setCategoriesLoading]=useState(true)
  const [brand,setBrand]=useState('')
  const [size,setSize]=useState('')
  const [condition,setCondition]=useState('good')
@@ -36,13 +46,23 @@ export default function SellerPanel({supabase,user,language}:Props){
   if(error)throw error
   setListings((data||[]) as Listing[])
  }
- useEffect(()=>{let active=true;(async()=>{try{await refresh()}catch(e){if(active)setError(e instanceof Error?e.message:t.error)}finally{if(active)setLoading(false)}})();return()=>{active=false}},[user.id])
- function reset(){setEditing(null);setTitle('');setDescription('');setPrice('');setCategory('clothing');setBrand('');setSize('');setCondition('good');setDefects('');setFiles([]);setExistingImages([]);setShowForm(false)}
- function startEdit(item:Listing){setEditing(item);setTitle(item.title);setDescription(item.description);setPrice(String(item.price));setCategory(item.category);setBrand(item.brand||'');setSize(item.size_label||'');setCondition(item.item_condition);setDefects(item.defects||'');setExistingImages(item.images||[]);setFiles([]);setShowForm(true)}
+ async function loadCategories(){
+  setCategoriesLoading(true)
+  const {data,error}=await supabase.from('categories').select('id,name,slug').order('sort_order',{ascending:true})
+  if(error)throw error
+  const rows=(data||[]) as StoreCategory[]
+  setCategories(rows)
+  setCategory(current=>current||rows[0]?.name||'')
+  setCategoriesLoading(false)
+ }
+ useEffect(()=>{let active=true;(async()=>{try{await Promise.all([refresh(),loadCategories()])}catch(e){if(active)setError(e instanceof Error?e.message:t.error);if(active)setCategoriesLoading(false)}finally{if(active)setLoading(false)}})();return()=>{active=false}},[user.id])
+ function reset(){setEditing(null);setTitle('');setDescription('');setPrice('');setCategory(categories[0]?.name||'');setBrand('');setSize('');setCondition('good');setDefects('');setFiles([]);setExistingImages([]);setShowForm(false)}
+ function startEdit(item:Listing){setEditing(item);setTitle(item.title);setDescription(item.description);setPrice(String(item.price));setCategory(categories.find(c=>c.name===item.category||c.slug===item.category)?.name||item.category);setBrand(item.brand||'');setSize(item.size_label||'');setCondition(item.item_condition);setDefects(item.defects||'');setExistingImages(item.images||[]);setFiles([]);setShowForm(true)}
  async function submit(event:React.FormEvent){
   event.preventDefault();setError('');setMessage('')
   const total=existingImages.length+files.length
   if(total<3||total>10){setError(t.needPhotos);return}
+  if(!category||!categories.some(item=>item.name===category)){setError('Please select a valid category.');return}
   if(!Number.isFinite(Number(price))||Number(price)<=0){setError('Enter a valid price.');return}
   setBusy(true)
   const uploaded:string[]=[]
@@ -82,7 +102,7 @@ export default function SellerPanel({supabase,user,language}:Props){
    <div className="seller-form-grid">
     <label>{t.name}<input value={title} onChange={e=>setTitle(e.target.value)} maxLength={100} required minLength={3}/></label>
     <label>{t.price}<input type="number" value={price} onChange={e=>setPrice(e.target.value)} min="0.01" step="0.01" required/></label>
-    <label>{t.category}<select value={category} onChange={e=>setCategory(e.target.value)}>{t.categories.map((x,i)=><option key={x} value={['clothing','shoes','accessories'][i]}>{x}</option>)}</select></label>
+    <label>{t.category}<select value={category} onChange={e=>setCategory(e.target.value)} disabled={categoriesLoading||categories.length===0} required><option value="" disabled>{categoriesLoading?'Loading…':'Select category'}</option>{categories.map(item=><option key={item.id} value={item.name}>{categoryLabel(item.name,language)}</option>)}</select></label>
     <label>{t.brand}<input value={brand} onChange={e=>setBrand(e.target.value)} maxLength={80}/></label>
     <label>{t.size}<input value={size} onChange={e=>setSize(e.target.value)} maxLength={40}/></label>
     <label>{t.condition}<select value={condition} onChange={e=>setCondition(e.target.value)}><option value="new_with_tags">{t.conditionOptions[0]}</option><option value="excellent">{t.conditionOptions[1]}</option><option value="good">{t.conditionOptions[2]}</option><option value="defects">{t.conditionOptions[3]}</option></select></label>
