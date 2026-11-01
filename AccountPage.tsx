@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
-import SellerPanel from './SellerPanel'
 import { Camera, CheckCircle2, LoaderCircle, LogIn, LogOut, Mail, ShieldCheck, Trash2, UserRound } from 'lucide-react'
 
 type AccountProfile = {
@@ -332,7 +331,6 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
               <span className="account-telegram-mark">➤</span> {t.linkTelegram}
             </button>
           )}
-          <SellerPanel supabase={supabase} user={user} language={language} />
           <form className="account-card account-form" onSubmit={saveProfile}>
             <h2>{t.details}</h2>
             <label>{t.displayName}<input value={displayName} onChange={event => setDisplayName(event.target.value)} maxLength={80} autoComplete="name" required /></label>
