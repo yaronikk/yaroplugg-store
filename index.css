@@ -524,3 +524,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 
 /* Marketplace seller listing filters */
 .seller-list-filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;border-bottom:1px solid var(--line,#2a2a2a);padding-bottom:12px}.seller-list-filters button{display:flex;align-items:center;gap:8px;background:transparent;border:1px solid var(--line,#333);color:inherit;padding:9px 13px;font:inherit;font-size:11px;letter-spacing:.06em;cursor:pointer}.seller-list-filters button.active{border-color:var(--accent,#d71920);color:var(--accent,#d71920)}.seller-list-filters button span{opacity:.65;font-variant-numeric:tabular-nums}
+
+
+/* Marketplace authenticity selector */
+.seller-legit-field{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 14px;border:1px solid rgba(255,255,255,.10);border-radius:12px;background:linear-gradient(135deg,#151515,#101010)}
+.seller-legit-field>div{display:grid;gap:4px}.seller-legit-title{color:#eee;font-size:10px;font-weight:800;letter-spacing:.12em}.seller-legit-field small{color:#777;font-size:10px;letter-spacing:normal}
+.seller-legit-switch{position:relative;display:flex;align-items:center;justify-content:center;min-width:112px;height:38px;padding:0 12px 0 36px;border:1px solid;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.12em;transition:background .22s,border-color .22s,color .22s,box-shadow .22s;cursor:pointer}
+.seller-legit-switch .seller-legit-knob{position:absolute;left:5px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 8px #0008;transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+.seller-legit-switch.is-legit{color:#b8ffd0;background:rgba(34,197,94,.13);border-color:rgba(34,197,94,.65);box-shadow:0 0 18px rgba(34,197,94,.12)}
+.seller-legit-switch.is-rep{color:#ffb7b7;background:rgba(245,34,34,.12);border-color:rgba(245,34,34,.58);box-shadow:0 0 18px rgba(245,34,34,.10)}
+.seller-legit-switch.is-rep .seller-legit-knob{transform:translateX(0)}.seller-legit-switch.is-legit .seller-legit-knob{transform:translateX(0)}
+.seller-legit-badge{display:inline-flex;align-items:center;width:max-content;margin-top:5px;padding:4px 8px;border:1px solid;border-radius:999px;font-size:9px;font-weight:900;letter-spacing:.1em}
+.seller-legit-badge.is-legit{color:#9cf2b7;background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.45)}.seller-legit-badge.is-rep{color:#ffaaaa;background:rgba(245,34,34,.11);border-color:rgba(245,34,34,.4)}
+@media(prefers-reduced-motion:reduce){.seller-legit-switch,.seller-legit-switch .seller-legit-knob{transition:none}}
