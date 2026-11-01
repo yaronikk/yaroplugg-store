@@ -21,6 +21,10 @@ const COLOR_PALETTE:AdminColor[]=[
  {name:'Orange',hex:'#d96b24'},{name:'Yellow',hex:'#d6aa24'}
 ]
 const isBeltCategory=(name:string)=>/belt|ремн|vöö/i.test(name)
+const COLOR_LABELS:Record<string,{ru:string;et:string}>={
+ Black:{ru:'Чёрный',et:'Must'},White:{ru:'Белый',et:'Valge'},Cream:{ru:'Кремовый',et:'Kreem'},Grey:{ru:'Серый',et:'Hall'},'Light Grey':{ru:'Светло-серый',et:'Helehall'},Red:{ru:'Красный',et:'Punane'},Burgundy:{ru:'Бордовый',et:'Burgundia'},Navy:{ru:'Тёмно-синий',et:'Tumesinine'},Blue:{ru:'Синий',et:'Sinine'},Green:{ru:'Зелёный',et:'Roheline'},Olive:{ru:'Оливковый',et:'Oliiviroheline'},Brown:{ru:'Коричневый',et:'Pruun'},Beige:{ru:'Бежевый',et:'Beež'},Pink:{ru:'Розовый',et:'Roosa'},Purple:{ru:'Фиолетовый',et:'Lilla'},Orange:{ru:'Оранжевый',et:'Oranž'},Yellow:{ru:'Жёлтый',et:'Kollane'}
+}
+const colorLabel=(name:string,language:'en'|'ru'|'et')=>language==='en'?name:(COLOR_LABELS[name]?.[language]||name)
 const CLOTHING_SIZES=['XS','S','M','L','XL']
 const categoryLabel=(name:string,language:'en'|'ru'|'et')=>{
  const labels:Record<string,{ru:string;et:string}>={
@@ -74,7 +78,7 @@ export default function SellerPanel({supabase,user,language}:Props){
  }
  useEffect(()=>{let active=true;(async()=>{try{await Promise.all([refresh(),loadCategories()])}catch(e){if(active)setError(e instanceof Error?e.message:t.error);if(active)setCategoriesLoading(false)}finally{if(active)setLoading(false)}})();return()=>{active=false}},[user.id])
  function reset(){setEditing(null);setTitle('');setDescription('');setPrice('');setCategory('');setBrand('');setSize('');setIsLegit(false);setCondition('');setColors([]);setColorSearch('');setCustomColorName('');setCustomColorHex('#888888');setColorError('');setFiles([]);setExistingImages([]);setShowForm(false)}
- function startEdit(item:Listing){setEditing(item);setTitle(item.title);setDescription(item.description);setPrice(String(item.price));setCategory(categories.find(c=>c.name===item.category||c.slug===item.category)?.name||item.category);setBrand(item.brand||'');setSize(isBeltCategory(categories.find(c=>c.name===item.category||c.slug===item.category)?.name||item.category)?(item.size_label||'').replace(/\\s*cm$/i,''):(item.size_label||''));setIsLegit(Boolean(item.is_legit));setCondition(item.item_condition);setColors(Array.isArray(item.colors)?item.colors:[]);setExistingImages(item.images||[]);setFiles([]);setShowForm(true)}
+ function startEdit(item:Listing){setEditing(item);setTitle(item.title);setDescription(item.description);setPrice(String(item.price));setCategory(categories.find(c=>c.name===item.category||c.slug===item.category)?.name||item.category);setBrand(item.brand||'');setSize(isBeltCategory(categories.find(c=>c.name===item.category||c.slug===item.category)?.name||item.category)?(item.size_label||'').replace(/\\s*(?:cm|см)$/i,''):(item.size_label||''));setIsLegit(Boolean(item.is_legit));setCondition(item.item_condition);setColors(Array.isArray(item.colors)?item.colors:[]);setExistingImages(item.images||[]);setFiles([]);setShowForm(true)}
  function movePhoto(from:number,to:number){
   const ordered=[...existingImages.map(src=>({kind:'existing' as const,src})),...files.map(file=>({kind:'new' as const,file}))];
   if(to<0||to>=ordered.length)return;
@@ -104,7 +108,7 @@ export default function SellerPanel({supabase,user,language}:Props){
     if(uploadError)throw uploadError
     uploaded.push(supabase.storage.from('marketplace-listings').getPublicUrl(path).data.publicUrl)
    }
-   const payload={title:title.trim(),description:description.trim(),price:Number(price),category,brand:brand.trim(),size_label:isBeltCategory(category)?`${size.trim()} cm`:size.trim(),item_condition:condition,is_legit:isLegit,colors,images:[...existingImages,...uploaded]}
+   const payload={title:title.trim(),description:description.trim(),price:Number(price),category,brand:brand.trim(),size_label:isBeltCategory(category)?`${size.trim()} ${language==='ru'?'см':'cm'}`:size.trim(),item_condition:condition,is_legit:isLegit,colors,images:[...existingImages,...uploaded]}
    if(editing){
     const {error:saveError}=await supabase.from('marketplace_listings').update({...payload,status:'pending'}).eq('id',editing.id).eq('seller_id',user.id)
     if(saveError)throw saveError
@@ -142,7 +146,7 @@ export default function SellerPanel({supabase,user,language}:Props){
     <div className="seller-form-grid">
      <label>{t.category}<select value={category} onChange={e=>{const next=e.target.value;setCategory(next);setSize('')}} disabled={categoriesLoading||categories.length===0} required><option value="" disabled>{categoriesLoading?t.loadingCategories:t.selectCategory}</option>{categories.map(item=><option key={item.id} value={item.name}>{categoryLabel(item.name,language)}</option>)}</select></label>
      <label>{t.brand}<input value={brand} onChange={e=>setBrand(e.target.value)} maxLength={80} placeholder={t.brandPlaceholder}/></label>
-     <label>{isBeltCategory(category)?t.beltSize:t.clothingSize}{isBeltCategory(category)?<div className="seller-belt-size"><input type="number" inputMode="numeric" min="1" max="300" step="1" value={size} onChange={e=>setSize(e.target.value)} placeholder={t.beltPlaceholder} required/><span>cm</span></div>:<select value={size} onChange={e=>setSize(e.target.value)} required><option value="" disabled>{t.selectSize}</option>{CLOTHING_SIZES.map(value=><option key={value} value={value}>{value}</option>)}{size&&!CLOTHING_SIZES.includes(size)&&<option value={size}>{size}</option>}</select>}</label>
+     <label>{isBeltCategory(category)?t.beltSize:t.clothingSize}{isBeltCategory(category)?<div className="seller-belt-size"><input type="number" inputMode="numeric" min="1" max="300" step="1" value={size} onChange={e=>setSize(e.target.value)} placeholder={t.beltPlaceholder} required/><span>{language==='ru'?'см':'cm'}</span></div>:<select value={size} onChange={e=>setSize(e.target.value)} required><option value="" disabled>{t.selectSize}</option>{CLOTHING_SIZES.map(value=><option key={value} value={value}>{value}</option>)}{size&&!CLOTHING_SIZES.includes(size)&&<option value={size}>{size}</option>}</select>}</label>
      <label>{t.condition}<select value={condition} onChange={e=>setCondition(e.target.value)} required><option value="" disabled>{t.selectCondition}</option><option value="new_with_tags">{t.conditionOptions[0]}</option><option value="new_without_tags">{t.conditionOptions[1]}</option><option value="excellent">{t.conditionOptions[2]}</option><option value="good">{t.conditionOptions[3]}</option><option value="defects">{t.conditionOptions[4]}</option></select></label>
     </div>
    </section>
