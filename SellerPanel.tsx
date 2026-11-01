@@ -79,7 +79,7 @@ export default function SellerPanel({supabase,user,language}:Props){
   const total=existingImages.length+files.length
   if(total<3||total>10){setError(t.needPhotos);return}
   if(!category||!categories.some(item=>item.name===category)){setError('Please select a valid category.');return}
-  if(!size){setError(t.selectSize);return}\n  if(isBeltCategory(category)&&!/^\d{2,3} cm$/.test(size)){setError(t.beltSize);return}
+  if(!size.trim()||(isBeltCategory(category)&&(!Number.isFinite(Number(size))||Number(size)<=0||Number(size)>300))){setError(isBeltCategory(category)?t.beltPlaceholder:t.selectSize);return}
   if(!colors.length){setColorError(t.noColors);setError(t.noColors);return}
   if(!Number.isFinite(Number(price))||Number(price)<=0){setError('Enter a valid price.');return}
   setBusy(true)
