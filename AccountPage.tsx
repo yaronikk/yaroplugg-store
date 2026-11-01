@@ -67,6 +67,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false)
 
   const telegramUsername = String(
     profile?.telegram_username || user?.user_metadata?.preferred_username || user?.user_metadata?.username || ''
@@ -198,6 +199,8 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ''
   const identityProviders = Array.from(new Set((user?.identities || []).map(identity => identity.provider)))
 
+  useEffect(() => { setAvatarLoadFailed(false) }, [avatarUrl])
+
   return (
     <section className="account-page page-pad page-top">
       <div className="account-heading">
@@ -212,7 +215,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
         <>
           <div className="account-card account-profile-card">
             <div className="account-profile-top">
-              {avatarUrl ? <img className="account-avatar" src={avatarUrl} alt="" /> : <div className="account-avatar account-avatar-placeholder"><UserRound size={26} /></div>}
+              {avatarUrl && !avatarLoadFailed ? <img className="account-avatar" src={avatarUrl} alt="" referrerPolicy="no-referrer" onError={() => setAvatarLoadFailed(true)} /> : <div className="account-avatar account-avatar-placeholder"><UserRound size={26} /></div>}
               <div className="account-profile-copy">
                 <strong>{profile?.display_name || metadataName(user) || 'Yaroplugg user'}</strong>
                 <span>{user.email || 'Telegram account'}</span>
