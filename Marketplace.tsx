@@ -10,7 +10,7 @@ const words={
  et:{eyebrow:'KOGUKONNA LEIUD',title:'TURG',intro:'Avasta teiste kasutajate müügikuulutusi.',search:'Otsi tooteid või brände…',all:'KÕIK',category:'KATEGOORIA',condition:'SEISUKORD',size:'SUURUS',sort:'JÄRJESTUS',newest:'Uuemad ees',low:'Odavamad ees',high:'Kallimad ees',empty:'Kuulutusi ei leitud',emptyHint:'Proovi muuta otsingut või kategooriat.',loading:'KUULUTUSI LAADITAKSE…',conditionNames:['Uus siltidega','Uus ilma siltideta','Suurepärane','Hea','Defektidega'],contact:'VÕTA MÜÜJAGA ÜHENDUST',details:'TOOTE ANDMED',seller:'MÜÜJA',noSeller:'Yaropluggi müüja',close:'Sulge',clear:'Tühjenda filtrid',legit:'MÜÜJA MÄRKIS LEGIT',rep:'MÜÜJA MÄRKIS R€P',sizeLabel:'SUURUS',colors:'VÄRVID',description:'KIRJELDUS',error:'Kuulutuste laadimine ebaõnnestus.',noPhoto:'PILT PUUDUB',count:'KUULUTUST'}
 } as const
 const categories=[{en:'T-Shirts',ru:'Футболки',et:'T-särgid'},{en:'Hoodies',ru:'Худи',et:'Pusad'},{en:'Pants',ru:'Брюки',et:'Püksid'},{en:'Accessories',ru:'Аксессуары',et:'Aksessuaarid'},{en:'Belts',ru:'Ремни',et:'Vööd'},{en:'Jackets',ru:'Куртки',et:'Joped'}]
-const conditionKey=(v:string)=>({new_with_tags:0,new_without_tags:1,excellent:2,good:3,defects:4}[v]??3)
+const conditionIndexes:Record<string,number>={new_with_tags:0,new_without_tags:1,excellent:2,good:3,defects:4}\nconst conditionKey=(v:string)=>conditionIndexes[v]??3
 export default function Marketplace({supabase,language}:{supabase:any;language:Language}){
  const t=words[language]
  const [items,setItems]=useState<Listing[]>([])
