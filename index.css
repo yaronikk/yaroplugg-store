@@ -725,3 +725,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .admin-marketplace-status.is-approved{color:#75d69a;border-color:#75d69a55}
 .admin-marketplace-status.is-rejected{color:#ff8585;border-color:#ff858555}
 .admin-marketplace-status.is-sold{color:#aaa;border-color:#aaa6}
+
+
+.account-google{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px;border:1px solid rgba(255,255,255,.16);border-radius:10px;background:#fff;color:#171717;font-size:11px;font-weight:800;letter-spacing:.06em;cursor:pointer}
+.account-google:disabled{opacity:.55;cursor:wait}
+.account-google-mark{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#f1f1f1;color:#4285f4;font-size:14px;font-weight:900}
