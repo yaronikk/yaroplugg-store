@@ -56,6 +56,10 @@ revoke all on function public.handle_new_user_profile() from public, anon, authe
 
 -- Keep profiles private by default while exposing seller cards only for
 -- profiles that belong to a currently approved marketplace listing.
+-- Anonymous visitors need table-level SELECT to use the seller-card policy below;
+-- RLS still limits them to profiles with an approved listing.
+grant select on public.profiles to anon;
+
 drop policy if exists "Authenticated users can view marketplace profiles" on public.profiles;
 drop policy if exists "Marketplace profile visibility" on public.profiles;
 drop policy if exists "Public can view marketplace seller profiles" on public.profiles;
