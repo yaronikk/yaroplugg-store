@@ -139,6 +139,14 @@ Deno.serve(async request => {
       }
     }
 
+    if (matchedUser && !matchedUser.email) {
+      const { data: updated, error: updateError } = await admin.auth.admin.updateUserById(matchedUser.id, {
+        email: syntheticEmail,
+        email_confirm: true,
+      })
+      if (updateError) throw updateError
+      matchedUser = updated.user
+    }
     if (!matchedUser?.email) return response({ code: 'ACCOUNT_EMAIL_UNAVAILABLE' }, 500, origin)
     const { data: link, error: linkError } = await admin.auth.admin.generateLink({
       type: 'magiclink',
