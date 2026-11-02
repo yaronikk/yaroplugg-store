@@ -334,7 +334,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
               </div>
               <div className="account-profile-copy">
                 <strong>{profile?.display_name || metadataName(user) || 'Yaroplugg user'}</strong>
-                <span>{user.email || 'Telegram account'}</span>
+                <span>{user.user_metadata?.auth_method === 'telegram_miniapp' ? 'Telegram account' : user.email || 'Telegram account'}</span>
                 {telegramUsername && <a href={`https://t.me/${encodeURIComponent(telegramUsername)}`} target="_blank" rel="noreferrer">@{telegramUsername}</a>}
               </div>
             </div>
