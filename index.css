@@ -809,3 +809,23 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .seller-color-section .admin-custom-color .admin-color-picker,.seller-color-section .admin-custom-color .admin-color-picker span,.seller-color-section .admin-custom-color .admin-color-picker input[type="color"]{width:38px;height:38px;min-width:38px;min-height:38px}
  .seller-color-section .admin-custom-color .admin-ghost{width:58px;min-width:58px}
 }
+
+/* Compact website seller color picker */
+.seller-color-section .admin-color-palette{display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:center;gap:10px;width:100%;padding:2px 0}
+.seller-color-section .admin-color-palette button{flex:0 0 36px;display:grid;place-items:center;width:36px;height:36px;min-height:36px;padding:0;margin:0;border-radius:50%}
+.seller-color-section .admin-color-palette button i{width:29px;height:29px}
+.seller-color-section .admin-color-palette button.selected i{width:25px;height:25px}
+.seller-color-section .admin-custom-color{display:grid;grid-template-columns:minmax(180px,1fr) 40px 72px;align-items:center;justify-content:start;gap:10px;width:100%;max-width:520px;margin:0}
+.seller-color-section .admin-custom-color>input{grid-column:1;grid-row:1;width:100%;min-width:0;height:40px;min-height:40px;box-sizing:border-box}
+.seller-color-section .admin-custom-color .admin-color-picker{grid-column:2;grid-row:1;width:40px;height:40px;margin:0}
+.seller-color-section .admin-custom-color .admin-color-picker span{width:40px;height:40px;border-radius:50%}
+.seller-color-section .admin-custom-color .admin-color-picker input[type="color"]{width:40px;height:40px}
+.seller-color-section .admin-custom-color .admin-ghost{grid-column:3;grid-row:1;width:72px;min-width:72px;height:40px;min-height:40px;margin:0;padding:0 10px;white-space:nowrap}
+@media(max-width:600px){
+ .seller-color-section .admin-color-palette{gap:9px}
+ .seller-color-section .admin-color-palette button{flex-basis:34px;width:34px;height:34px;min-height:34px}
+ .seller-color-section .admin-color-palette button i{width:28px;height:28px}
+ .seller-color-section .admin-custom-color{grid-template-columns:minmax(0,1fr) 38px 64px;gap:8px;max-width:100%}
+ .seller-color-section .admin-custom-color .admin-color-picker,.seller-color-section .admin-custom-color .admin-color-picker span,.seller-color-section .admin-custom-color .admin-color-picker input[type="color"]{width:38px;height:38px;min-width:38px;min-height:38px}
+ .seller-color-section .admin-custom-color .admin-ghost{width:64px;min-width:64px;height:38px;min-height:38px}
+}
