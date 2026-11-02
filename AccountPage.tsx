@@ -309,7 +309,11 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
 
   const avatarUrl = profile?.avatar_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? ''
   const avatarInitial = (profile?.display_name || displayName || metadataName(user || ({} as User)) || 'Y').trim().charAt(0).toUpperCase()
+  const isTelegramMiniAppAccount = user?.user_metadata?.auth_method === 'telegram_miniapp'
   const identityProviders = Array.from(new Set((user?.identities || []).map(identity => identity.provider)))
+  const displayedIdentityProviders = isTelegramMiniAppAccount
+    ? ['custom:telegram', ...identityProviders.filter(provider => provider !== 'email')]
+    : identityProviders
 
   useEffect(() => { setAvatarLoadFailed(false) }, [avatarUrl])
 
@@ -344,11 +348,11 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
               </div>
             )}
             <div className="account-identities">
-              {identityProviders.map(provider => <span key={provider}><ShieldCheck size={13} /> {provider === 'custom:telegram' ? 'TELEGRAM' : provider.toUpperCase()}</span>)}
+              {displayedIdentityProviders.map(provider => <span key={provider}><ShieldCheck size={13} /> {provider === 'custom:telegram' ? 'TELEGRAM' : provider.toUpperCase()}</span>)}
             </div>
           </div>
 
-          {!identityProviders.includes('custom:telegram') && !identityProviders.includes('telegram') && (
+          {!isTelegramMiniAppAccount && !identityProviders.includes('custom:telegram') && !identityProviders.includes('telegram') && (
             <button className="account-telegram" type="button" onClick={linkTelegram} disabled={busy}>
               <span className="account-telegram-mark">➤</span> {t.linkTelegram}
             </button>
