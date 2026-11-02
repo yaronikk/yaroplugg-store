@@ -42,6 +42,8 @@ export default function SellerPanel({supabase,user,language}:Props){
  const [message,setMessage]=useState('')
  const [editing,setEditing]=useState<Listing|null>(null)
  const [title,setTitle]=useState('')
+ const [telegramUsername,setTelegramUsername]=useState('')
+ const [telegramAutofilled,setTelegramAutofilled]=useState(false)
  const [description,setDescription]=useState('')
  const [price,setPrice]=useState('')
  const [category,setCategory]=useState('')
@@ -63,6 +65,7 @@ export default function SellerPanel({supabase,user,language}:Props){
  const [photoPreview,setPhotoPreview]=useState<string|null>(null)
  const previews=useMemo(()=>files.map(file=>URL.createObjectURL(file)),[files])
  useEffect(()=>()=>previews.forEach(URL.revokeObjectURL),[previews])
+ useEffect(()=>{let active=true;(async()=>{const {data}=await supabase.from('marketplace_user_profiles').select('telegram_username').eq('id',user.id).maybeSingle();if(!active)return;const fromProfile=String(data?.telegram_username||'').trim().replace(/^@/,'');const fromAuth=String(user.user_metadata?.preferred_username||user.user_metadata?.username||'').trim().replace(/^@/,'');const value=fromProfile||fromAuth;if(value){setTelegramUsername(value);setTelegramAutofilled(true)}})();return()=>{active=false}},[supabase,user.id])
  async function refresh(){
   const {data,error}=await supabase.from('marketplace_listings').select('*').eq('seller_id',user.id).order('created_at',{ascending:false})
   if(error)throw error
@@ -77,8 +80,8 @@ export default function SellerPanel({supabase,user,language}:Props){
   setCategoriesLoading(false)
  }
  useEffect(()=>{let active=true;(async()=>{try{await Promise.all([refresh(),loadCategories()])}catch(e){if(active)setError(e instanceof Error?e.message:t.error);if(active)setCategoriesLoading(false)}finally{if(active)setLoading(false)}})();return()=>{active=false}},[user.id])
- function reset(){setEditing(null);setTitle('');setDescription('');setPrice('');setCategory('');setBrand('');setSize('');setIsLegit(false);setCondition('');setColors([]);setColorSearch('');setCustomColorName('');setCustomColorHex('#888888');setColorError('');setFiles([]);setExistingImages([]);setShowForm(false)}
- function startEdit(item:Listing){setEditing(item);setTitle(item.title);setDescription(item.description);setPrice(String(item.price));setCategory(categories.find(c=>c.name===item.category||c.slug===item.category)?.name||item.category);setBrand(item.brand||'');setSize(isBeltCategory(categories.find(c=>c.name===item.category||c.slug===item.category)?.name||item.category)?(item.size_label||'').replace(/\\s*(?:cm|см)$/i,''):(item.size_label||''));setIsLegit(Boolean(item.is_legit));setCondition(item.item_condition);setColors(Array.isArray(item.colors)?item.colors:[]);setExistingImages(item.images||[]);setFiles([]);setShowForm(true)}
+ function reset(){setEditing(null);setTitle('');setTelegramUsername('');setTelegramAutofilled(false);setDescription('');setPrice('');setCategory('');setBrand('');setSize('');setIsLegit(false);setCondition('');setColors([]);setColorSearch('');setCustomColorName('');setCustomColorHex('#888888');setColorError('');setFiles([]);setExistingImages([]);setShowForm(false)}
+ function startEdit(item:Listing){setEditing(item);setTelegramUsername(String((item as any).telegram_username||''));setTelegramAutofilled(false);setTitle(item.title);setDescription(item.description);setPrice(String(item.price));setCategory(categories.find(c=>c.name===item.category||c.slug===item.category)?.name||item.category);setBrand(item.brand||'');setSize(isBeltCategory(categories.find(c=>c.name===item.category||c.slug===item.category)?.name||item.category)?(item.size_label||'').replace(/\\s*(?:cm|см)$/i,''):(item.size_label||''));setIsLegit(Boolean(item.is_legit));setCondition(item.item_condition);setColors(Array.isArray(item.colors)?item.colors:[]);setExistingImages(item.images||[]);setFiles([]);setShowForm(true)}
  function movePhoto(from:number,to:number){
   const ordered=[...existingImages.map(src=>({kind:'existing' as const,src})),...files.map(file=>({kind:'new' as const,file}))];
   if(to<0||to>=ordered.length)return;
@@ -94,6 +97,8 @@ export default function SellerPanel({supabase,user,language}:Props){
   if(!size.trim()||(isBeltCategory(category)&&(!Number.isFinite(Number(size))||Number(size)<=0||Number(size)>300))){setError(isBeltCategory(category)?t.beltPlaceholder:t.selectSize);return}
   if(!colors.length){setColorError(t.noColors);setError(t.noColors);return}
   if(!Number.isFinite(Number(price))||Number(price)<=0){setError(t.validPrice);return}
+  const cleanTelegram=telegramUsername.trim().replace(/^@/,'')
+  if(!/^[A-Za-z0-9_]{5,32}$/.test(cleanTelegram)){setError(language==='ru'?'Укажи корректный Telegram username (5–32 символа, латиница, цифры и _).':'Enter a valid Telegram username (5–32 characters, letters, numbers and _).');return}
   setBusy(true)
   const uploaded:string[]=[]
   try{
@@ -108,7 +113,7 @@ export default function SellerPanel({supabase,user,language}:Props){
     if(uploadError)throw uploadError
     uploaded.push(supabase.storage.from('marketplace-listings').getPublicUrl(path).data.publicUrl)
    }
-   const payload={title:title.trim(),description:description.trim(),price:Number(price),category,brand:brand.trim(),size_label:isBeltCategory(category)?`${size.trim()} ${language==='ru'?'см':'cm'}`:size.trim(),item_condition:condition,is_legit:isLegit,colors,images:[...existingImages,...uploaded]}
+   const payload={title:title.trim(),telegram_username:cleanTelegram,description:description.trim(),price:Number(price),category,brand:brand.trim(),size_label:isBeltCategory(category)?`${size.trim()} ${language==='ru'?'см':'cm'}`:size.trim(),item_condition:condition,is_legit:isLegit,colors,images:[...existingImages,...uploaded]}
    if(editing){
     const {data:saved,error:saveError}=await supabase.from('marketplace_listings').update({...payload,status:'pending',moderation_reason:null,moderated_at:null,moderated_by:null}).eq('id',editing.id).eq('seller_id',user.id).select('id').single()
     if(saveError)throw saveError
@@ -158,6 +163,7 @@ export default function SellerPanel({supabase,user,language}:Props){
      <label className="seller-field-title">{t.name}<input value={title} onChange={e=>setTitle(e.target.value)} maxLength={100} required minLength={3} placeholder={t.titlePlaceholder}/></label>
      <label className="seller-field-price">{t.price}<div className="seller-price-wrap"><input type="number" value={price} onChange={e=>setPrice(e.target.value)} min="0.01" step="0.01" required placeholder="0.00"/><span>€</span></div></label>
     </div>
+    <label className="seller-field-title seller-telegram-field">TELEGRAM ДЛЯ СВЯЗИ<input value={telegramUsername} onChange={e=>{setTelegramUsername(e.target.value);setTelegramAutofilled(false)}} placeholder="@username" required minLength={5} maxLength={33} pattern="@?[A-Za-z0-9_]{5,32}"/><small>{telegramAutofilled?(language==='ru'?'Заполнено автоматически из профиля Telegram. Можно изменить.':'Auto-filled from your Telegram profile. You can edit it.'):(language==='ru'?'Обязательно для связи с покупателями. Укажи username, а не номер телефона.':'Required so buyers can contact you. Enter your username, not phone number.')}</small></label>
    </section>
    <section className="seller-form-section">
     <div className="seller-section-heading"><span className="seller-section-kicker">02</span><div><h4>{t.specsHeading}</h4><p>{t.specsHint}</p></div></div>
