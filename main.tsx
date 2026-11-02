@@ -401,7 +401,7 @@ function AdminApp(){
   finally{setSavingOrderId(null)}
  }
  async function login(e:React.FormEvent){e.preventDefault();setAuthError('');if(!adminSupabase){setAuthError('Supabase is not configured in this deployment.');return}const {error}=await adminSupabase.auth.signInWithPassword({email,password});if(error)setAuthError(error.message)}
- async function logout(){await adminSupabase?.auth.signOut()}
+ async function logout(){await adminSupabase?.auth.signOut({ scope: 'local' })}
  function startAdd(){setEditing(null);setForm({...emptyForm,colors:emptyForm.colors.map(c=>({...c})),sizes:[...emptyForm.sizes],lengths:[],images:[]});setNewUploadedUrls([]);setRemovedExistingUrls([]);setShowForm(true);setMessage('')}
  function startEdit(p:any){
   const colors=normalizeColors(p.colors)
