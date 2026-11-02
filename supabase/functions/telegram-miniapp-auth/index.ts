@@ -62,7 +62,8 @@ function parseTelegramUser(initData: string) {
 }
 
 function randomPassword() {
-  const bytes = crypto.getRandomValues(new Uint8Array(48))
+  // Supabase Auth enforces a 72-character maximum for passwords.
+  const bytes = crypto.getRandomValues(new Uint8Array(32))
   return [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
