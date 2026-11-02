@@ -41,6 +41,8 @@ const instagramUrl=String(import.meta.env.VITE_INSTAGRAM_URL||'').trim()
 const supabaseUrl=import.meta.env.VITE_SUPABASE_URL as string|undefined
 const supabaseKey=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string|undefined
 const supabase=supabaseUrl&&supabaseKey?createClient(supabaseUrl,supabaseKey):null
+// Keep the admin session isolated so email login in /admin never replaces a seller's Telegram session.
+const adminSupabase=supabaseUrl&&supabaseKey?createClient(supabaseUrl,supabaseKey,{auth:{storageKey:'yaroplugg-admin-auth'}}):null
 
 function readStorage<T>(key:string,fallback:T):T{try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):fallback}catch{return fallback}}
 
@@ -316,16 +318,16 @@ function AdminApp(){
  const [orderFilter,setOrderFilter]=useState<'all'|OrderStatus>('all')
 
  useEffect(()=>{
-  if(!supabase){setLoading(false);return}
-  supabase.auth.getSession().then(({data})=>{setUser(data.session?.user??null);setLoading(false)})
-  const {data:listener}=supabase.auth.onAuthStateChange((_event,session)=>setUser(session?.user??null))
+  if(!adminSupabase){setLoading(false);return}
+  adminSupabase.auth.getSession().then(({data})=>{setUser(data.session?.user??null);setLoading(false)})
+  const {data:listener}=adminSupabase.auth.onAuthStateChange((_event,session)=>setUser(session?.user??null))
   return ()=>listener.subscription.unsubscribe()
  },[])
  useEffect(()=>{if(user?.app_metadata?.role==='admin')void loadAdminData()},[user])
  useEffect(()=>{if(user?.app_metadata?.role==='admin'&&adminSection==='orders')void loadOrders()},[user,adminSection])
 
  async function loadAdminData(){
-  if(!supabase||user?.app_metadata?.role!=='admin'){
+  if(!adminSupabase||user?.app_metadata?.role!=='admin'){
    setMessage('Admin access is required to load marketplace listings.')
    return
   }
@@ -333,9 +335,9 @@ function AdminApp(){
   setMessage('')
   try{
    const [{data:ps,error:pe},{data:cs,error:ce},{data:ml,error:me}]=await Promise.all([
-    supabase.from('products').select('*, category:categories(name,slug)').order('sort_order',{ascending:true}).order('created_at',{ascending:false}),
-    supabase.from('categories').select('*').order('sort_order',{ascending:true}),
-    supabase.from('marketplace_listings').select('id,seller_id,title,description,price,category,brand,size_label,item_condition,defects,images,is_legit,colors,status,moderation_reason,pending_revision,created_at,updated_at,moderated_at,moderated_by,published_at,telegram_username').order('created_at',{ascending:false})
+    adminSupabase.from('products').select('*, category:categories(name,slug)').order('sort_order',{ascending:true}).order('created_at',{ascending:false}),
+    adminSupabase.from('categories').select('*').order('sort_order',{ascending:true}),
+    adminSupabase.from('marketplace_listings').select('id,seller_id,title,description,price,category,brand,size_label,item_condition,defects,images,is_legit,colors,status,moderation_reason,pending_revision,created_at,updated_at,moderated_at,moderated_by,published_at,telegram_username').order('created_at',{ascending:false})
    ])
    if(pe||ce)throw new Error(pe?.message||ce?.message||'Could not load admin data')
    if(me)throw new Error('Marketplace moderation: '+me.message)
@@ -349,14 +351,14 @@ function AdminApp(){
   }
  }
  async function moderateMarketplaceListing(listing:any,decision:'approved'|'rejected',providedReason=''){
-  if(!supabase||!user||user.app_metadata?.role!=='admin'||moderatingId)return
+  if(!adminSupabase||!user||user.app_metadata?.role!=='admin'||moderatingId)return
   if(decision==='rejected'&&!providedReason.trim()){setMessage('A rejection reason is required.');return}
   setModeratingId(listing.id);setMessage('')
   try{
    const now=new Date().toISOString()
    const payload:any={status:decision,moderation_reason:decision==='rejected'?providedReason.trim():null,moderated_at:now,moderated_by:user.id}
    if(decision==='approved')payload.published_at=now
-   const {data,error}=await supabase.from('marketplace_listings').update(payload).eq('id',listing.id).select('id').maybeSingle()
+   const {data,error}=await adminSupabase.from('marketplace_listings').update(payload).eq('id',listing.id).select('id').maybeSingle()
    if(error)throw error
    if(!data)throw new Error('No listing was updated. Check admin permissions for marketplace_listings.')
    setMessage(decision==='approved'?'Marketplace listing approved.':'Marketplace listing rejected.')
@@ -368,19 +370,19 @@ function AdminApp(){
  }
 
  async function loadOrders(){
-  if(!supabase)return
+  if(!adminSupabase)return
   if(user?.app_metadata?.role!=='admin'){setOrdersError('Order access is restricted. In Supabase, set app_metadata.role to admin for your admin account, then sign out and sign in again.');return}
   setOrdersLoading(true);setOrdersError('')
-  const {data,error}=await supabase.from('store_orders').select('id,order_number,customer_name,telegram_user_id,telegram_username,total_cents,status,payment_status,fulfillment_status,stock_reserved,manager_note,created_at,store_order_items(id,product_name,unit_price_cents,quantity,size,color,length)').order('created_at',{ascending:false})
+  const {data,error}=await adminSupabase.from('store_orders').select('id,order_number,customer_name,telegram_user_id,telegram_username,total_cents,status,payment_status,fulfillment_status,stock_reserved,manager_note,created_at,store_order_items(id,product_name,unit_price_cents,quantity,size,color,length)').order('created_at',{ascending:false})
   if(error)setOrdersError(error.message)
   else setOrders(data||[])
   setOrdersLoading(false)
  }
  async function updateOrderStatus(orderId:string,status:OrderStatus){
-  if(!supabase||!user||user.app_metadata?.role!=='admin')return
+  if(!adminSupabase||!user||user.app_metadata?.role!=='admin')return
   setSavingOrderId(orderId);setOrdersError('')
   try{
-   const {error}=await supabase.rpc('admin_update_store_order',{p_order_id:orderId,p_status:status,p_payment_status:null,p_manager_note:null})
+   const {error}=await adminSupabase.rpc('admin_update_store_order',{p_order_id:orderId,p_status:status,p_payment_status:null,p_manager_note:null})
    if(error)throw error
    await loadOrders()
    setMessage(status==='cancelled'?'Order cancelled and reserved stock returned.':'Order status updated.')
@@ -388,18 +390,18 @@ function AdminApp(){
   finally{setSavingOrderId(null)}
  }
  async function updateOrderPaymentStatus(orderId:string,status:PaymentStatus){
-  if(!supabase||!user||user.app_metadata?.role!=='admin')return
+  if(!adminSupabase||!user||user.app_metadata?.role!=='admin')return
   setSavingOrderId(orderId);setOrdersError('')
   try{
-   const {error}=await supabase.rpc('admin_update_store_order',{p_order_id:orderId,p_status:null,p_payment_status:status,p_manager_note:null})
+   const {error}=await adminSupabase.rpc('admin_update_store_order',{p_order_id:orderId,p_status:null,p_payment_status:status,p_manager_note:null})
    if(error)throw error
    await loadOrders()
    setMessage(status==='paid'?'Payment marked as paid.':'Payment marked as refunded.')
   }catch(error){setOrdersError(error instanceof Error?error.message:'Could not update payment status.')}
   finally{setSavingOrderId(null)}
  }
- async function login(e:React.FormEvent){e.preventDefault();setAuthError('');if(!supabase){setAuthError('Supabase is not configured in this deployment.');return}const {error}=await supabase.auth.signInWithPassword({email,password});if(error)setAuthError(error.message)}
- async function logout(){await supabase?.auth.signOut()}
+ async function login(e:React.FormEvent){e.preventDefault();setAuthError('');if(!adminSupabase){setAuthError('Supabase is not configured in this deployment.');return}const {error}=await adminSupabase.auth.signInWithPassword({email,password});if(error)setAuthError(error.message)}
+ async function logout(){await adminSupabase?.auth.signOut()}
  function startAdd(){setEditing(null);setForm({...emptyForm,colors:emptyForm.colors.map(c=>({...c})),sizes:[...emptyForm.sizes],lengths:[],images:[]});setNewUploadedUrls([]);setRemovedExistingUrls([]);setShowForm(true);setMessage('')}
  function startEdit(p:any){
   const colors=normalizeColors(p.colors)
@@ -413,9 +415,9 @@ function AdminApp(){
  function addCustomColor(name:string,hex:string){const clean=name.trim();if(!clean)return false;if(!/^#[0-9a-fA-F]{6}$/.test(hex))return false;if(form.colors.some(c=>c.name.toLowerCase()===clean.toLowerCase()))return false;setForm(f=>({...f,colors:[...f.colors,{name:clean,hex:hex.toLowerCase()}]}));return true}
  function removeColor(name:string){setForm(f=>({...f,colors:f.colors.filter(c=>c.name!==name)}))}
  function storagePathFromUrl(url:string){const marker='/storage/v1/object/public/product-images/';const i=url.indexOf(marker);return i>=0?decodeURIComponent(url.slice(i+marker.length)):''}
- async function removeStorageUrls(urls:string[]){if(!supabase||!urls.length)return;const paths=urls.map(storagePathFromUrl).filter(Boolean);if(paths.length)await supabase.storage.from('product-images').remove(paths)}
+ async function removeStorageUrls(urls:string[]){if(!adminSupabase||!urls.length)return;const paths=urls.map(storagePathFromUrl).filter(Boolean);if(paths.length)await adminSupabase.storage.from('product-images').remove(paths)}
  async function uploadFiles(files:File[]){
-  if(!supabase||!user||!files.length)return
+  if(!adminSupabase||!user||!files.length)return
   const current=form.images.length
   const available=MAX_PRODUCT_IMAGES-current
   if(available<=0){setMessage(`Maximum ${MAX_PRODUCT_IMAGES} images per product.`);return}
@@ -430,9 +432,9 @@ function AdminApp(){
   for(const file of valid){
    const ext=file.name.split('.').pop()?.toLowerCase()||'jpg'
    const path=`${crypto.randomUUID()}.${ext}`
-   const {error}=await supabase.storage.from('product-images').upload(path,file,{contentType:file.type,upsert:false})
+   const {error}=await adminSupabase.storage.from('product-images').upload(path,file,{contentType:file.type,upsert:false})
    if(error){setMessage(error.message);continue}
-   const {data}=supabase.storage.from('product-images').getPublicUrl(path)
+   const {data}=adminSupabase.storage.from('product-images').getPublicUrl(path)
    added.push({url:data.publicUrl,existing:false});addedUrls.push(data.publicUrl)
   }
   if(added.length){setForm(f=>({...f,images:[...f.images,...added]}));setNewUploadedUrls(v=>[...v,...addedUrls])}
@@ -451,7 +453,7 @@ function AdminApp(){
  function makeMain(index:number){setForm(f=>{if(index===0)return f;const next=[...f.images];const [item]=next.splice(index,1);next.unshift(item);return {...f,images:next}})}
  function handleDrop(e:React.DragEvent<HTMLDivElement>){e.preventDefault();void uploadFiles(Array.from(e.dataTransfer.files))}
  async function saveProduct(e:React.FormEvent){
-  e.preventDefault();if(!supabase||!user)return
+  e.preventDefault();if(!adminSupabase||!user)return
   if(!form.name.trim()){setMessage('Product name is required.');return}
   if(!form.colors.length){setMessage('Select at least one color.');return}
   if(isBeltCategory(form.category)&&!form.lengths.length){setMessage('Add at least one belt length in centimeters.');return}
@@ -472,9 +474,9 @@ function AdminApp(){
   const stockValue=Number(form.stock)
   if(!Number.isInteger(stockValue)||stockValue<0){setSaving(false);setMessage('Stock must be a whole number 0 or greater.');return}
   const payload={name:form.name.trim(),slug,description:form.description.trim(),composition:form.composition.trim(),price:Number(form.price)||0,category_id:category?.id||null,sizes:isBeltCategory(form.category)?[]:form.sizes,lengths:isBeltCategory(form.category)?form.lengths:[],colors:form.colors,stock:stockValue,image_url:imageUrls[0]||null,images:imageUrls,is_active:form.isActive,is_new:form.isNew,featured:form.featured,sort_order:Number(form.sortOrder)||0,updated_at:new Date().toISOString()}
-  let result=editing?await supabase.from('products').update(payload).eq('id',editing.id):await supabase.from('products').insert(payload)
+  let result=editing?await adminSupabase.from('products').update(payload).eq('id',editing.id):await adminSupabase.from('products').insert(payload)
   if(result.error&&editing){
-   const stockRetry=await supabase.from('products').update({stock:stockValue,updated_at:new Date().toISOString()}).eq('id',editing.id)
+   const stockRetry=await adminSupabase.from('products').update({stock:stockValue,updated_at:new Date().toISOString()}).eq('id',editing.id)
    if(!stockRetry.error){
     await removeStorageUrls(newUploadedUrls);setNewUploadedUrls([]);setRemovedExistingUrls([]);setSaving(false);setShowForm(false);setMessage('Stock updated. Other changes could not be saved: '+result.error.message);await loadAdminData();return
    }
@@ -485,19 +487,19 @@ function AdminApp(){
  }
  async function cancelForm(){if(newUploadedUrls.length)await removeStorageUrls(newUploadedUrls);setNewUploadedUrls([]);setRemovedExistingUrls([]);setShowForm(false)}
  async function updateStock(p:any,next:number){
-  if(!supabase||!user||stockSavingId)return
+  if(!adminSupabase||!user||stockSavingId)return
   const value=Math.max(0,Math.floor(Number(next)||0))
   setStockSavingId(p.id);setMessage('')
   const previous=p.stock??0
   setAdminProducts(items=>items.map(item=>item.id===p.id?{...item,stock:value}:item))
-  const {error}=await supabase.from('products').update({stock:value,updated_at:new Date().toISOString()}).eq('id',p.id)
+  const {error}=await adminSupabase.from('products').update({stock:value,updated_at:new Date().toISOString()}).eq('id',p.id)
   if(error){setAdminProducts(items=>items.map(item=>item.id===p.id?{...item,stock:previous}:item));setMessage(`Could not update stock: ${error.message}`)}
   else setMessage(`${p.name} stock updated to ${value}`)
   setStockSavingId(null)
  }
- async function markProductSold(p:any){if(!supabase||!user||user.app_metadata?.role!=='admin')return;if(!window.confirm(`Mark ${p.name} as sold? It will disappear from the active catalog and appear in SOLD.`))return;setMessage('');const {error}=await supabase.from('products').update({is_sold:true,is_active:false,updated_at:new Date().toISOString()}).eq('id',p.id);if(error){setMessage(`Could not mark as sold: ${error.message}`);return}setMessage(`${p.name} moved to SOLD`);await loadAdminData()}
- async function restoreSoldProduct(p:any){if(!supabase||!user||user.app_metadata?.role!=='admin')return;const {error}=await supabase.from('products').update({is_sold:false,is_active:true,updated_at:new Date().toISOString()}).eq('id',p.id);if(error){setMessage(`Could not restore product: ${error.message}`);return}setMessage(`${p.name} restored to PRODUCTS`);await loadAdminData()}
- async function deleteProduct(p:any){if(!supabase||!user)return;if(!window.confirm(`Delete ${p.name}?`))return;const urls=Array.isArray(p.images)&&p.images.length?p.images:(p.image_url?[p.image_url]:[]);const {error}=await supabase.from('products').delete().eq('id',p.id);if(error){setMessage(error.message);return}if(urls.length)await removeStorageUrls(urls);setMessage('Product deleted');await loadAdminData()}
+ async function markProductSold(p:any){if(!adminSupabase||!user||user.app_metadata?.role!=='admin')return;if(!window.confirm(`Mark ${p.name} as sold? It will disappear from the active catalog and appear in SOLD.`))return;setMessage('');const {error}=await adminSupabase.from('products').update({is_sold:true,is_active:false,updated_at:new Date().toISOString()}).eq('id',p.id);if(error){setMessage(`Could not mark as sold: ${error.message}`);return}setMessage(`${p.name} moved to SOLD`);await loadAdminData()}
+ async function restoreSoldProduct(p:any){if(!adminSupabase||!user||user.app_metadata?.role!=='admin')return;const {error}=await adminSupabase.from('products').update({is_sold:false,is_active:true,updated_at:new Date().toISOString()}).eq('id',p.id);if(error){setMessage(`Could not restore product: ${error.message}`);return}setMessage(`${p.name} restored to PRODUCTS`);await loadAdminData()}
+ async function deleteProduct(p:any){if(!adminSupabase||!user)return;if(!window.confirm(`Delete ${p.name}?`))return;const urls=Array.isArray(p.images)&&p.images.length?p.images:(p.image_url?[p.image_url]:[]);const {error}=await adminSupabase.from('products').delete().eq('id',p.id);if(error){setMessage(error.message);return}if(urls.length)await removeStorageUrls(urls);setMessage('Product deleted');await loadAdminData()}
 
  if(loading)return <AdminFrame><AdminLoading/></AdminFrame>
  if(!user)return <AdminLogin email={email} password={password} setEmail={setEmail} setPassword={setPassword} error={authError} onSubmit={login}/>
