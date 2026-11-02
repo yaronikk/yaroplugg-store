@@ -54,6 +54,40 @@ $$;
 
 revoke all on function public.handle_new_user_profile() from public, anon, authenticated;
 
+-- Keep profiles private by default while exposing seller cards only for
+-- profiles that belong to a currently approved marketplace listing.
+drop policy if exists "Authenticated users can view marketplace profiles" on public.profiles;
+drop policy if exists "Marketplace profile visibility" on public.profiles;
+drop policy if exists "Public can view marketplace seller profiles" on public.profiles;
+
+create policy "Marketplace profile visibility"
+on public.profiles
+for select
+to authenticated
+using (
+  id = (select auth.uid())
+  or exists (
+    select 1
+    from public.marketplace_listings as listing
+    where listing.seller_id = profiles.id
+      and listing.status = 'approved'
+  )
+  or (select auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+);
+
+create policy "Public can view marketplace seller profiles"
+on public.profiles
+for select
+to anon
+using (
+  exists (
+    select 1
+    from public.marketplace_listings as listing
+    where listing.seller_id = profiles.id
+      and listing.status = 'approved'
+  )
+);
+
 -- Consolidate marketplace read/update rules while preserving the existing
 -- public, seller-owned, and administrator access model.
 drop policy if exists "Admins can view all marketplace listings" on public.marketplace_listings;
