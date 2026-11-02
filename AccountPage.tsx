@@ -134,6 +134,24 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
     setError('')
     setMessage('')
     try {
+      const telegram = (window as any).Telegram?.WebApp
+      const initData = typeof telegram?.initData === 'string' ? telegram.initData : ''
+      if (initData) {
+        // Mini Apps use server-verified initData; never trust initDataUnsafe for authentication.
+        const { data, error: exchangeError } = await supabase.functions.invoke('telegram-miniapp-auth', {
+          body: { initData },
+        })
+        if (exchangeError) throw exchangeError
+        if (!data?.token_hash) throw new Error('Telegram sign-in could not be completed. Please reopen the Mini App and try again.')
+        const { error: sessionError } = await supabase.auth.verifyOtp({
+          token_hash: data.token_hash,
+          type: 'magiclink',
+        })
+        if (sessionError) throw sessionError
+        return
+      }
+
+      // Keep the existing OIDC flow unchanged for the regular website.
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'custom:telegram',
         options: { redirectTo: window.location.origin },
@@ -141,6 +159,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
       if (authError) throw authError
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Telegram sign-in failed. Please try again.')
+    } finally {
       setBusy(false)
     }
   }
@@ -315,7 +334,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
               </div>
               <div className="account-profile-copy">
                 <strong>{profile?.display_name || metadataName(user) || 'Yaroplugg user'}</strong>
-                <span>{user.email || 'Telegram account'}</span>
+                <span>{user.user_metadata?.auth_method === 'telegram_miniapp' ? 'Telegram account' : user.email || 'Telegram account'}</span>
                 {telegramUsername && <a href={`https://t.me/${encodeURIComponent(telegramUsername)}`} target="_blank" rel="noreferrer">@{telegramUsername}</a>}
               </div>
             </div>
