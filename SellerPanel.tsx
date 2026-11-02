@@ -123,7 +123,22 @@ export default function SellerPanel({supabase,user,language}:Props){
   }catch(e){if(uploaded.length){const paths=uploaded.map(url=>{try{return new URL(url).pathname.split('/marketplace-listings/')[1]}catch{return ''}}).filter(Boolean);if(paths.length)await supabase.storage.from('marketplace-listings').remove(paths)}setError(e instanceof Error?e.message:t.error)}
   finally{setBusy(false)}
  }
- async function remove(item:Listing){if(!window.confirm(t.remove+'?'))return;setError('');const {error}=await supabase.from('marketplace_listings').delete().eq('id',item.id).eq('seller_id',user.id);if(error)setError(error.message);else await refresh()}
+ async function remove(item:Listing){
+  if(!window.confirm(t.remove+'?'))return
+  setError('');setMessage('');setBusy(true)
+  try{
+   const {data:deleted,error:deleteError}=await supabase.from('marketplace_listings').delete().eq('id',item.id).eq('seller_id',user.id).select('id').maybeSingle()
+   if(deleteError)throw deleteError
+   if(!deleted?.id)throw new Error(language==='ru'?'Объявление не удалено: оно не найдено для текущего аккаунта. Обнови страницу и проверь, в тот ли аккаунт ты вошёл.':'Listing was not deleted: it was not found for the current account. Refresh and check which account is signed in.')
+   const paths=(item.images||[]).map(url=>{try{return new URL(url).pathname.split('/marketplace-listings/')[1]}catch{return ''}}).filter(Boolean)
+   if(paths.length){
+    const {error:storageError}=await supabase.storage.from('marketplace-listings').remove(paths)
+    if(storageError)setMessage(language==='ru'?'Объявление удалено, но часть фотографий не удалось очистить.':'Listing deleted, but some photos could not be cleaned up.')
+   }
+   await refresh()
+  }catch(e){setError(e instanceof Error?e.message:t.error)}
+  finally{setBusy(false)}
+ }
  async function markSold(item:Listing){setError('');const {error}=await supabase.rpc('mark_marketplace_listing_sold',{p_listing_id:item.id});if(error)setError(error.message);else await refresh()}
  const statusText=(status:string)=>t[statusKey[status]||'pending']
  return <section className="seller-panel">
