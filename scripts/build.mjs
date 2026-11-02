@@ -7,6 +7,7 @@ const optimized = 'public/hero-drop.webp'
 const outputPng = 'dist/hero-drop.png'
 
 const original = await stat(source)
+execFileSync(process.execPath, ['node_modules/typescript/bin/tsc', '-b'], { stdio: 'inherit' })
 await sharp(source).webp({ quality: 82, effort: 5 }).toFile(optimized)
 const webp = await stat(optimized)
 
