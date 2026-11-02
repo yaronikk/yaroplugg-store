@@ -69,6 +69,9 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
   const [message, setMessage] = useState('')
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false)
   const [avatarBusy, setAvatarBusy] = useState(false)
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null)
+  const [pendingAvatarPreview, setPendingAvatarPreview] = useState('')
+  const [removeAvatarPending, setRemoveAvatarPending] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
   const telegramUsername = String(
@@ -183,35 +186,32 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
 
   async function saveProfile(event: React.FormEvent) {
     event.preventDefault()
-    if (!supabase || !user || busy) return
+    if (!supabase || !user || busy || avatarBusy) return
     const cleanName = displayName.trim()
-    if (cleanName.length < 2 || cleanName.length > 80) {
-      setError(t.nameLength)
-      return
-    }
-    setBusy(true)
-    setError('')
-    setMessage('')
+    if (cleanName.length < 2 || cleanName.length > 80) { setError(t.nameLength); return }
+    setBusy(true); setError(''); setMessage('')
+    let uploadedPath: string | null = null
     try {
-      const { error: metadataError } = await supabase.auth.updateUser({ data: { full_name: cleanName } })
-      if (metadataError) throw metadataError
-      const { data, error: profileError } = await supabase.from('profiles').upsert({
-        id: user.id,
-        display_name: cleanName,
-        avatar_url: profile?.avatar_url ?? user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
-        telegram_username: telegramUsername || null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'id' }).select('display_name,avatar_url,telegram_username,created_at').single()
+      let nextAvatarUrl = profile?.avatar_url ?? user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null
+      if (pendingAvatarFile) {
+        const extension = pendingAvatarFile.type === 'image/png' ? 'png' : pendingAvatarFile.type === 'image/webp' ? 'webp' : 'jpg'
+        uploadedPath = `${user.id}/${crypto.randomUUID()}.${extension}`
+        const { error: uploadError } = await supabase.storage.from('marketplace-avatars').upload(uploadedPath, pendingAvatarFile, { cacheControl: '3600', upsert: false, contentType: pendingAvatarFile.type })
+        if (uploadError) throw uploadError
+        nextAvatarUrl = supabase.storage.from('marketplace-avatars').getPublicUrl(uploadedPath).data.publicUrl
+      } else if (removeAvatarPending) nextAvatarUrl = null
+      const { data, error: profileError } = await supabase.from('profiles').upsert({ id: user.id, display_name: cleanName, avatar_url: nextAvatarUrl, telegram_username: telegramUsername || null, updated_at: new Date().toISOString() }, { onConflict: 'id' }).select('display_name,avatar_url,telegram_username,created_at').single()
       if (profileError) throw profileError
-      setProfile(data as AccountProfile)
-      setMessage(t.updated)
+      const { error: metadataError } = await supabase.auth.updateUser({ data: { full_name: cleanName } })
+      if (metadataError) console.warn('Profile saved, but auth metadata could not be refreshed:', metadataError)
+      const oldPath = ownAvatarStoragePath(profile?.avatar_url)
+      setProfile(data as AccountProfile); setPendingAvatarFile(null); setPendingAvatarPreview(''); setRemoveAvatarPending(false); setAvatarLoadFailed(false); setMessage(t.updated)
+      if (oldPath && oldPath !== uploadedPath && (pendingAvatarFile || removeAvatarPending)) await supabase.storage.from('marketplace-avatars').remove([oldPath])
     } catch (cause) {
+      if (uploadedPath) await supabase.storage.from('marketplace-avatars').remove([uploadedPath])
       setError(cause instanceof Error ? cause.message : 'Could not update your profile.')
-    } finally {
-      setBusy(false)
-    }
+    } finally { setBusy(false) }
   }
-
 
   function ownAvatarStoragePath(url: string | null | undefined) {
     if (!url || !supabase || !user) return null
@@ -227,77 +227,15 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
     }
   }
 
-  async function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file || !supabase || !user || avatarBusy) return
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setError(t.avatarTypeError)
-      return
-    }
-    if (file.size > 3 * 1024 * 1024) {
-      setError(t.avatarSizeError)
-      return
-    }
-    setAvatarBusy(true)
-    setError('')
-    setMessage('')
-    const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
-    const path = `${user.id}/${crypto.randomUUID()}.${extension}`
-    try {
-      const { error: uploadError } = await supabase.storage.from('marketplace-avatars').upload(path, file, {
-        cacheControl: '3600', upsert: false, contentType: file.type,
-      })
-      if (uploadError) throw uploadError
-      const { data: publicData } = supabase.storage.from('marketplace-avatars').getPublicUrl(path)
-      const { data, error: profileError } = await supabase.from('profiles').upsert({
-        id: user.id,
-        display_name: profile?.display_name || metadataName(user) || 'Yaroplugg user',
-        avatar_url: publicData.publicUrl,
-        telegram_username: telegramUsername || null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'id' }).select('display_name,avatar_url,telegram_username,created_at').single()
-      if (profileError) {
-        await supabase.storage.from('marketplace-avatars').remove([path])
-        throw profileError
-      }
-      const oldPath = ownAvatarStoragePath(profile?.avatar_url)
-      setProfile(data as AccountProfile)
-      setAvatarLoadFailed(false)
-      setMessage(t.updated)
-      if (oldPath && oldPath !== path) await supabase.storage.from('marketplace-avatars').remove([oldPath])
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not upload the avatar.')
-    } finally {
-      setAvatarBusy(false)
-    }
+  function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]; event.target.value = ''
+    if (!file || !supabase || !user) return
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { setError(t.avatarTypeError); return }
+    if (file.size > 3 * 1024 * 1024) { setError(t.avatarSizeError); return }
+    setError(''); setMessage(''); setPendingAvatarFile(file); setPendingAvatarPreview(URL.createObjectURL(file)); setRemoveAvatarPending(false)
   }
 
-  async function removeAvatar() {
-    if (!supabase || !user || avatarBusy) return
-    setAvatarBusy(true)
-    setError('')
-    setMessage('')
-    try {
-      const { data, error: profileError } = await supabase.from('profiles').upsert({
-        id: user.id,
-        display_name: profile?.display_name || metadataName(user) || 'Yaroplugg user',
-        avatar_url: '',
-        telegram_username: telegramUsername || null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'id' }).select('display_name,avatar_url,telegram_username,created_at').single()
-      if (profileError) throw profileError
-      const oldPath = ownAvatarStoragePath(profile?.avatar_url)
-      setProfile(data as AccountProfile)
-      setAvatarLoadFailed(false)
-      setMessage(t.updated)
-      if (oldPath) await supabase.storage.from('marketplace-avatars').remove([oldPath])
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not remove the avatar.')
-    } finally {
-      setAvatarBusy(false)
-    }
-  }
+  function removeAvatar() { setPendingAvatarFile(null); setPendingAvatarPreview(''); setRemoveAvatarPending(true); setError(''); setMessage('') }
 
   async function signOut() {
     if (!supabase || busy) return
@@ -307,7 +245,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
     setBusy(false)
   }
 
-  const avatarUrl = profile?.avatar_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? ''
+  const avatarUrl = pendingAvatarPreview || (removeAvatarPending ? '' : profile ? (profile.avatar_url || '') : user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? '')
   const avatarInitial = (profile?.display_name || displayName || metadataName(user || ({} as User)) || 'Y').trim().charAt(0).toUpperCase()
   const isTelegramMiniAppAccount = user?.user_metadata?.auth_method === 'telegram_miniapp'
   const identityProviders = Array.from(new Set((user?.identities || []).map(identity => identity.provider)))
@@ -316,6 +254,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
     : identityProviders
 
   useEffect(() => { setAvatarLoadFailed(false) }, [avatarUrl])
+  useEffect(() => () => { if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview) }, [pendingAvatarPreview])
 
   return (
     <section className="account-page page-pad page-top">
@@ -333,7 +272,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
             <div className="account-profile-top">
               <div className="account-avatar-wrap">
                 {avatarUrl && !avatarLoadFailed ? <img className="account-avatar" src={avatarUrl} alt="" referrerPolicy="no-referrer" onError={() => setAvatarLoadFailed(true)} /> : <div className="account-avatar account-avatar-placeholder" aria-label={avatarInitial}><span className="account-avatar-initial">{avatarInitial}</span></div>}
-                <button className="account-avatar-edit" type="button" onClick={() => avatarInputRef.current?.click()} disabled={avatarBusy} aria-label={t.uploadAvatar}><Camera size={14} /></button>
+                <button className="account-avatar-edit" type="button" onClick={() => avatarInputRef.current?.click()} disabled={busy || avatarBusy} aria-label={t.uploadAvatar}><Camera size={14} /></button>
                 <input ref={avatarInputRef} className="account-avatar-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadAvatar} />
               </div>
               <div className="account-profile-copy">
@@ -342,9 +281,9 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
                 {telegramUsername && <a href={`https://t.me/${encodeURIComponent(telegramUsername)}`} target="_blank" rel="noreferrer">@{telegramUsername}</a>}
               </div>
             </div>
-            {profile?.avatar_url && ownAvatarStoragePath(profile.avatar_url) && (
+            {(pendingAvatarFile || removeAvatarPending || (profile?.avatar_url && ownAvatarStoragePath(profile.avatar_url))) && (
               <div className="account-avatar-actions">
-                <button type="button" onClick={removeAvatar} disabled={avatarBusy}><Trash2 size={13} /> {t.removeAvatar}</button>
+                <button type="button" onClick={removeAvatar} disabled={busy || avatarBusy}><Trash2 size={13} /> {t.removeAvatar}</button>
               </div>
             )}
             <div className="account-identities">
@@ -360,7 +299,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
           <form className="account-card account-form" onSubmit={saveProfile}>
             <h2>{t.details}</h2>
             <label>{t.displayName}<input value={displayName} onChange={event => setDisplayName(event.target.value)} maxLength={80} autoComplete="name" required /></label>
-            <button className="account-primary" type="submit" disabled={busy}><CheckCircle2 size={16} /> {busy ? t.saving : t.save}</button>
+            <button className="account-primary" type="submit" disabled={busy || avatarBusy}><CheckCircle2 size={16} /> {busy ? t.saving : t.save}</button>
           </form>
           {message && <div className="account-message"><CheckCircle2 size={16} /> {message}</div>}
           {error && <div className="account-error">{error}</div>}

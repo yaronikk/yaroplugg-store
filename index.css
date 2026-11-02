@@ -730,3 +730,39 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .account-google{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px;border:1px solid rgba(255,255,255,.16);border-radius:10px;background:#fff;color:#171717;font-size:11px;font-weight:800;letter-spacing:.06em;cursor:pointer}
 .account-google:disabled{opacity:.55;cursor:wait}
 .account-google-mark{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#f1f1f1;color:#4285f4;font-size:14px;font-weight:900}
+
+
+/* Final responsive polish: header controls, seller form and custom colors. */
+.site-header{gap:18px;min-width:0}
+.brand-button{min-width:0;flex:0 1 auto}
+.brand-logo{width:clamp(132px,14vw,176px);max-height:42px}
+.header-actions{flex:none;gap:10px}
+.language-switch{min-height:42px;gap:4px;padding:4px}
+.language-switch button{min-width:34px;height:32px;padding:0 8px;font-size:9px}
+.icon-button{width:44px;height:44px}
+.admin-custom-color{grid-template-columns:minmax(0,1.2fr) 42px minmax(0,.8fr) auto;min-width:0}
+.admin-custom-color>input{min-width:0;width:100%}
+.seller-telegram-field{width:100%;max-width:none;margin-top:4px}
+.seller-telegram-field input{min-width:0}
+@media(max-width:600px){
+ .site-header{height:72px;padding:0 14px;gap:8px}
+ .brand-logo{width:clamp(108px,30vw,132px);max-height:34px}
+ .header-actions{gap:6px}
+ .language-switch{min-height:38px;gap:2px;padding:3px}
+ .language-switch button{min-width:25px;height:30px;padding:0 5px;font-size:8px}
+ .icon-button{width:38px;height:38px}
+ .admin-custom-color{grid-template-columns:42px minmax(0,1fr);gap:8px}
+ .admin-custom-color>input:first-of-type{grid-column:1/-1;grid-row:1}
+ .admin-custom-color .admin-color-picker{grid-column:1;grid-row:2}
+ .admin-custom-color>input:nth-of-type(2){grid-column:2;grid-row:2}
+ .admin-custom-color .admin-ghost{grid-column:1/-1;grid-row:3;width:100%;height:42px}
+ .seller-form-section{min-width:0}
+ .seller-form-grid-main{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:380px){
+ .site-header{padding:0 10px;gap:5px}
+ .brand-logo{width:104px}
+ .header-actions{gap:4px}
+ .language-switch button{min-width:22px;padding:0 4px}
+ .icon-button{width:35px;height:35px}
+}
