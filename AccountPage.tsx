@@ -203,7 +203,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
       const { data, error: profileError } = await supabase.from('profiles').upsert({ id: user.id, display_name: cleanName, avatar_url: nextAvatarUrl, telegram_username: telegramUsername || null, updated_at: new Date().toISOString() }, { onConflict: 'id' }).select('display_name,avatar_url,telegram_username,created_at').single()
       if (profileError) throw profileError
       const { error: metadataError } = await supabase.auth.updateUser({ data: { full_name: cleanName } })
-      if (metadataError) throw metadataError
+      if (metadataError) console.warn('Profile saved, but auth metadata could not be refreshed:', metadataError)
       const oldPath = ownAvatarStoragePath(profile?.avatar_url)
       setProfile(data as AccountProfile); setPendingAvatarFile(null); setPendingAvatarPreview(''); setRemoveAvatarPending(false); setAvatarLoadFailed(false); setMessage(t.updated)
       if (oldPath && oldPath !== uploadedPath && (pendingAvatarFile || removeAvatarPending)) await supabase.storage.from('marketplace-avatars').remove([oldPath])
