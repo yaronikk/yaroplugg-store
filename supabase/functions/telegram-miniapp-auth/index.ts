@@ -1,9 +1,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const allowedOrigins = new Set([
-  'https://yaropluggstore.vercel.app',
-  Deno.env.get('SHOP_SITE_URL') || '',
-].filter(Boolean))
+const allowedOrigins = new Set(
+  ['https://yaropluggstore.vercel.app', Deno.env.get('SHOP_SITE_URL') || '']
+    .filter(Boolean)
+    .map(value => {
+      try { return new URL(value).origin } catch { return '' }
+    })
+    .filter(Boolean)
+)
 
 function response(body: unknown, status = 200, origin = '') {
   return new Response(JSON.stringify(body), {
