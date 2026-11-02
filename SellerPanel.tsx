@@ -4,7 +4,7 @@ import { CheckCircle2, ImagePlus, LoaderCircle, Plus, Trash2, Package, RotateCcw
 
 type Props = { supabase: any; user: User; language: 'en'|'ru'|'et' }
 type AdminColor={name:string;hex:string}
-type Listing = { id:string; title:string; description:string; price:number; category:string; brand:string; size_label:string; item_condition:string; is_legit:boolean; colors:AdminColor[]; images:string[]; status:string; moderation_reason:string|null; created_at:string }
+type Listing = { id:string; seller_id:string; title:string; description:string; price:number; category:string; brand:string; size_label:string; item_condition:string; is_legit:boolean; colors:AdminColor[]; images:string[]; status:string; moderation_reason:string|null; created_at:string }
 type StoreCategory = { id:string; name:string; slug:string }
 const words = {
  en:{colors:'COLORS',chooseColors:'Choose one or more',searchColors:'Search colors…',customColor:'Custom color name',addColor:'ADD',noColors:'Select at least one color.',title:'SELLER PANEL',intro:'Create listings and manage your items.',new:'NEW LISTING',my:'MY LISTINGS',name:'TITLE',desc:'DESCRIPTION',price:'PRICE · EUR',category:'CATEGORY',brand:'BRAND',size:'SIZE',condition:'CONDITION',selectCondition:'Select condition',legit:'AUTHENTICITY',legitYes:'LEGIT',legitNo:'R€P',legitHint:'Seller-declared status',photos:'PHOTOS · 3–10',photoCover:'COVER',addPhotos:'Add photos',photoHint:'JPG, PNG or WebP · up to 10 photos · max 10 MB each',submit:'SUBMIT FOR REVIEW',save:'SAVE CHANGES',loading:'LOADING…',empty:'No listings yet.',pending:'UNDER REVIEW',approved:'PUBLISHED',rejected:'CHANGES REQUIRED',sold:'SOLD',remove:'DELETE',markSold:'MARK AS SOLD',resubmit:'RESUBMIT',uploading:'UPLOADING PHOTOS…',success:'Listing sent for moderation.',needPhotos:'Please add 3–10 photos.',conditionOptions:['New with tags','New without tags','Excellent','Good','Has defects'],beltSize:'SIZE · CM',clothingSize:'SIZE',selectSize:'Select size',beltPlaceholder:'Enter belt length in cm',error:'Could not save listing.',all:'ALL LISTINGS',active:'ACTIVE',rejectedTab:'REJECTED',marketTab:'MARKET',marketEmpty:'No published listings in the market yet.',photoSection:'Photos',photoSectionHint:'Add clear photos from different angles. The first photo will be the cover.',itemInfo:'Item information',itemInfoHint:'Add a clear title and price.',specifications:'Specifications',specificationsHint:'Choose the appropriate item details.',descriptionSection:'Description',descriptionHint:'Describe the fit, condition and any flaws.',descriptionPlaceholder:'Describe the item, fit and any flaws…',titlePlaceholder:'For example, vintage Nike hoodie',brandPlaceholder:'For example, Nike, Carhartt',cancel:'CANCEL',close:'Close form',preview:'Photo preview',validCategory:'Select a category from the list.',validPrice:'Enter a valid price.',invalidImage:'Use JPG, PNG or WebP images up to 10 MB.',uniqueColor:'Enter a unique color name and valid HEX code.',customSwatch:'Custom color swatch',customHex:'Custom color HEX',removePhoto:'Remove photo',moveLeft:'Move photo left',moveRight:'Move photo right',markedLegit:'Seller marked this item as LEGIT',markedRep:'Seller marked this item as R€P',loadingCategories:'Loading…',selectCategory:'Select category',marketplace:"MARKETPLACE",createHint:"Add photos first, then fill in the item details.",photosHeading:"Photos",photosHint:"Add clear photos from multiple angles. The first photo will be your cover.",itemInfoHeading:"Item information",itemInfoHint:"Give your listing a clear title and price.",specsHeading:"Specifications",specsHint:"Choose the closest match for your item.",descriptionHeading:"Description",descriptionHint:"Add useful details about fit, condition and flaws.",titlePlaceholder:"e.g. Vintage Nike hoodie",brandPlaceholder:"e.g. Nike, Carhartt",descriptionPlaceholder:"Describe the item, its fit and any imperfections…",closeForm:"Close form",previewPhoto:"Preview photo",listingPhoto:"Listing photo",movePhotoLeft:"Move photo left",movePhotoRight:"Move photo right",removePhoto:"Remove photo",removeColor:"Remove color",customSwatch:"Custom color swatch",customHex:"Custom HEX color",cancel:"CANCEL",soldEmpty:"No sold listings yet.",createTitle:"CREATE LISTING",closePreview:"Close preview"},
@@ -39,6 +39,7 @@ export default function SellerPanel({supabase,user,language}:Props){
  const [loading,setLoading]=useState(true)
  const [busy,setBusy]=useState(false)
  const [error,setError]=useState('')
+ const [accountMismatch,setAccountMismatch]=useState(false)
  const [message,setMessage]=useState('')
  const [editing,setEditing]=useState<Listing|null>(null)
  const [title,setTitle]=useState('')
@@ -94,7 +95,18 @@ export default function SellerPanel({supabase,user,language}:Props){
  async function refresh(){
   const {data,error}=await supabase.from('marketplace_listings').select('*').eq('seller_id',user.id).order('created_at',{ascending:false})
   if(error)throw error
-  setListings((data||[]) as Listing[])
+  const ownListings=(data||[]) as Listing[]
+  setListings(ownListings)
+  // Detect an account mismatch without ever transferring listing ownership by username.
+  if(!ownListings.length){
+   const {data:profile}=await supabase.from('profiles').select('telegram_username').eq('id',user.id).maybeSingle()
+   const telegram=String(profile?.telegram_username||user.user_metadata?.preferred_username||user.user_metadata?.username||'').replace(/^@/,'').trim()
+   if(telegram){
+    const {data:otherListings,error:otherError}=await supabase.from('marketplace_listings').select('id,seller_id').neq('seller_id',user.id).eq('telegram_username',telegram).limit(1)
+    if(otherError)console.warn('Could not check for listings linked to another account',otherError)
+    setAccountMismatch(Boolean(otherListings?.length))
+   }else setAccountMismatch(false)
+  }else setAccountMismatch(false)
  }
  async function loadCategories(){
   setCategoriesLoading(true)
@@ -175,6 +187,7 @@ export default function SellerPanel({supabase,user,language}:Props){
   <div className="seller-panel-heading"><div><p className="eyebrow red">{t.marketplace}</p><h2>{t.title}</h2><p>{t.intro}</p></div><Package size={21}/></div>
   <div className="seller-panel-toolbar"><h3>{t.my}</h3><button type="button" onClick={()=>{reset();setShowForm(true)}}><Plus size={15}/>{t.new}</button></div>
   {message&&<div className="account-message"><CheckCircle2 size={16}/>{message}</div>}
+  {accountMismatch&&<div className="account-error">{language==='ru'?'Похоже, ты вошёл в другой аккаунт. У этого Telegram username есть объявления в другой учётной записи. Выйди и войди через исходный Telegram-аккаунт; объявления не удалены.':'This looks like a different account. Listings exist under another account with this Telegram username. Sign out and use the original Telegram login; your listings have not been deleted.'}</div>}
   {error&&<div className="account-error">{error}</div>}
   {showForm&&<form className="seller-form" onSubmit={submit}>
    <div className="seller-form-intro"><div><span className="seller-section-kicker">{t.createTitle}</span><h3>{editing?t.save:t.new}</h3><p>{t.createHint}</p></div><button type="button" className="seller-form-close" onClick={reset} aria-label={t.closeForm}>×</button></div>
