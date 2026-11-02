@@ -789,45 +789,33 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 }
 @media(max-width:380px){.admin-color-palette{grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}}
 
-/* Seller color picker: fix mobile sizing and spacing */
-.seller-color-section{display:flex;flex-direction:column;align-items:stretch;gap:14px}
-.seller-color-section .admin-color-selected{min-height:0;margin:0}
-.seller-color-section .admin-color-palette{width:100%;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px 8px;padding:2px 0;justify-items:start}
-.seller-color-section .admin-color-palette button{width:36px;height:36px;min-height:36px;max-width:100%;margin:0}
-.seller-color-section .admin-color-palette button i{width:28px;height:28px}
-.seller-color-section .admin-color-palette button.selected i{width:24px;height:24px}
-.seller-color-section .admin-custom-color{display:grid;width:100%;max-width:100%;min-width:0;grid-template-columns:minmax(0,1fr) 40px 64px;gap:10px;align-items:center;margin-top:2px}
-.seller-color-section .admin-custom-color>input{display:block;width:100%;min-width:0;max-width:100%;height:42px;min-height:42px;padding:0 12px;box-sizing:border-box;font-size:14px}
-.seller-color-section .admin-custom-color .admin-color-picker{position:relative;display:block;width:40px;height:40px;min-width:40px;margin:0;padding:0;box-sizing:border-box}
-.seller-color-section .admin-custom-color .admin-color-picker input[type="color"]{position:absolute;inset:0;width:40px;height:40px;min-height:40px;margin:0;padding:0;opacity:0;cursor:pointer}
-.seller-color-section .admin-custom-color .admin-color-picker span{display:block;width:40px;height:40px;min-height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.24);box-sizing:border-box}
-.seller-color-section .admin-custom-color .admin-ghost{display:inline-flex;align-items:center;justify-content:center;width:64px;min-width:64px;height:40px;min-height:40px;padding:0 10px;margin:0;white-space:nowrap}
-.seller-color-section .admin-inline-error{margin-top:0}
-@media(max-width:380px){
- .seller-color-section .admin-color-palette{grid-template-columns:repeat(6,minmax(0,1fr));gap:9px 6px}
- .seller-color-section .admin-custom-color{grid-template-columns:minmax(0,1fr) 38px 58px;gap:7px}
- .seller-color-section .admin-custom-color .admin-color-picker,.seller-color-section .admin-custom-color .admin-color-picker span,.seller-color-section .admin-custom-color .admin-color-picker input[type="color"]{width:38px;height:38px;min-width:38px;min-height:38px}
- .seller-color-section .admin-custom-color .admin-ghost{width:58px;min-width:58px}
-}
-
-/* Compact website seller color picker */
-.seller-color-section .admin-color-palette{display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:center;gap:10px;width:100%;padding:2px 0}
-.seller-color-section .admin-color-palette button{flex:0 0 36px;display:grid;place-items:center;width:36px;height:36px;min-height:36px;padding:0;margin:0;border-radius:50%}
+/* Unified seller color picker layout for web and Telegram Mini App */
+.seller-color-section{display:flex;flex-direction:column;align-items:stretch;gap:12px;min-width:0;width:100%}
+.seller-color-section .admin-color-selected{display:flex;flex-wrap:wrap;gap:7px;min-height:0;margin:0}
+.seller-color-section .admin-color-palette{display:grid;grid-template-columns:repeat(auto-fill,36px);justify-content:start;justify-items:center;align-items:center;gap:9px 10px;width:100%;padding:2px 0}
+.seller-color-section .admin-color-palette button{position:relative;display:grid;place-items:center;flex:none;width:36px;height:36px;min-width:36px;min-height:36px;padding:0;margin:0;border-radius:50%}
 .seller-color-section .admin-color-palette button i{width:29px;height:29px}
 .seller-color-section .admin-color-palette button.selected i{width:25px;height:25px}
-.seller-color-section .admin-custom-color{display:grid;grid-template-columns:minmax(180px,1fr) 40px 72px;align-items:center;justify-content:start;gap:10px;width:100%;max-width:520px;margin:0}
-.seller-color-section .admin-custom-color>input{grid-column:1;grid-row:1;width:100%;min-width:0;height:40px;min-height:40px;box-sizing:border-box}
-.seller-color-section .admin-custom-color .admin-color-picker{grid-column:2;grid-row:1;width:40px;height:40px;margin:0}
-.seller-color-section .admin-custom-color .admin-color-picker span{width:40px;height:40px;border-radius:50%}
-.seller-color-section .admin-custom-color .admin-color-picker input[type="color"]{width:40px;height:40px}
-.seller-color-section .admin-custom-color .admin-ghost{grid-column:3;grid-row:1;width:72px;min-width:72px;height:40px;min-height:40px;margin:0;padding:0 10px;white-space:nowrap}
-@media(max-width:600px){
- .seller-color-section .admin-color-palette{gap:9px}
- .seller-color-section .admin-color-palette button{flex-basis:34px;width:34px;height:34px;min-height:34px}
- .seller-color-section .admin-color-palette button i{width:28px;height:28px}
- .seller-color-section .admin-custom-color{grid-template-columns:minmax(0,1fr) 38px 64px;gap:8px;max-width:100%}
+.seller-color-section .admin-custom-color{display:grid;grid-template-columns:minmax(0,1fr) 40px max-content;align-items:center;gap:9px;width:100%;max-width:560px;min-width:0;margin:0}
+.seller-color-section .admin-custom-color>input{grid-column:1;grid-row:1;display:block;width:100%;min-width:0;max-width:100%;height:42px;min-height:42px;padding:0 12px;box-sizing:border-box;font-size:14px}
+.seller-color-section .admin-custom-color .admin-color-picker{grid-column:2;grid-row:1;position:relative;display:block;width:40px;height:40px;min-width:40px;margin:0;padding:0;box-sizing:border-box}
+.seller-color-section .admin-custom-color .admin-color-picker input[type="color"]{position:absolute;inset:0;width:40px;height:40px;min-width:40px;min-height:40px;margin:0;padding:0;opacity:0;cursor:pointer}
+.seller-color-section .admin-custom-color .admin-color-picker span{display:block;width:40px;height:40px;min-height:40px;border:1px solid rgba(255,255,255,.24);border-radius:50%;box-sizing:border-box}
+.seller-color-section .admin-custom-color .admin-ghost{grid-column:3;grid-row:1;display:inline-flex;align-items:center;justify-content:center;width:auto;min-width:104px;height:40px;min-height:40px;margin:0;padding:0 13px;border-radius:999px;white-space:nowrap;overflow:visible;text-overflow:clip;font-size:11px;font-weight:600;line-height:1;letter-spacing:.04em;text-transform:none}
+.seller-color-section .admin-inline-error{margin-top:0;line-height:1.45;overflow-wrap:anywhere}
+@media(max-width:420px){
+ .seller-color-section{gap:10px}
+ .seller-color-section .admin-color-palette{grid-template-columns:repeat(auto-fill,34px);gap:8px 9px}
+ .seller-color-section .admin-color-palette button{width:34px;height:34px;min-width:34px;min-height:34px}
+ .seller-color-section .admin-color-palette button i{width:27px;height:27px}
+ .seller-color-section .admin-custom-color{grid-template-columns:minmax(0,1fr) 38px max-content;gap:7px}
  .seller-color-section .admin-custom-color .admin-color-picker,.seller-color-section .admin-custom-color .admin-color-picker span,.seller-color-section .admin-custom-color .admin-color-picker input[type="color"]{width:38px;height:38px;min-width:38px;min-height:38px}
- .seller-color-section .admin-custom-color .admin-ghost{width:64px;min-width:64px;height:38px;min-height:38px}
+ .seller-color-section .admin-custom-color .admin-ghost{min-width:96px;height:38px;min-height:38px;padding:0 10px;font-size:10px}
+}
+@media(max-width:340px){
+ .seller-color-section .admin-custom-color{grid-template-columns:minmax(0,1fr) 34px max-content;gap:6px}
+ .seller-color-section .admin-custom-color .admin-color-picker,.seller-color-section .admin-custom-color .admin-color-picker span,.seller-color-section .admin-custom-color .admin-color-picker input[type="color"]{width:34px;height:34px;min-width:34px;min-height:34px}
+ .seller-color-section .admin-custom-color .admin-ghost{min-width:88px;padding:0 8px;font-size:9px}
 }
 
 /* Russian seller panel: prevent clipped labels and improve readability */
