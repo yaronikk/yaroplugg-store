@@ -2,7 +2,7 @@ import React,{useEffect,useMemo,useState} from 'react'
 import {Search,X,MessageCircle,Package,LoaderCircle,ArrowUpRight,ChevronDown,Check} from 'lucide-react'
 
 type Language='en'|'ru'|'et'
-type Listing={id:string;seller_id:string;title:string;description:string;price:number;category:string;brand:string;size_label:string;item_condition:string;is_legit:boolean;colors:{name:string;hex:string}[];images:string[];created_at:string;status:string}
+type Listing={id:string;seller_id:string;telegram_username?:string|null;title:string;description:string;price:number;category:string;brand:string;size_label:string;item_condition:string;is_legit:boolean;colors:{name:string;hex:string}[];images:string[];created_at:string;status:string}
 type Seller={id:string;display_name:string;avatar_url:string|null;telegram_username:string|null}
 const words={
  en:{eyebrow:'PRE-LOVED FINDS',title:'MARKETPLACE',intro:'Discover pieces listed by the community.',search:'Search items or brands…',all:'ALL',category:'CATEGORY',condition:'CONDITION',size:'SIZE',sort:'SORT BY',newest:'Newest',low:'Price: low to high',high:'Price: high to low',empty:'No listings found',emptyHint:'Try another search or category.',loading:'LOADING LISTINGS…',conditionNames:['New with tags','New without tags','Excellent','Good','Has defects'],contact:'CONTACT SELLER',details:'ITEM DETAILS',seller:'SELLER',noSeller:'Yaroplugg seller',close:'Close',clear:'Clear filters',legit:'SELLER MARKED LEGIT',rep:'SELLER MARKED R€P',sizeLabel:'SIZE',colors:'COLORS',description:'DESCRIPTION',error:'Could not load marketplace listings.',noPhoto:'NO PHOTO',count:'LISTINGS'},
@@ -41,7 +41,7 @@ export default function Marketplace({supabase,language}:{supabase:any;language:L
  const [selected,setSelected]=useState<Listing|null>(null)
  useEffect(()=>{let active=true;(async()=>{setLoading(true);setError('');try{
   if(!supabase)throw new Error(t.error)
-  const {data,error}=await supabase.from('marketplace_listings').select('id,seller_id,title,description,price,category,brand,size_label,item_condition,is_legit,colors,images,created_at,status').eq('status','approved').order('created_at',{ascending:false}).limit(100)
+  const {data,error}=await supabase.from('marketplace_listings').select('id,seller_id,telegram_username,title,description,price,category,brand,size_label,item_condition,is_legit,colors,images,created_at,status').eq('status','approved').order('created_at',{ascending:false}).limit(100)
   if(error)throw error
   const rows=(data||[]) as Listing[]
   const ids=Array.from(new Set(rows.map(x=>x.seller_id).filter(Boolean)))
@@ -54,7 +54,7 @@ export default function Marketplace({supabase,language}:{supabase:any;language:L
  const categoryName=(value:string)=>{const c=categories.find(x=>x.en.toLowerCase()===value.toLowerCase());return c?c[language]:value}
  const conditionName=(value:string)=>t.conditionNames[conditionKey(value)]
  const seller=(id:string)=>sellers[id]
- const telegram=(id:string)=>String(seller(id)?.telegram_username||'').replace(/^@/,'')
+ const telegram=(id:string)=>String(items.find(item=>item.seller_id===id&&item.telegram_username)?.telegram_username||seller(id)?.telegram_username||'').replace(/^@/,'')
  return <section className="marketplace-page page-pad page-top">
   <div className="marketplace-heading"><div><p className="eyebrow">{t.eyebrow}</p><h1 className="page-title">{t.title}</h1><p>{t.intro}</p></div><Package size={22}/></div>
   <div className="marketplace-search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder={t.search}/>{query&&<button type="button" onClick={()=>setQuery('')} aria-label={t.clear}><X size={15}/></button>}</div>
