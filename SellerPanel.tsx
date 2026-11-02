@@ -110,13 +110,16 @@ export default function SellerPanel({supabase,user,language}:Props){
    }
    const payload={title:title.trim(),description:description.trim(),price:Number(price),category,brand:brand.trim(),size_label:isBeltCategory(category)?`${size.trim()} ${language==='ru'?'см':'cm'}`:size.trim(),item_condition:condition,is_legit:isLegit,colors,images:[...existingImages,...uploaded]}
    if(editing){
-    const {error:saveError}=await supabase.from('marketplace_listings').update({...payload,status:'pending'}).eq('id',editing.id).eq('seller_id',user.id)
+    const {data:saved,error:saveError}=await supabase.from('marketplace_listings').update({...payload,status:'pending'}).eq('id',editing.id).eq('seller_id',user.id).select('id').single()
     if(saveError)throw saveError
+    if(!saved)throw new Error(t.error)
    }else{
-    const {error:saveError}=await supabase.from('marketplace_listings').insert({id:listingId,seller_id:user.id,...payload,status:'pending'})
+    const {data:saved,error:saveError}=await supabase.from('marketplace_listings').insert({id:listingId,seller_id:user.id,...payload,status:'pending'}).select('id').single()
     if(saveError)throw saveError
+    if(!saved)throw new Error(t.error)
    }
-   await refresh();setMessage(t.success);reset()
+   setMessage(t.success);reset()
+   try{await refresh()}catch(refreshError){setError((refreshError instanceof Error?refreshError.message:t.error)+' · '+(language==='ru'?'Объявление сохранено, но список не удалось обновить.':'Listing saved, but the list could not be refreshed.'))}
   }catch(e){if(uploaded.length){const paths=uploaded.map(url=>{try{return new URL(url).pathname.split('/marketplace-listings/')[1]}catch{return ''}}).filter(Boolean);if(paths.length)await supabase.storage.from('marketplace-listings').remove(paths)}setError(e instanceof Error?e.message:t.error)}
   finally{setBusy(false)}
  }
