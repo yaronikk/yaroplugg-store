@@ -279,7 +279,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
   async function signOut() {
     if (!supabase || busy) return
     setBusy(true)
-    const { error: authError } = await supabase.auth.signOut()
+    const { error: authError } = await supabase.auth.signOut({ scope: 'local' })
     if (authError) setError(authError.message)
     setBusy(false)
   }
