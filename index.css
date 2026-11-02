@@ -766,3 +766,25 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .language-switch button{min-width:22px;padding:0 4px}
  .icon-button{width:35px;height:35px}
 }
+
+/* Compact seller color picker */
+.admin-color-section,.seller-color-section{gap:9px}
+.admin-color-palette{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:9px;justify-items:center;padding:4px 2px}
+.admin-color-palette button{position:relative;display:grid;place-items:center;width:34px;height:34px;min-height:34px;padding:0;border:1px solid transparent;border-radius:50%;background:transparent;cursor:pointer;transition:transform .15s,border-color .15s}
+.admin-color-palette button:hover{transform:scale(1.08)}
+.admin-color-palette button i{width:25px;height:25px;border:1px solid rgba(255,255,255,.28);border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.admin-color-palette button.selected{border-color:#f52222;background:rgba(245,34,34,.10)}
+.admin-color-palette button.selected i{width:21px;height:21px;box-shadow:0 0 0 1px #f52222}
+.admin-color-palette button span{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:13px;font-weight:900;text-shadow:0 1px 3px #000}
+.admin-custom-color{grid-template-columns:minmax(0,1fr) 38px auto;gap:8px;max-width:520px}
+.admin-custom-color input{min-height:38px}
+.admin-color-picker,.admin-color-picker span{width:38px;height:38px}
+.admin-custom-color .admin-ghost{height:38px}
+@media(max-width:600px){
+ .admin-color-palette{grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
+ .admin-color-palette button{width:32px;height:32px;min-height:32px}
+ .admin-color-palette button i{width:24px;height:24px}
+ .admin-custom-color{grid-template-columns:minmax(0,1fr) 38px auto}
+ .admin-custom-color .admin-ghost{grid-column:auto;grid-row:auto;width:auto;height:38px}
+}
+@media(max-width:380px){.admin-color-palette{grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}}
