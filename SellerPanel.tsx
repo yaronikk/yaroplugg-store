@@ -65,7 +65,32 @@ export default function SellerPanel({supabase,user,language}:Props){
  const [photoPreview,setPhotoPreview]=useState<string|null>(null)
  const previews=useMemo(()=>files.map(file=>URL.createObjectURL(file)),[files])
  useEffect(()=>()=>previews.forEach(URL.revokeObjectURL),[previews])
- useEffect(()=>{let active=true;(async()=>{try{const {data,error}=await supabase.from('profiles').select('telegram_username').eq('id',user.id).maybeSingle();if(error)throw error;if(!active)return;const identityData=(user.identities||[]).find((identity:any)=>identity.provider==='custom:telegram'||identity.provider==='telegram')?.identity_data||{};const candidates=[data?.telegram_username,user.user_metadata?.preferred_username,user.user_metadata?.username,user.user_metadata?.user_name,identityData.username,identityData.preferred_username,identityData.user_name];const value=String(candidates.find(v=>typeof v==='string'&&v.trim())||'').trim().replace(/^@/,'');if(value){setTelegramUsername(value);setTelegramAutofilled(true)}}catch(error){if(active)console.warn('Could not load Telegram username from profile',error)}})();return()=>{active=false}},[supabase,user.id])
+ useEffect(()=>{
+  let active=true
+  ;(async()=>{
+   try{
+    const {data:authData,error:authError}=await supabase.auth.getUser()
+    if(authError)throw authError
+    const currentUser=authData.user
+    if(!currentUser||currentUser.id!==user.id)return
+    const {data:profile,error:profileError}=await supabase.from('profiles').select('telegram_username').eq('id',currentUser.id).maybeSingle()
+    if(profileError)throw profileError
+    const meta=currentUser.user_metadata||user.user_metadata||{}
+    const candidates=[profile?.telegram_username,meta.preferred_username,meta.username,meta.user_name,meta.telegram_username]
+    const value=String(candidates.find(v=>typeof v==='string'&&v.trim())||'').trim().replace(/^@/,'')
+    if(!active)return
+    if(value){
+     setTelegramUsername(value)
+     setTelegramAutofilled(true)
+     if(!profile?.telegram_username){
+      const {error:saveError}=await supabase.from('profiles').upsert({id:currentUser.id,telegram_username:value,display_name:String(meta.full_name||meta.name||meta.given_name||'').slice(0,80)||null,avatar_url:meta.avatar_url||meta.picture||null,updated_at:new Date().toISOString()},{onConflict:'id'})
+      if(saveError)console.warn('Could not persist Telegram username to profile',saveError)
+     }
+    }
+   }catch(error){if(active)console.warn('Could not load Telegram username',error)}
+  })()
+  return()=>{active=false}
+ },[supabase,user.id])
  async function refresh(){
   const {data,error}=await supabase.from('marketplace_listings').select('*').eq('seller_id',user.id).order('created_at',{ascending:false})
   if(error)throw error
