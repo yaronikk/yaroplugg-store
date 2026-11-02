@@ -133,12 +133,14 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
     setBusy(true)
     setError('')
     setMessage('')
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: 'custom:telegram',
-      options: { redirectTo: window.location.origin },
-    })
-    if (authError) {
-      setError(authError.message)
+    try {
+      const { error: authError } = await supabase.auth.signInWithOAuth({
+        provider: 'custom:telegram',
+        options: { redirectTo: window.location.origin },
+      })
+      if (authError) throw authError
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Telegram sign-in failed. Please try again.')
       setBusy(false)
     }
   }
@@ -148,12 +150,14 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
     setBusy(true)
     setError('')
     setMessage('')
-    const { error: linkError } = await supabase.auth.linkIdentity({
-      provider: 'custom:telegram',
-      options: { redirectTo: window.location.origin },
-    })
-    if (linkError) {
-      setError(linkError.message)
+    try {
+      const { error: linkError } = await supabase.auth.linkIdentity({
+        provider: 'custom:telegram',
+        options: { redirectTo: window.location.origin },
+      })
+      if (linkError) throw linkError
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not connect Telegram. Please try again.')
       setBusy(false)
     }
   }
