@@ -715,3 +715,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .admin-marketplace-detail-grid>div{grid-template-columns:minmax(90px,.7fr) minmax(0,1.3fr)}
 }
 @media(max-width:420px){.admin-marketplace-card{grid-template-columns:1fr}.admin-marketplace-images{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:100px;min-height:100px}.admin-marketplace-images img{min-height:100px}.admin-marketplace-info{min-height:0}}
+
+
+.seller-telegram-field{display:flex;flex-direction:column;gap:9px;margin-top:18px;max-width:560px}
+.seller-telegram-field input{width:100%}
+.seller-telegram-field small{color:#929292;font-size:11px;line-height:1.5;font-weight:400}
+.admin-marketplace-status{display:inline-flex;align-items:center;width:max-content;margin:5px 0;padding:5px 8px;border:1px solid #ffffff24;border-radius:7px;font-size:9px;font-weight:850;letter-spacing:.1em}
+.admin-marketplace-status.is-pending{color:#f4c66b;border-color:#f4c66b55}
+.admin-marketplace-status.is-approved{color:#75d69a;border-color:#75d69a55}
+.admin-marketplace-status.is-rejected{color:#ff8585;border-color:#ff858555}
+.admin-marketplace-status.is-sold{color:#aaa;border-color:#aaa6}
