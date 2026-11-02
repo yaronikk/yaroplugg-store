@@ -84,7 +84,7 @@ export default function SellerPanel({supabase,user,language}:Props){
      setTelegramUsername(value)
      setTelegramAutofilled(true)
      if(!profile?.telegram_username){
-      const {error:saveError}=await supabase.from('profiles').upsert({id:currentUser.id,telegram_username:value,display_name:String(meta.full_name||meta.name||meta.given_name||'').slice(0,80)||null,avatar_url:meta.avatar_url||meta.picture||null,updated_at:new Date().toISOString()},{onConflict:'id'})
+      const {error:saveError}=await supabase.from('profiles').upsert({id:currentUser.id,telegram_username:value,display_name:String(meta.full_name||meta.name||meta.given_name||'Yaroplugg user').trim().slice(0,80)||'Yaroplugg user',avatar_url:meta.avatar_url||meta.picture||null,updated_at:new Date().toISOString()},{onConflict:'id'})
       if(saveError)console.warn('Could not persist Telegram username to profile',saveError)
      }
     }
