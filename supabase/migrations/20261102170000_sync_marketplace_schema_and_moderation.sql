@@ -11,6 +11,14 @@ alter table public.marketplace_listings
 alter table public.marketplace_listings
   add column if not exists telegram_username text;
 
+-- Keep the condition values used by the seller form and the live database.
+alter table public.marketplace_listings
+  drop constraint if exists marketplace_listings_item_condition_check;
+
+alter table public.marketplace_listings
+  add constraint marketplace_listings_item_condition_check
+  check (item_condition in ('new_with_tags','new_without_tags','excellent','good','defects'));
+
 do $$
 begin
   if not exists (
