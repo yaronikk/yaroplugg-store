@@ -202,7 +202,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
       } else if (removeAvatarPending) nextAvatarUrl = null
       const { data, error: profileError } = await supabase.from('profiles').upsert({ id: user.id, display_name: cleanName, avatar_url: nextAvatarUrl, telegram_username: telegramUsername || null, updated_at: new Date().toISOString() }, { onConflict: 'id' }).select('display_name,avatar_url,telegram_username,created_at').single()
       if (profileError) throw profileError
-      const { error: metadataError } = await supabase.auth.updateUser({ data: { full_name: cleanName, avatar_url: nextAvatarUrl } })
+      const { error: metadataError } = await supabase.auth.updateUser({ data: { full_name: cleanName } })
       if (metadataError) throw metadataError
       const oldPath = ownAvatarStoragePath(profile?.avatar_url)
       setProfile(data as AccountProfile); setPendingAvatarFile(null); setPendingAvatarPreview(''); setRemoveAvatarPending(false); setAvatarLoadFailed(false); setMessage(t.updated)
@@ -245,7 +245,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
     setBusy(false)
   }
 
-  const avatarUrl = pendingAvatarPreview || (removeAvatarPending ? '' : profile?.avatar_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? '')
+  const avatarUrl = pendingAvatarPreview || (removeAvatarPending ? '' : profile ? (profile.avatar_url || '') : user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? '')
   const avatarInitial = (profile?.display_name || displayName || metadataName(user || ({} as User)) || 'Y').trim().charAt(0).toUpperCase()
   const isTelegramMiniAppAccount = user?.user_metadata?.auth_method === 'telegram_miniapp'
   const identityProviders = Array.from(new Set((user?.identities || []).map(identity => identity.provider)))
@@ -254,6 +254,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
     : identityProviders
 
   useEffect(() => { setAvatarLoadFailed(false) }, [avatarUrl])
+  useEffect(() => () => { if (pendingAvatarPreview) URL.revokeObjectURL(pendingAvatarPreview) }, [pendingAvatarPreview])
 
   return (
     <section className="account-page page-pad page-top">
