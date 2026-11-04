@@ -898,3 +898,30 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 /* Keep the six-item Telegram bottom bar readable on narrow phones. */
 @media(max-width:430px){.bottom-nav{width:calc(100% - 12px);padding:7px 6px;grid-template-columns:repeat(6,minmax(0,1fr))}.nav-item{gap:2px;font-size:0;letter-spacing:0}.nav-item>span:last-child{display:block;min-width:0;max-width:100%;overflow:hidden;font-size:0;line-height:1.1;letter-spacing:0}.nav-item>span:last-child::after{content:attr(data-compact-label);display:block;font-size:6px;font-weight:700;letter-spacing:.02em;line-height:1.2;white-space:nowrap}}
 @media(max-width:560px){.seller-listing{grid-template-columns:54px minmax(0,1fr);align-items:start}.seller-listing-actions{grid-column:1/-1;flex-direction:row;justify-content:flex-end;align-items:center}.seller-listing-actions .seller-mark-sold{flex:1;max-width:260px;min-height:36px;padding:7px 10px;white-space:normal;line-height:1.25;text-align:center}}
+
+/* Quiet photo position indicator and fullscreen zoom viewer. */
+.marketplace-gallery-indicator{gap:7px;padding:5px 8px;border-color:rgba(255,255,255,.09);background:rgba(0,0,0,.46);opacity:.76;transition:opacity .2s ease}
+.marketplace-detail-gallery:hover .marketplace-gallery-indicator,.marketplace-detail-gallery:focus-within .marketplace-gallery-indicator{opacity:.94}
+.marketplace-gallery-count{font-size:8px;font-weight:600;color:rgba(255,255,255,.82)}
+.marketplace-gallery-dots{gap:3px}
+.marketplace-gallery-dots button span{width:4px;height:4px;background:rgba(255,255,255,.48);transition:width .28s ease,background .28s ease}
+.marketplace-gallery-dots button.is-active span{width:8px;background:rgba(255,255,255,.82)}
+.marketplace-detail-image-button{flex:0 0 100%;width:100%;padding:0;border:0;background:transparent;scroll-snap-align:start}
+.marketplace-detail-image-button img{display:block;width:100%;max-height:440px;aspect-ratio:.9;object-fit:cover;cursor:zoom-in}
+.marketplace-photo-viewer{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(0,0,0,.97);touch-action:none}
+.marketplace-photo-viewer-image{display:block;max-width:min(94vw,1500px);max-height:88dvh;object-fit:contain;user-select:none;-webkit-user-drag:none;touch-action:none;cursor:grab;transition:transform .08s linear}
+.marketplace-photo-viewer-image:active{cursor:grabbing}
+.marketplace-photo-viewer-close{position:absolute;top:calc(16px + env(safe-area-inset-top));right:16px;z-index:2;width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.16);border-radius:50%;background:rgba(30,30,30,.72);color:#fff}
+.marketplace-photo-viewer-nav{position:absolute;top:50%;z-index:2;width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.14);border-radius:50%;background:rgba(30,30,30,.62);color:#fff;transform:translateY(-50%)}
+.marketplace-photo-viewer-nav.is-previous{left:16px}
+.marketplace-photo-viewer-nav.is-previous svg{transform:rotate(90deg)}
+.marketplace-photo-viewer-nav.is-next{right:16px}
+.marketplace-photo-viewer-nav.is-next svg{transform:rotate(-90deg)}
+.marketplace-photo-viewer-toolbar{position:absolute;bottom:calc(22px + env(safe-area-inset-bottom));left:50%;z-index:2;display:flex;align-items:center;gap:6px;padding:5px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(28,28,28,.78);transform:translateX(-50%)}
+.marketplace-photo-viewer-toolbar button{min-width:38px;height:34px;padding:0 9px;border:0;border-radius:999px;background:transparent;color:#fff}
+.marketplace-photo-viewer-toolbar button span{font-size:21px;line-height:1}
+.marketplace-photo-viewer-toolbar button:disabled{opacity:.38;cursor:default}
+.marketplace-photo-viewer-toolbar .marketplace-photo-viewer-reset{min-width:54px;font-size:11px;font-variant-numeric:tabular-nums}
+.marketplace-photo-viewer-count{position:absolute;top:calc(22px + env(safe-area-inset-top));left:50%;padding:6px 9px;border:1px solid rgba(255,255,255,.11);border-radius:999px;background:rgba(22,22,22,.65);color:rgba(255,255,255,.76);font-size:10px;font-variant-numeric:tabular-nums;transform:translateX(-50%)}
+.marketplace-photo-viewer-hint{position:absolute;bottom:calc(72px + env(safe-area-inset-bottom));left:50%;max-width:80vw;color:rgba(255,255,255,.45);font-size:10px;text-align:center;transform:translateX(-50%);pointer-events:none}
+@media(max-width:600px){.marketplace-photo-viewer-image{max-width:100vw;max-height:82dvh}.marketplace-photo-viewer-nav.is-previous{left:8px}.marketplace-photo-viewer-nav.is-next{right:8px}.marketplace-photo-viewer-hint{font-size:9px}}
