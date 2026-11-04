@@ -22,7 +22,7 @@ function buildMarketplaceQuery(supabase:any,filters:{query:string;category:strin
  if(filters.category!=='all')request=request.ilike('category',filters.category)
  if(filters.condition!=='all')request=request.eq('item_condition',filters.condition)
  if(filters.size!=='all')request=request.ilike('size_label',filters.size)
- const term=filters.query.trim().replace(/[(),\\%_*]/g,' ').replace(/\\s+/g,' ')
+ const term=filters.query.trim().replace(/[(),\\%_*]/g,' ').replace(/\s+/g,' ')
  if(term)request=request.or(['title','brand','description','category'].map(field=>field+'.ilike.%'+term+'%').join(','))
  if(filters.sort==='low')request=request.order('price',{ascending:true})
  else if(filters.sort==='high')request=request.order('price',{ascending:false})
@@ -139,7 +139,7 @@ function MarketplaceCard({item,language,favorite,onFavorite,onSelect}:{item:List
  const conditionName=(value:string)=>t.conditionNames[conditionKey(value)]
  return <article className="marketplace-card">
   <button type="button" className="marketplace-card-open" onClick={onSelect}>
-   <div className="marketplace-card-media">{item.images?.[0]?<img src={item.images[0]} alt={item.title} loading="lazy"/>:<span>{t.noPhoto}</span>}<span className={`marketplace-auth-badge ${item.is_legit?'is-legit':'is-rep'}`}>{item.is_legit?'LEGIT':'R€P'}</span></div>
+   <div className="marketplace-card-media">{item.images?.[0]?<img src={item.images[0]} alt={item.title} loading="lazy" decoding="async"/>:<span>{t.noPhoto}</span>}<span className={`marketplace-auth-badge ${item.is_legit?'is-legit':'is-rep'}`}>{item.is_legit?'LEGIT':'R€P'}</span></div>
    <div className="marketplace-card-info"><span className="marketplace-card-category">{categoryName(item.category)}</span><strong>{item.title}</strong><div><span>{item.brand||conditionName(item.item_condition)}</span><b>€{Number(item.price).toFixed(2)}</b></div></div>
   </button>
   <button type="button" className={`marketplace-favorite-toggle ${favorite?'is-favorite':''}`} aria-label={favorite?t.removeFavorite:t.saveFavorite} aria-pressed={favorite} onClick={onFavorite}><Heart size={16} fill={favorite?'currentColor':'none'}/></button>
@@ -161,7 +161,8 @@ export default function Marketplace({supabase,language,favorites,onFavorite}:{su
  const [size,setSize]=useState('all')
  const [sort,setSort]=useState('newest')
  const [selected,setSelected]=useState<Listing|null>(null)
- useEffect(()=>{let active=true;const timer=window.setTimeout(()=>{setLoading(true);setError('');(async()=>{try{
+ const requestVersion=useRef(0)
+ useEffect(()=>{let active=true;const version=++requestVersion.current;setLoadingMore(false);const timer=window.setTimeout(()=>{setLoading(true);setError('');(async()=>{try{
   if(!supabase)throw new Error(t.error)
   const {data,count,error}=await buildMarketplaceQuery(supabase,{query,category,condition,size,sort},true).range(0,MARKETPLACE_PAGE_SIZE-1)
   if(error)throw error
@@ -169,26 +170,28 @@ export default function Marketplace({supabase,language,favorites,onFavorite}:{su
   const ids=Array.from(new Set(rows.map(item=>item.seller_id).filter(Boolean)))
   let profiles:Seller[]=[]
   if(ids.length){const result=await supabase.from('profiles').select('id,display_name,avatar_url,telegram_username').in('id',ids);if(!result.error)profiles=(result.data||[]) as Seller[]}
-  if(!active)return
+  if(!active||requestVersion.current!==version)return
   setItems(rows);setSellers(Object.fromEntries(profiles.map(profile=>[profile.id,profile])))
   const total=count??rows.length
   setTotalCount(total);setHasMore(rows.length<total)
- }catch(e){if(active)setError(e instanceof Error?e.message:t.error)}finally{if(active)setLoading(false)}})()},query.trim()?240:0);return()=>{active=false;window.clearTimeout(timer)}},[supabase,language,query,category,condition,size,sort])
+ }catch(e){if(active&&requestVersion.current===version)setError(e instanceof Error?e.message:t.error)}finally{if(active&&requestVersion.current===version)setLoading(false)}})()},query.trim()?240:0);return()=>{active=false;window.clearTimeout(timer)}},[supabase,language,query,category,condition,size,sort])
  async function loadMore(){
   if(!supabase||loadingMore||!hasMore)return
-  const offset=items.length
+  const offset=items.length,version=requestVersion.current
   setLoadingMore(true);setError('')
   try{
    const {data,error}=await buildMarketplaceQuery(supabase,{query,category,condition,size,sort}).range(offset,offset+MARKETPLACE_PAGE_SIZE-1)
    if(error)throw error
+   if(version!==requestVersion.current)return
    const rows=(data||[]) as Listing[]
    const ids=Array.from(new Set(rows.map(item=>item.seller_id).filter(Boolean)))
    let profiles:Seller[]=[]
    if(ids.length){const result=await supabase.from('profiles').select('id,display_name,avatar_url,telegram_username').in('id',ids);if(!result.error)profiles=(result.data||[]) as Seller[]}
+   if(version!==requestVersion.current)return
    setItems(current=>{const known=new Set(current.map(item=>item.id));return [...current,...rows.filter(item=>!known.has(item.id))]})
    setSellers(current=>({...current,...Object.fromEntries(profiles.map(profile=>[profile.id,profile]))}))
    setHasMore(offset+rows.length<totalCount)
-  }catch(e){setError(e instanceof Error?e.message:t.error)}finally{setLoadingMore(false)}
+  }catch(e){if(version===requestVersion.current)setError(e instanceof Error?e.message:t.error)}finally{if(version===requestVersion.current)setLoadingMore(false)}
  }
  const categoryName=(value:string)=>{const c=categories.find(x=>x.en.toLowerCase()===value.toLowerCase());return c?c[language]:value}
  const conditionName=(value:string)=>t.conditionNames[conditionKey(value)]
