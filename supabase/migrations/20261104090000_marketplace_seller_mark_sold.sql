@@ -50,7 +50,7 @@ begin
   perform set_config('app.marketplace_listing_sold_rpc', 'on', true);
 
   update public.marketplace_listings
-  set status = 'sold', updated_at = now()
+  set status = 'sold', sold_at = now(), updated_at = now()
   where id = p_listing_id
     and seller_id = (select auth.uid())
     and status = 'approved';
