@@ -873,3 +873,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .marketplace-empty.compact{min-height:150px}
 .marketplace-detail-favorite{display:inline-flex;align-items:center;gap:8px;margin-top:13px;padding:9px 12px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:#131313;color:#eee;font-size:9px;letter-spacing:.06em}
 .marketplace-detail-favorite:focus-visible,.marketplace-favorite-toggle:focus-visible{outline:2px solid #f52222;outline-offset:2px}
+
+/* Seller listing controls: clearer sold action and touch-friendly photo ordering. */
+.seller-listing-actions .seller-mark-sold{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:auto;min-width:30px;padding:0 10px;border-radius:999px;background:#251012;border-color:#783138;color:#ffdfe1;font-size:9px;font-weight:750;letter-spacing:.04em;white-space:nowrap}
+.seller-listing-actions .seller-mark-sold:disabled{opacity:.55;cursor:wait}
+.seller-photo-thumb.is-draggable{touch-action:none;cursor:grab}
+.seller-photo-thumb[data-dragging="true"]{z-index:3;opacity:.62;transform:scale(.97);cursor:grabbing}
+.seller-photo-thumb-actions button.remove{background:rgba(20,20,20,.9);border-color:#ffffff35;color:#f3f3f3}
+.seller-photo-thumb-actions button.remove:hover{background:#c92c37;border-color:#c92c37}
+@media(max-width:560px){.seller-listing-actions .seller-mark-sold{min-height:34px;padding:0 8px;font-size:8px}}
