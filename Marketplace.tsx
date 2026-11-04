@@ -36,13 +36,25 @@ function MarketplaceSellerAvatar({src}:{src:string|null|undefined}){
 }
 function MarketplacePhotoGallery({images,title,language}:{images:string[];title:string;language:Language}){
  const galleryRef=useRef<HTMLDivElement>(null)
+ const pointerPositions=useRef(new Map<number,{x:number;y:number}>())
+ const gesture=useRef<{distance:number;zoom:number;x:number;y:number;pointX:number;pointY:number}|null>(null)
  const [activeIndex,setActiveIndex]=useState(0)
+ const [viewerIndex,setViewerIndex]=useState<number|null>(null)
+ const [zoom,setZoom]=useState(1)
+ const [pan,setPan]=useState({x:0,y:0})
  if(!images.length)return null
- const label=(index:number)=>language==='ru'?`Фото ${index+1} из ${images.length}`:language==='et'?`Foto ${index+1} / ${images.length}`:`Photo ${index+1} of ${images.length}`
+ const label=(index:number)=>language==='ru'?'Фото '+(index+1)+' из '+images.length:language==='et'?'Foto '+(index+1)+' / '+images.length:'Photo '+(index+1)+' of '+images.length
+ const text=language==='ru'?{open:'Открыть фото на весь экран',close:'Закрыть просмотр',zoomIn:'Увеличить',zoomOut:'Уменьшить',reset:'Сбросить масштаб',previous:'Предыдущее фото',next:'Следующее фото',hint:'Сведите или разведите пальцы, чтобы изменить масштаб'}:language==='et'?{open:'Ava foto täisekraanil',close:'Sulge vaade',zoomIn:'Suurenda',zoomOut:'Vähenda',reset:'Lähtesta suurendus',previous:'Eelmine foto',next:'Järgmine foto',hint:'Suurendamiseks kasuta kahe sõrmega liigutust'}:{open:'Open photo fullscreen',close:'Close viewer',zoomIn:'Zoom in',zoomOut:'Zoom out',reset:'Reset zoom',previous:'Previous photo',next:'Next photo',hint:'Pinch to zoom'}
  function showImage(index:number){const gallery=galleryRef.current;if(!gallery)return;gallery.scrollTo({left:index*gallery.clientWidth,behavior:'smooth'});setActiveIndex(index)}
+ function openViewer(index:number){setViewerIndex(index);setZoom(1);setPan({x:0,y:0})}
+ function changeZoom(next:number){setZoom(Math.max(1,Math.min(4,next)));if(next<=1)setPan({x:0,y:0})}
+ function pointerDown(event:React.PointerEvent<HTMLImageElement>){event.currentTarget.setPointerCapture(event.pointerId);pointerPositions.current.set(event.pointerId,{x:event.clientX,y:event.clientY});const points=[...pointerPositions.current.values()];if(points.length===2){const dx=points[0].x-points[1].x,dy=points[0].y-points[1].y;gesture.current={distance:Math.hypot(dx,dy),zoom,x:pan.x,y:pan.y,pointX:event.clientX,pointY:event.clientY}}else gesture.current={distance:0,zoom,x:pan.x,y:pan.y,pointX:event.clientX,pointY:event.clientY}}
+ function pointerMove(event:React.PointerEvent<HTMLImageElement>){if(!pointerPositions.current.has(event.pointerId))return;pointerPositions.current.set(event.pointerId,{x:event.clientX,y:event.clientY});const points=[...pointerPositions.current.values()],g=gesture.current;if(!g)return;if(points.length===2){const dx=points[0].x-points[1].x,dy=points[0].y-points[1].y;const distance=Math.hypot(dx,dy);if(g.distance)setZoom(Math.max(1,Math.min(4,g.zoom*distance/g.distance)))}else if(zoom>1){setPan({x:g.x+event.clientX-g.pointX,y:g.y+event.clientY-g.pointY})}}
+ function pointerEnd(event:React.PointerEvent<HTMLImageElement>){pointerPositions.current.delete(event.pointerId);gesture.current=null}
+ useEffect(()=>{if(viewerIndex===null)return;const onKeyDown=(event:KeyboardEvent)=>{if(event.key==='Escape')setViewerIndex(null);if(event.key==='ArrowRight')setViewerIndex(i=>i===null?null:(i+1)%images.length);if(event.key==='ArrowLeft')setViewerIndex(i=>i===null?null:(i-1+images.length)%images.length)};document.addEventListener('keydown',onKeyDown);const previousOverflow=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.removeEventListener('keydown',onKeyDown);document.body.style.overflow=previousOverflow}},[viewerIndex,images.length])
  return <div className="marketplace-detail-gallery">
-  <div ref={galleryRef} className="marketplace-detail-images" role="group" aria-label={language==='ru'?`Фотографии: ${title}`:language==='et'?`Fotod: ${title}`:`Photos: ${title}`} onScroll={event=>{const width=event.currentTarget.clientWidth;if(width)setActiveIndex(Math.min(images.length-1,Math.round(event.currentTarget.scrollLeft/width)))}}>
-   {images.map((src,index)=><img key={src+index} src={src} alt={title} loading={index===0?'eager':'lazy'}/>)}
+  <div ref={galleryRef} className="marketplace-detail-images" role="group" aria-label={language==='ru'?'Фотографии: '+title:language==='et'?'Fotod: '+title:'Photos: '+title} onScroll={event=>{const width=event.currentTarget.clientWidth;if(width)setActiveIndex(Math.min(images.length-1,Math.round(event.currentTarget.scrollLeft/width)))}}>
+   {images.map((src,index)=><button key={src+index} type="button" className="marketplace-detail-image-button" aria-label={text.open+' · '+label(index)} onClick={()=>openViewer(index)}><img src={src} alt={title} loading={index===0?'eager':'lazy'}/></button>)}
   </div>
   {images.length>1&&<div className="marketplace-gallery-indicator">
    <span className="marketplace-gallery-count" aria-live="polite">{activeIndex+1} / {images.length}</span>
@@ -50,9 +62,18 @@ function MarketplacePhotoGallery({images,title,language}:{images:string[];title:
     {images.map((_,index)=><button key={index} type="button" className={index===activeIndex?'is-active':''} aria-label={label(index)} aria-current={index===activeIndex?'true':undefined} onClick={()=>showImage(index)}><span/></button>)}
    </div>
   </div>}
+  {viewerIndex!==null&&<div className="marketplace-photo-viewer" role="dialog" aria-modal="true" aria-label={title} onClick={()=>setViewerIndex(null)}>
+   <button type="button" className="marketplace-photo-viewer-close" aria-label={text.close} onClick={()=>setViewerIndex(null)}><X size={20}/></button>
+   {images.length>1&&<button type="button" className="marketplace-photo-viewer-nav is-previous" aria-label={text.previous} onClick={event=>{event.stopPropagation();setViewerIndex((viewerIndex-1+images.length)%images.length);setZoom(1);setPan({x:0,y:0})}}><ChevronDown size={22}/></button>}
+   <img className="marketplace-photo-viewer-image" src={images[viewerIndex]} alt={title} draggable={false} style={{transform:'translate('+pan.x+'px, '+pan.y+'px) scale('+zoom+')'}} onClick={event=>event.stopPropagation()} onDoubleClick={event=>{event.stopPropagation();changeZoom(zoom>1?1:2)}} onWheel={event=>{event.preventDefault();changeZoom(zoom+(event.deltaY<0?.25:-.25))}} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerEnd} onPointerCancel={pointerEnd}/>
+   {images.length>1&&<button type="button" className="marketplace-photo-viewer-nav is-next" aria-label={text.next} onClick={event=>{event.stopPropagation();setViewerIndex((viewerIndex+1)%images.length);setZoom(1);setPan({x:0,y:0})}}><ChevronDown size={22}/></button>}
+   <div className="marketplace-photo-viewer-toolbar" onClick={event=>event.stopPropagation()}>
+    <button type="button" aria-label={text.zoomOut} onClick={()=>changeZoom(zoom-.25)} disabled={zoom<=1}><span>−</span></button><button type="button" className="marketplace-photo-viewer-reset" aria-label={text.reset} onClick={()=>{setZoom(1);setPan({x:0,y:0})}}>{Math.round(zoom*100)}%</button><button type="button" aria-label={text.zoomIn} onClick={()=>changeZoom(zoom+.25)} disabled={zoom>=4}><span>+</span></button>
+   </div>
+   <span className="marketplace-photo-viewer-count">{viewerIndex+1} / {images.length}</span><span className="marketplace-photo-viewer-hint">{text.hint}</span>
+  </div>}
  </div>
 }
-
 function MarketplaceCard({item,language,favorite,onFavorite,onSelect}:{item:Listing;language:Language;favorite:boolean;onFavorite:()=>void;onSelect:()=>void}){
  const t=words[language]
  const categoryName=(value:string)=>{const c=categories.find(x=>x.en.toLowerCase()===value.toLowerCase());return c?c[language]:value}
