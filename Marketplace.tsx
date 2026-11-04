@@ -45,6 +45,18 @@ function MarketDropdown({value,options,onChange,ariaLabel}:{value:string;options
  </div>
 }
 const marketplaceFavoriteKey=(id:string)=>`marketplace:${id}`
+function marketplaceImageSrc(src:string,width:number){
+ try{
+  const image=new URL(src)
+  const prefix='/storage/v1/object/public/'
+  const start=image.pathname.indexOf(prefix)
+  if(image.hostname!=='itbatnhmrmvegspsqmgb.supabase.co'||start<0)return src
+  const path=image.pathname.slice(start+prefix.length)
+  if(!path.startsWith('marketplace-listings/')||path.includes('..'))return src
+  const params=new URLSearchParams({path,width:String(width)})
+  return '/api/marketplace-image?'+params.toString()
+ }catch{return src}
+}
 
 function MarketplaceSellerAvatar({src}:{src:string|null|undefined}){
  const [failedUrl,setFailedUrl]=useState<string|null>(null)
@@ -113,7 +125,7 @@ function MarketplacePhotoGallery({images,title,language}:{images:string[];title:
  useEffect(()=>{if(viewerIndex===null)return;const onKeyDown=(event:KeyboardEvent)=>{if(event.key==='Escape')resetViewer(null);if(event.key==='ArrowRight')resetViewer((viewerIndex+1)%images.length);if(event.key==='ArrowLeft')resetViewer((viewerIndex-1+images.length)%images.length)};document.addEventListener('keydown',onKeyDown);const previousOverflow=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.removeEventListener('keydown',onKeyDown);document.body.style.overflow=previousOverflow}},[viewerIndex,images.length])
  return <div className="marketplace-detail-gallery">
   <div ref={galleryRef} className="marketplace-detail-images" role="group" aria-label={language==='ru'?'Фотографии: '+title:language==='et'?'Fotod: '+title:'Photos: '+title} onScroll={event=>{const width=event.currentTarget.clientWidth;if(width)setActiveIndex(Math.min(images.length-1,Math.round(event.currentTarget.scrollLeft/width)))}}>
-   {images.map((src,index)=><button key={src+index} type="button" className="marketplace-detail-image-button" aria-label={text.open+' · '+label(index)} onClick={()=>openViewer(index)}><img src={src} alt={title} loading={index===0?'eager':'lazy'} decoding="async"/></button>)}
+   {images.map((src,index)=><button key={src+index} type="button" className="marketplace-detail-image-button" aria-label={text.open+' · '+label(index)} onClick={()=>openViewer(index)}><img src={marketplaceImageSrc(src,1600)} alt={title} loading={index===0?'eager':'lazy'} decoding="async"/></button>)}
   </div>
   {images.length>1&&<div className="marketplace-gallery-indicator">
    <span className="marketplace-gallery-count" aria-live="polite">{activeIndex+1} / {images.length}</span>
@@ -124,7 +136,7 @@ function MarketplacePhotoGallery({images,title,language}:{images:string[];title:
   {viewerIndex!==null&&<div className="marketplace-photo-viewer" role="dialog" aria-modal="true" aria-label={title} onClick={()=>resetViewer(null)}>
    <button type="button" className="marketplace-photo-viewer-close" aria-label={text.close} onClick={()=>resetViewer(null)}><X size={20}/></button>
    {images.length>1&&<button type="button" className="marketplace-photo-viewer-nav is-previous" aria-label={text.previous} onClick={event=>{event.stopPropagation();resetViewer((viewerIndex-1+images.length)%images.length)}}><ChevronDown size={22}/></button>}
-   <img className={'marketplace-photo-viewer-image'+(interacting?' is-interacting':'')} src={images[viewerIndex]} alt={title} draggable={false} style={{transform:'translate('+pan.x+'px, '+pan.y+'px) scale('+zoom+')'}} onClick={event=>event.stopPropagation()} onDoubleClick={event=>{event.stopPropagation();const next=zoom>1?1:2;changeZoom(next,event.currentTarget,event.clientX,event.clientY)}} onWheel={event=>{event.preventDefault();changeZoom(zoom+(event.deltaY<0?.2:-.2),event.currentTarget,event.clientX,event.clientY)}} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerEnd} onPointerCancel={pointerEnd}/>
+   <img className={'marketplace-photo-viewer-image'+(interacting?' is-interacting':'')} src={marketplaceImageSrc(images[viewerIndex],2200)} alt={title} draggable={false} style={{transform:'translate('+pan.x+'px, '+pan.y+'px) scale('+zoom+')'}} onClick={event=>event.stopPropagation()} onDoubleClick={event=>{event.stopPropagation();const next=zoom>1?1:2;changeZoom(next,event.currentTarget,event.clientX,event.clientY)}} onWheel={event=>{event.preventDefault();changeZoom(zoom+(event.deltaY<0?.2:-.2),event.currentTarget,event.clientX,event.clientY)}} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerEnd} onPointerCancel={pointerEnd}/>
    {images.length>1&&<button type="button" className="marketplace-photo-viewer-nav is-next" aria-label={text.next} onClick={event=>{event.stopPropagation();resetViewer((viewerIndex+1)%images.length)}}><ChevronDown size={22}/></button>}
    <div className="marketplace-photo-viewer-toolbar" onClick={event=>event.stopPropagation()}>
     <button type="button" aria-label={text.zoomOut} onClick={()=>changeZoom(zoom-.2)} disabled={zoom<=1}><span>−</span></button><button type="button" className="marketplace-photo-viewer-reset" aria-label={text.reset} onClick={()=>{setZoom(1);setPan({x:0,y:0})}}>{Math.round(zoom*100)}%</button><button type="button" aria-label={text.zoomIn} onClick={()=>changeZoom(zoom+.2)} disabled={zoom>=4}><span>+</span></button>
@@ -139,7 +151,7 @@ function MarketplaceCard({item,language,favorite,onFavorite,onSelect}:{item:List
  const conditionName=(value:string)=>t.conditionNames[conditionKey(value)]
  return <article className="marketplace-card">
   <button type="button" className="marketplace-card-open" onClick={onSelect}>
-   <div className="marketplace-card-media">{item.images?.[0]?<img src={item.images[0]} alt={item.title} loading="lazy" decoding="async"/>:<span>{t.noPhoto}</span>}<span className={`marketplace-auth-badge ${item.is_legit?'is-legit':'is-rep'}`}>{item.is_legit?'LEGIT':'R€P'}</span></div>
+   <div className="marketplace-card-media">{item.images?.[0]?<img src={marketplaceImageSrc(item.images[0],640)} alt={item.title} loading="lazy" decoding="async"/>:<span>{t.noPhoto}</span>}<span className={`marketplace-auth-badge ${item.is_legit?'is-legit':'is-rep'}`}>{item.is_legit?'LEGIT':'R€P'}</span></div>
    <div className="marketplace-card-info"><span className="marketplace-card-category">{categoryName(item.category)}</span><strong>{item.title}</strong><div><span>{item.brand||conditionName(item.item_condition)}</span><b>€{Number(item.price).toFixed(2)}</b></div></div>
   </button>
   <button type="button" className={`marketplace-favorite-toggle ${favorite?'is-favorite':''}`} aria-label={favorite?t.removeFavorite:t.saveFavorite} aria-pressed={favorite} onClick={onFavorite}><Heart size={16} fill={favorite?'currentColor':'none'}/></button>
