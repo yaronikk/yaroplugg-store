@@ -36,5 +36,12 @@
       "source": "/admin/:path*",
       "destination": "/"
     }
-  ]
+  ],
+  "functions": {
+    "api/marketplace-image.ts": {
+      "regions": [
+        "fra1"
+      ]
+    }
+  }
 }
