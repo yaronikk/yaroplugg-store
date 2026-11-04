@@ -860,3 +860,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .seller-panel-ru .seller-form-actions{grid-template-columns:minmax(0,1fr)}
  .seller-panel-ru .seller-form-actions button{width:100%}
 }
+
+
+/* Marketplace favorites */
+.marketplace-card{position:relative}
+.marketplace-card-open{display:block;width:100%;min-width:0;padding:0;border:0;background:none;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.marketplace-favorite-toggle{position:absolute;z-index:1;top:8px;right:8px;width:36px;height:36px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.2);border-radius:50%;background:rgba(0,0,0,.68);color:#fff;backdrop-filter:blur(8px)}
+.marketplace-favorite-toggle.is-favorite,.marketplace-detail-favorite.is-favorite{color:#f52222}
+.marketplace-saved-section{margin-top:30px;padding-top:22px;border-top:1px solid rgba(255,255,255,.1)}
+.marketplace-saved-section .catalog-head{margin-bottom:16px}
+.marketplace-saved-section .catalog-head h2{margin:4px 0 0;font-size:18px;letter-spacing:-.04em}
+.marketplace-empty.compact{min-height:150px}
+.marketplace-detail-favorite{display:inline-flex;align-items:center;gap:8px;margin-top:13px;padding:9px 12px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:#131313;color:#eee;font-size:9px;letter-spacing:.06em}
+.marketplace-detail-favorite:focus-visible,.marketplace-favorite-toggle:focus-visible{outline:2px solid #f52222;outline-offset:2px}
