@@ -184,9 +184,12 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
     }
   }
 
+  const savedDisplayName = String(profile?.display_name ?? (user ? metadataName(user) : '')).trim()
+  const hasProfileChanges = displayName.trim() !== savedDisplayName || pendingAvatarFile !== null || removeAvatarPending
+
   async function saveProfile(event: React.FormEvent) {
     event.preventDefault()
-    if (!supabase || !user || busy || avatarBusy) return
+    if (!supabase || !user || busy || avatarBusy || !hasProfileChanges) return
     const cleanName = displayName.trim()
     if (cleanName.length < 2 || cleanName.length > 80) { setError(t.nameLength); return }
     setBusy(true); setError(''); setMessage('')
@@ -299,7 +302,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
           <form className="account-card account-form" onSubmit={saveProfile}>
             <h2>{t.details}</h2>
             <label>{t.displayName}<input value={displayName} onChange={event => setDisplayName(event.target.value)} maxLength={80} autoComplete="name" required /></label>
-            <button className="account-primary" type="submit" disabled={busy || avatarBusy}><CheckCircle2 size={16} /> {busy ? t.saving : t.save}</button>
+            {hasProfileChanges && <button className="account-primary" type="submit" disabled={busy || avatarBusy}><CheckCircle2 size={16} /> {busy ? t.saving : t.save}</button>}
           </form>
           {message && <div className="account-message"><CheckCircle2 size={16} /> {message}</div>}
           {error && <div className="account-error">{error}</div>}
@@ -329,3 +332,4 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
     </section>
   )
 }
+
