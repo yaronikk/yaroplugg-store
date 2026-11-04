@@ -38,10 +38,10 @@ function MarketplacePhotoGallery({images,title,language}:{images:string[];title:
  const galleryRef=useRef<HTMLDivElement>(null)
  const [activeIndex,setActiveIndex]=useState(0)
  if(!images.length)return null
- const label=(index:number)=>language==='ru'?\`Фото \${index+1} из \${images.length}\`:language==='et'?\`Foto \${index+1} / \${images.length}\`:\`Photo \${index+1} of \${images.length}\`
+ const label=(index:number)=>language==='ru'?`Фото ${index+1} из ${images.length}`:language==='et'?`Foto ${index+1} / ${images.length}`:`Photo ${index+1} of ${images.length}`
  function showImage(index:number){const gallery=galleryRef.current;if(!gallery)return;gallery.scrollTo({left:index*gallery.clientWidth,behavior:'smooth'});setActiveIndex(index)}
  return <div className="marketplace-detail-gallery">
-  <div ref={galleryRef} className="marketplace-detail-images" role="group" aria-label={language==='ru'?\`Фотографии: \${title}\`:language==='et'?\`Fotod: \${title}\`:\`Photos: \${title}\`} onScroll={event=>{const width=event.currentTarget.clientWidth;if(width)setActiveIndex(Math.min(images.length-1,Math.round(event.currentTarget.scrollLeft/width)))}}>
+  <div ref={galleryRef} className="marketplace-detail-images" role="group" aria-label={language==='ru'?`Фотографии: ${title}`:language==='et'?`Fotod: ${title}`:`Photos: ${title}`} onScroll={event=>{const width=event.currentTarget.clientWidth;if(width)setActiveIndex(Math.min(images.length-1,Math.round(event.currentTarget.scrollLeft/width)))}}>
    {images.map((src,index)=><img key={src+index} src={src} alt={title} loading={index===0?'eager':'lazy'}/>)}
   </div>
   {images.length>1&&<div className="marketplace-gallery-indicator">
