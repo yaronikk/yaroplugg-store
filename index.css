@@ -928,9 +928,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 @media(max-width:600px){.marketplace-photo-viewer-image{max-width:100vw;max-height:82dvh}.marketplace-photo-viewer-nav.is-previous{left:8px}.marketplace-photo-viewer-nav.is-next{right:8px}.marketplace-photo-viewer-hint{font-size:9px}}
 
 /* Seller studio quality-of-life refinements. */
-.seller-photo-tip{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:linear-gradient(110deg,rgba(245,34,34,.07),rgba(255,255,255,.015));}
-.seller-photo-tip>span{flex:0 0 auto;padding:4px 6px;border:1px solid rgba(245,34,34,.25);border-radius:5px;color:#e87575;font-size:7px;font-weight:850;letter-spacing:.12em}
-.seller-photo-tip p{margin:0;color:#92918f;font-size:10px;line-height:1.55}
 .seller-upload-progress{display:grid;gap:7px;padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#0b0b0b}
 .seller-upload-progress>div{display:flex;justify-content:space-between;gap:10px;color:#898989;font-size:9px;letter-spacing:.06em}
 .seller-upload-progress strong{color:#d6d6d4;font-variant-numeric:tabular-nums}
