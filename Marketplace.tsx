@@ -5,13 +5,30 @@ type Language='en'|'ru'|'et'
 type Listing={id:string;seller_id:string;telegram_username?:string|null;title:string;description:string;price:number;category:string;brand:string;size_label:string;item_condition:string;is_legit:boolean;colors:{name:string;hex:string}[];images:string[];created_at:string;status:string}
 type Seller={id:string;display_name:string;avatar_url:string|null;telegram_username:string|null}
 const words={
- en:{eyebrow:'PRE-LOVED FINDS',title:'MARKETPLACE',intro:'Discover pieces listed by the community.',search:'Search items or brands…',all:'ALL',category:'CATEGORY',condition:'CONDITION',size:'SIZE',sort:'SORT BY',newest:'Newest',low:'Price: low to high',high:'Price: high to low',empty:'No listings found',emptyHint:'Try another search or category.',loading:'LOADING LISTINGS…',conditionNames:['New with tags','New without tags','Excellent','Good','Has defects'],contact:'CONTACT SELLER',details:'ITEM DETAILS',seller:'SELLER',noSeller:'Yaroplugg seller',close:'Close',clear:'Clear filters',legit:'SELLER MARKED LEGIT',rep:'SELLER MARKED R€P',sizeLabel:'SIZE',colors:'COLORS',description:'DESCRIPTION',error:'Could not load marketplace listings.',noPhoto:'NO PHOTO',count:'LISTINGS',saveFavorite:'SAVE TO FAVORITES',removeFavorite:'REMOVE FROM FAVORITES',saved:'MARKETPLACE SAVED'},
- ru:{eyebrow:'ВЕЩИ ОТ СООБЩЕСТВА',title:'МАРКЕТПЛЕЙС',intro:'Находи интересные вещи от других пользователей.',search:'Поиск вещей или брендов…',all:'ВСЕ',category:'КАТЕГОРИЯ',condition:'СОСТОЯНИЕ',size:'РАЗМЕР',sort:'СОРТИРОВКА',newest:'Сначала новые',low:'Сначала дешевле',high:'Сначала дороже',empty:'Объявлений не найдено',emptyHint:'Попробуй изменить поиск или категорию.',loading:'ЗАГРУЗКА ОБЪЯВЛЕНИЙ…',conditionNames:['Новое с бирками','Новое без бирок','Отличное','Хорошее','Есть дефекты'],contact:'НАПИСАТЬ ПРОДАВЦУ',details:'ИНФОРМАЦИЯ О ТОВАРЕ',seller:'ПРОДАВЕЦ',noSeller:'Продавец Yaroplugg',close:'Закрыть',clear:'Сбросить фильтры',legit:'ПРОДАВЕЦ ОТМЕТИЛ LEGIT',rep:'ПРОДАВЕЦ ОТМЕТИЛ R€P',sizeLabel:'РАЗМЕР',colors:'ЦВЕТА',description:'ОПИСАНИЕ',error:'Не удалось загрузить объявления.',noPhoto:'НЕТ ФОТО',count:'ОБЪЯВЛЕНИЙ',saveFavorite:'В ИЗБРАННОЕ',removeFavorite:'УБРАТЬ ИЗ ИЗБРАННОГО',saved:'ИЗБРАННОЕ ИЗ МАРКЕТПЛЕЙСА'},
- et:{eyebrow:'KOGUKONNA LEIUD',title:'TURG',intro:'Avasta teiste kasutajate müügikuulutusi.',search:'Otsi tooteid või brände…',all:'KÕIK',category:'KATEGOORIA',condition:'SEISUKORD',size:'SUURUS',sort:'JÄRJESTUS',newest:'Uuemad ees',low:'Odavamad ees',high:'Kallimad ees',empty:'Kuulutusi ei leitud',emptyHint:'Proovi muuta otsingut või kategooriat.',loading:'KUULUTUSI LAADITAKSE…',conditionNames:['Uus siltidega','Uus ilma siltideta','Suurepärane','Hea','Defektidega'],contact:'VÕTA MÜÜJAGA ÜHENDUST',details:'TOOTE ANDMED',seller:'MÜÜJA',noSeller:'Yaropluggi müüja',close:'Sulge',clear:'Tühjenda filtrid',legit:'MÜÜJA MÄRKIS LEGIT',rep:'MÜÜJA MÄRKIS R€P',sizeLabel:'SUURUS',colors:'VÄRVID',description:'KIRJELDUS',error:'Kuulutuste laadimine ebaõnnestus.',noPhoto:'PILT PUUDUB',count:'KUULUTUST',saveFavorite:'SALVESTA LEMMIKUTESSE',removeFavorite:'EEMALDA LEMMIKUTEST',saved:'TURU LEMMIKUD'}
+ en:{eyebrow:'PRE-LOVED FINDS',title:'MARKETPLACE',intro:'Discover pieces listed by the community.',search:'Search items or brands…',all:'ALL',category:'CATEGORY',condition:'CONDITION',size:'SIZE',sort:'SORT BY',newest:'Newest',low:'Price: low to high',high:'Price: high to low',empty:'No listings found',emptyHint:'Try another search or category.',loading:'LOADING LISTINGS…',conditionNames:['New with tags','New without tags','Excellent','Good','Has defects'],contact:'CONTACT SELLER',details:'ITEM DETAILS',seller:'SELLER',noSeller:'Yaroplugg seller',close:'Close',clear:'Clear filters',legit:'SELLER MARKED LEGIT',rep:'SELLER MARKED R€P',sizeLabel:'SIZE',colors:'COLORS',description:'DESCRIPTION',error:'Could not load marketplace listings.',noPhoto:'NO PHOTO',count:'LISTINGS',saveFavorite:'SAVE TO FAVORITES',removeFavorite:'REMOVE FROM FAVORITES',saved:'MARKETPLACE SAVED',loadMore:'LOAD MORE LISTINGS',loadingMore:'LOADING…'},
+ ru:{eyebrow:'ВЕЩИ ОТ СООБЩЕСТВА',title:'МАРКЕТПЛЕЙС',intro:'Находи интересные вещи от других пользователей.',search:'Поиск вещей или брендов…',all:'ВСЕ',category:'КАТЕГОРИЯ',condition:'СОСТОЯНИЕ',size:'РАЗМЕР',sort:'СОРТИРОВКА',newest:'Сначала новые',low:'Сначала дешевле',high:'Сначала дороже',empty:'Объявлений не найдено',emptyHint:'Попробуй изменить поиск или категорию.',loading:'ЗАГРУЗКА ОБЪЯВЛЕНИЙ…',conditionNames:['Новое с бирками','Новое без бирок','Отличное','Хорошее','Есть дефекты'],contact:'НАПИСАТЬ ПРОДАВЦУ',details:'ИНФОРМАЦИЯ О ТОВАРЕ',seller:'ПРОДАВЕЦ',noSeller:'Продавец Yaroplugg',close:'Закрыть',clear:'Сбросить фильтры',legit:'ПРОДАВЕЦ ОТМЕТИЛ LEGIT',rep:'ПРОДАВЕЦ ОТМЕТИЛ R€P',sizeLabel:'РАЗМЕР',colors:'ЦВЕТА',description:'ОПИСАНИЕ',error:'Не удалось загрузить объявления.',noPhoto:'НЕТ ФОТО',count:'ОБЪЯВЛЕНИЙ',saveFavorite:'В ИЗБРАННОЕ',removeFavorite:'УБРАТЬ ИЗ ИЗБРАННОГО',saved:'ИЗБРАННОЕ ИЗ МАРКЕТПЛЕЙСА',loadMore:'ПОКАЗАТЬ ЕЩЁ',loadingMore:'ЗАГРУЗКА…'},
+ et:{eyebrow:'KOGUKONNA LEIUD',title:'TURG',intro:'Avasta teiste kasutajate müügikuulutusi.',search:'Otsi tooteid või brände…',all:'KÕIK',category:'KATEGOORIA',condition:'SEISUKORD',size:'SUURUS',sort:'JÄRJESTUS',newest:'Uuemad ees',low:'Odavamad ees',high:'Kallimad ees',empty:'Kuulutusi ei leitud',emptyHint:'Proovi muuta otsingut või kategooriat.',loading:'KUULUTUSI LAADITAKSE…',conditionNames:['Uus siltidega','Uus ilma siltideta','Suurepärane','Hea','Defektidega'],contact:'VÕTA MÜÜJAGA ÜHENDUST',details:'TOOTE ANDMED',seller:'MÜÜJA',noSeller:'Yaropluggi müüja',close:'Sulge',clear:'Tühjenda filtrid',legit:'MÜÜJA MÄRKIS LEGIT',rep:'MÜÜJA MÄRKIS R€P',sizeLabel:'SUURUS',colors:'VÄRVID',description:'KIRJELDUS',error:'Kuulutuste laadimine ebaõnnestus.',noPhoto:'PILT PUUDUB',count:'KUULUTUST',saveFavorite:'SALVESTA LEMMIKUTESSE',removeFavorite:'EEMALDA LEMMIKUTEST',saved:'TURU LEMMIKUD',loadMore:'LAADI VEEL',loadingMore:'LAADIMINE…'}
 } as const
 const categories=[{en:'T-Shirts',ru:'Футболки',et:'T-särgid'},{en:'Hoodies',ru:'Худи',et:'Pusad'},{en:'Pants',ru:'Брюки',et:'Püksid'},{en:'Accessories',ru:'Аксессуары',et:'Aksessuaarid'},{en:'Belts',ru:'Ремни',et:'Vööd'},{en:'Jackets',ru:'Куртки',et:'Joped'}]
 const conditionIndexes:Record<string,number>={new_with_tags:0,new_without_tags:1,excellent:2,good:3,defects:4}
 const conditionKey=(v:string)=>conditionIndexes[v]??3
+const MARKETPLACE_PAGE_SIZE=20
+const MARKETPLACE_FIELDS='id,seller_id,telegram_username,title,description,price,category,brand,size_label,item_condition,is_legit,colors,images,created_at,status'
+function buildMarketplaceQuery(supabase:any,filters:{query:string;category:string;condition:string;size:string;sort:string},withCount=false){
+ const builder=withCount
+  ?supabase.from('marketplace_listings').select(MARKETPLACE_FIELDS,{count:'exact'})
+  :supabase.from('marketplace_listings').select(MARKETPLACE_FIELDS)
+ let request=builder.eq('status','approved')
+ if(filters.category!=='all')request=request.ilike('category',filters.category)
+ if(filters.condition!=='all')request=request.eq('item_condition',filters.condition)
+ if(filters.size!=='all')request=request.ilike('size_label',filters.size)
+ const term=filters.query.trim().replace(/[(),\\%_*]/g,' ').replace(/\\s+/g,' ')
+ if(term)request=request.or(['title','brand','description','category'].map(field=>field+'.ilike.%'+term+'%').join(','))
+ if(filters.sort==='low')request=request.order('price',{ascending:true})
+ else if(filters.sort==='high')request=request.order('price',{ascending:false})
+ else request=request.order('created_at',{ascending:false})
+ return request
+}
 type DropdownOption={value:string;label:string}
 function MarketDropdown({value,options,onChange,ariaLabel}:{value:string;options:DropdownOption[];onChange:(value:string)=>void;ariaLabel:string}){
  const [open,setOpen]=useState(false)
@@ -92,6 +109,9 @@ export default function Marketplace({supabase,language,favorites,onFavorite}:{su
  const [items,setItems]=useState<Listing[]>([])
  const [sellers,setSellers]=useState<Record<string,Seller>>({})
  const [loading,setLoading]=useState(true)
+ const [loadingMore,setLoadingMore]=useState(false)
+ const [hasMore,setHasMore]=useState(false)
+ const [totalCount,setTotalCount]=useState(0)
  const [error,setError]=useState('')
  const [query,setQuery]=useState('')
  const [category,setCategory]=useState('all')
@@ -99,18 +119,35 @@ export default function Marketplace({supabase,language,favorites,onFavorite}:{su
  const [size,setSize]=useState('all')
  const [sort,setSort]=useState('newest')
  const [selected,setSelected]=useState<Listing|null>(null)
- useEffect(()=>{let active=true;(async()=>{setLoading(true);setError('');try{
+ useEffect(()=>{let active=true;const timer=window.setTimeout(()=>{setLoading(true);setError('');(async()=>{try{
   if(!supabase)throw new Error(t.error)
-  const {data,error}=await supabase.from('marketplace_listings').select('id,seller_id,telegram_username,title,description,price,category,brand,size_label,item_condition,is_legit,colors,images,created_at,status').eq('status','approved').order('created_at',{ascending:false}).limit(100)
+  const {data,count,error}=await buildMarketplaceQuery(supabase,{query,category,condition,size,sort},true).range(0,MARKETPLACE_PAGE_SIZE-1)
   if(error)throw error
   const rows=(data||[]) as Listing[]
-  const ids=Array.from(new Set(rows.map(x=>x.seller_id).filter(Boolean)))
+  const ids=Array.from(new Set(rows.map(item=>item.seller_id).filter(Boolean)))
   let profiles:Seller[]=[]
   if(ids.length){const result=await supabase.from('profiles').select('id,display_name,avatar_url,telegram_username').in('id',ids);if(!result.error)profiles=(result.data||[]) as Seller[]}
   if(!active)return
-  setItems(rows);setSellers(Object.fromEntries(profiles.map(p=>[p.id,p])))
- }catch(e){if(active)setError(e instanceof Error?e.message:t.error)}finally{if(active)setLoading(false)}})();return()=>{active=false}},[supabase,language])
- const filtered=useMemo(()=>{const q=query.trim().toLowerCase();const result=items.filter(item=>(category==='all'||item.category.toLowerCase()===category.toLowerCase())&&(condition==='all'||item.item_condition===condition)&&(size==='all'||item.size_label?.toLowerCase()===size.toLowerCase())&&(!q||[item.title,item.brand,item.description,item.category].some(v=>String(v||'').toLowerCase().includes(q))));return result.sort((a,b)=>sort==='low'?a.price-b.price:sort==='high'?b.price-a.price:new Date(b.created_at).getTime()-new Date(a.created_at).getTime())},[items,query,category,condition,size,sort])
+  setItems(rows);setSellers(Object.fromEntries(profiles.map(profile=>[profile.id,profile])))
+  const total=count??rows.length
+  setTotalCount(total);setHasMore(rows.length<total)
+ }catch(e){if(active)setError(e instanceof Error?e.message:t.error)}finally{if(active)setLoading(false)}})()},query.trim()?240:0);return()=>{active=false;window.clearTimeout(timer)}},[supabase,language,query,category,condition,size,sort])
+ async function loadMore(){
+  if(!supabase||loadingMore||!hasMore)return
+  const offset=items.length
+  setLoadingMore(true);setError('')
+  try{
+   const {data,error}=await buildMarketplaceQuery(supabase,{query,category,condition,size,sort}).range(offset,offset+MARKETPLACE_PAGE_SIZE-1)
+   if(error)throw error
+   const rows=(data||[]) as Listing[]
+   const ids=Array.from(new Set(rows.map(item=>item.seller_id).filter(Boolean)))
+   let profiles:Seller[]=[]
+   if(ids.length){const result=await supabase.from('profiles').select('id,display_name,avatar_url,telegram_username').in('id',ids);if(!result.error)profiles=(result.data||[]) as Seller[]}
+   setItems(current=>{const known=new Set(current.map(item=>item.id));return [...current,...rows.filter(item=>!known.has(item.id))]})
+   setSellers(current=>({...current,...Object.fromEntries(profiles.map(profile=>[profile.id,profile]))}))
+   setHasMore(offset+rows.length<totalCount)
+  }catch(e){setError(e instanceof Error?e.message:t.error)}finally{setLoadingMore(false)}
+ }
  const categoryName=(value:string)=>{const c=categories.find(x=>x.en.toLowerCase()===value.toLowerCase());return c?c[language]:value}
  const conditionName=(value:string)=>t.conditionNames[conditionKey(value)]
  const seller=(id:string)=>sellers[id]
@@ -119,8 +156,10 @@ export default function Marketplace({supabase,language,favorites,onFavorite}:{su
   <div className="marketplace-heading"><div><p className="eyebrow">{t.eyebrow}</p><h1 className="page-title">{t.title}</h1><p>{t.intro}</p></div><Package size={22}/></div>
   <div className="marketplace-search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder={t.search}/>{query&&<button type="button" onClick={()=>setQuery('')} aria-label={t.clear}><X size={15}/></button>}</div>
   <div className="marketplace-filter-row"><MarketDropdown value={category} onChange={setCategory} ariaLabel={t.category} options={[{value:'all',label:`${t.all} · ${t.category}`},...categories.map(c=>({value:c.en.toLowerCase(),label:c[language]}))]}/><MarketDropdown value={condition} onChange={setCondition} ariaLabel={t.condition} options={[{value:'all',label:`${t.all} · ${t.condition}`},...['new_with_tags','new_without_tags','excellent','good','defects'].map((v,i)=>({value:v,label:t.conditionNames[i]}))]}/></div>
-  <div className="marketplace-sort"><span>{filtered.length} {t.count}</span><div className="marketplace-sort-control"><MarketDropdown value={sort} onChange={setSort} ariaLabel={t.sort} options={[{value:'newest',label:t.newest},{value:'low',label:t.low},{value:'high',label:t.high}]}/></div></div>
-  {loading?<div className="marketplace-loading"><LoaderCircle className="spin" size={22}/>{t.loading}</div>:error?<div className="account-error">{error}</div>:filtered.length===0?<div className="marketplace-empty"><Package size={28}/><strong>{t.empty}</strong><span>{t.emptyHint}</span></div>:<div className="marketplace-grid">{filtered.map(item=><MarketplaceCard key={item.id} item={item} language={language} favorite={favorites.includes(marketplaceFavoriteKey(item.id))} onFavorite={()=>onFavorite(marketplaceFavoriteKey(item.id))} onSelect={()=>setSelected(item)}/>)}</div>}
+  <div className="marketplace-sort"><span>{totalCount} {t.count}</span><div className="marketplace-sort-control"><MarketDropdown value={sort} onChange={setSort} ariaLabel={t.sort} options={[{value:'newest',label:t.newest},{value:'low',label:t.low},{value:'high',label:t.high}]}/></div></div>
+  {loading?<div className="marketplace-loading"><LoaderCircle className="spin" size={22}/>{t.loading}</div>:error&&items.length===0?<div className="account-error">{error}</div>:items.length===0?<div className="marketplace-empty"><Package size={28}/><strong>{t.empty}</strong><span>{t.emptyHint}</span></div>:<div className="marketplace-grid">{items.map(item=><MarketplaceCard key={item.id} item={item} language={language} favorite={favorites.includes(marketplaceFavoriteKey(item.id))} onFavorite={()=>onFavorite(marketplaceFavoriteKey(item.id))} onSelect={()=>setSelected(item)}/>)}</div>}
+  {error&&items.length>0&&<div className="account-error">{error}</div>}
+  {hasMore&&!loading&&<button type="button" className="marketplace-load-more" onClick={loadMore} disabled={loadingMore}>{loadingMore?<LoaderCircle className="spin" size={15}/>:<ChevronDown size={15}/>} {loadingMore?t.loadingMore:t.loadMore}</button>}
   {selected&&<div className="marketplace-overlay" role="dialog" aria-modal="true" aria-label={selected.title} onClick={()=>setSelected(null)}><div className="marketplace-detail" onClick={e=>e.stopPropagation()}><button className="marketplace-detail-close" type="button" onClick={()=>setSelected(null)} aria-label={t.close}><X size={19}/></button><MarketplacePhotoGallery images={selected.images||[]} title={selected.title} language={language}/><div className="marketplace-detail-content"><p className="eyebrow">{categoryName(selected.category)}</p><div className="marketplace-detail-title"><h2>{selected.title}</h2><strong>€{Number(selected.price).toFixed(2)}</strong></div><span className={`marketplace-auth-badge detail-badge ${selected.is_legit?'is-legit':'is-rep'}`}>{selected.is_legit?'LEGIT':'R€P'}</span><div className="marketplace-specs"><span>{t.sizeLabel}: <b>{selected.size_label||'—'}</b></span><span>{t.condition}: <b>{conditionName(selected.item_condition)}</b></span><span>{t.colors}: <b>{(selected.colors||[]).map(c=>c.name).join(', ')||'—'}</b></span></div><h3>{t.description}</h3><p className="marketplace-description">{selected.description}</p><div className="marketplace-seller"><MarketplaceSellerAvatar src={seller(selected.seller_id)?.avatar_url}/><div><small>{t.seller}</small><strong>{seller(selected.seller_id)?.display_name||t.noSeller}</strong></div></div>{telegram(selected.seller_id)?<a className="marketplace-contact" href={`https://t.me/${encodeURIComponent(telegram(selected.seller_id))}`} target="_blank" rel="noreferrer"><MessageCircle size={17}/>{t.contact}<ArrowUpRight size={15}/></a>:<p className="marketplace-contact-disabled">{language==='ru'?'Продавец не указал Telegram':language==='et'?'Müüja pole Telegrami lisanud':'Seller has not added Telegram'}</p>}</div></div></div>}
  </section>
 }
