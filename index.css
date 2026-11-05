@@ -993,3 +993,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .category-strip.catalog-tabs button.active{border-color:#f2f2f0;background:#f2f2f0;color:#111}
  .product-media{background:#3d3d3d}
 }
+
+@media(min-width:761px){.product-media img{object-fit:cover;padding:0}}
+@media(min-width:761px) and (max-width:1020px){.site-header{padding:0 16px;gap:12px}.brand-logo{width:116px}.desktop-site-nav{gap:0}.desktop-site-nav button{padding:0 9px;font-size:10px}.header-actions{gap:5px}.header-actions .icon-button{width:36px;height:36px}.language-switch button{min-width:23px;padding:0 4px;font-size:7px}}
