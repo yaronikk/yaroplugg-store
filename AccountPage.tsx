@@ -25,7 +25,7 @@ const text = {
     telegram:'CONTINUE WITH TELEGRAM', linkTelegram:'CONNECT TELEGRAM ACCOUNT',
     save:'SAVE PROFILE', saving:'SAVING…', details:'PROFILE DETAILS', signOut:'SIGN OUT',
     footnote:'Marketplace accounts are separate from the store administrator login.',
-    updated:'Profile updated successfully.
+    updated:'Profile updated successfully.',
     minName:'Enter your name (at least 2 characters).', nameLength:'Name must contain between 2 and 80 characters.',
     displayName:'DISPLAY NAME', uploadAvatar:'UPLOAD PHOTO', changeAvatar:'CHANGE PHOTO', removeAvatar:'REMOVE PHOTO', uploadingAvatar:'UPLOADING…', avatarTypeError:'Choose a JPG, PNG or WebP image.', avatarSizeError:'Image must be 3 MB or smaller.'
   },
@@ -35,7 +35,7 @@ const text = {
     telegram:'ВОЙТИ ЧЕРЕЗ TELEGRAM', linkTelegram:'ПРИВЯЗАТЬ TELEGRAM',
     save:'СОХРАНИТЬ ПРОФИЛЬ', saving:'СОХРАНЕНИЕ…', details:'ДАННЫЕ ПРОФИЛЯ', signOut:'ВЫЙТИ',
     footnote:'Аккаунт Marketplace отдельный от входа администратора магазина.',
-    updated:'Профиль успешно обновлён.
+    updated:'Профиль успешно обновлён.',
     minName:'Введите имя (не менее 2 символов).', nameLength:'Имя должно содержать от 2 до 80 символов.',
     displayName:'ИМЯ В ПРОФИЛЕ', uploadAvatar:'ЗАГРУЗИТЬ ФОТО', changeAvatar:'ИЗМЕНИТЬ ФОТО', removeAvatar:'УДАЛИТЬ ФОТО', uploadingAvatar:'ЗАГРУЗКА…', avatarTypeError:'Выбери изображение JPG, PNG или WebP.', avatarSizeError:'Размер изображения не должен превышать 3 МБ.'
   },
@@ -45,7 +45,7 @@ const text = {
     telegram:'JÄTKA TELEGRAMIGA', linkTelegram:'ÜHENDA TELEGRAM',
     save:'SALVESTA PROFIIL', saving:'SALVESTAMINE…', details:'PROFIILI ANDMED', signOut:'LOGI VÄLJA',
     footnote:'Marketplace konto on poe administraatori sisselogimisest eraldi.',
-    updated:'Profiil on edukalt uuendatud.
+    updated:'Profiil on edukalt uuendatud.',
     minName:'Sisesta nimi (vähemalt 2 märki).', nameLength:'Nimi peab sisaldama 2–80 märki.',
     displayName:'KUVA NIMI', uploadAvatar:'LAADI FOTO', changeAvatar:'MUUDA FOTOT', removeAvatar:'EEMALDA FOTO', uploadingAvatar:'ÜLESLAADIMINE…', avatarTypeError:'Vali JPG-, PNG- või WebP-pilt.', avatarSizeError:'Pilt peab olema kuni 3 MB.'
   }
