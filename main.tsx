@@ -171,7 +171,7 @@ function App(){
   try{
    const {data,error}=await supabase.functions.invoke('create-order',{body:{customerName:customerNameValue,phone:'',telegramId:telegramId.trim(),items:cart,telegramInitData:initData,idempotencyKey}})
    if(error||data?.error||data?.code){let message=data?.error||data?.code||'Could not create the order. Please try again.';try{const response=(error as any)?.context;if(response&&typeof response.clone==='function'){const body=await response.clone().json();if(body?.error||body?.code)message=body.error||body.code}}catch{}throw new Error(message)}
-   setCart([]);setCheckoutOpen(false);localStorage.removeItem('yp-pending-order-request');setPendingOrderRequest(null);setOrderMessage(`Order #${data.orderNumber} created. Status: awaiting payment.${data.notificationSent?'':' Telegram notification was not sent; check the function logs.'}`)
+   setCart([]);setCheckoutOpen(false);localStorage.removeItem('yp-pending-order-request');setPendingOrderRequest(null);setOrderMessage(`Order #${data.orderNumber} created. Status: awaiting payment.${data.managerNotificationSent?'':' Manager Telegram notification failed.'}${data.buyerNotificationSent?'':' Buyer Telegram notification was not sent (no linked Telegram account or Telegram API error).'}`)
   }catch(error){setOrderMessage(error instanceof Error?error.message:'Could not create the order. Please try again.')}
   finally{setCheckoutBusy(false)}
  }
