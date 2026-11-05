@@ -91,12 +91,12 @@ Deno.serve(async request=>{
   if(createError?.message==='INVALID_ORDER')return fail('INVALID_ORDER',400)
   if(createError)throw createError
   const order=Array.isArray(created)?created[0]:created;if(!order)throw new Error('Order was not returned')
+  let notificationSent=false
+  let buyerNotificationSent=false
   const botToken=Deno.env.get('TELEGRAM_BOT_TOKEN')||''
   const chatId=Deno.env.get('TELEGRAM_CHAT_ID')||''
-  let managerNotificationSent=false
-  let buyerNotificationSent=false
   const telegramSend=async(chat:string,text:string,options:Record<string,unknown>={})=>{
-   if(!botToken||!chat)return {ok:false}
+   if(!botToken||!chat)return false
    try{
     const telegramResponse=await fetch("https://api.telegram.org/bot"+botToken+"/sendMessage",{
      method:'POST',headers:{'Content-Type':'application/json'},
@@ -105,12 +105,12 @@ Deno.serve(async request=>{
     const result=await telegramResponse.json().catch(()=>null)
     if(!telegramResponse.ok||result?.ok!==true){
      console.error('Telegram sendMessage failed',{httpStatus:telegramResponse.status,telegramDescription:typeof result?.description==='string'?result.description.slice(0,300):'Unknown Telegram API error'})
-     return {ok:false}
+     return false
     }
-    return {ok:true}
+    return true
    }catch(error){
     console.error('Telegram sendMessage request failed',error instanceof Error?error.message:'Unknown network error')
-    return {ok:false}
+    return false
    }
   }
   if(order.created){
@@ -118,17 +118,12 @@ Deno.serve(async request=>{
    const lines=items.map(i=>"• "+escapeHtml(i.product_name)+" × "+i.quantity+(i.size?" · "+escapeHtml(i.size):'')+(i.length?" · "+escapeHtml(i.length)+" cm":'')+(i.color?" · "+escapeHtml(i.color):'')).join('\n')
    const message=("<b>Новый заказ #"+order.order_number+"</b>\nСтатус: новый · ожидает подтверждения\nПокупатель: "+escapeHtml(customerName)+"\nКонтакт: <a href=\""+escapeHtml(contactUrl)+"\">"+escapeHtml(normalized)+"</a>"+(telegramUser?.username?"\nTelegram: @"+escapeHtml(telegramUser.username):'')+(comment?"\nКомментарий: "+escapeHtml(comment):'')+"\n\n"+lines+"\nИтого за вещи: €"+(Number(order.total_cents)/100).toFixed(2)).slice(0,3900)
    const keyboard=siteUrl.startsWith('https://')?{inline_keyboard:[[{text:'Открыть заказ в админке',url:siteUrl.replace(/\/$/,'')+'/admin?tab=orders'}]]}:undefined
-   if(chatId){
-    const sent=await telegramSend(chatId,message,{parse_mode:'HTML',disable_web_page_preview:true,reply_markup:keyboard})
-    managerNotificationSent=sent.ok
-   }else console.error('Telegram manager notification skipped: TELEGRAM_CHAT_ID is not configured')
+   if(chatId)notificationSent=await telegramSend(chatId,message,{parse_mode:'HTML',disable_web_page_preview:true,reply_markup:keyboard})
+   else console.error('Telegram manager notification skipped: TELEGRAM_CHAT_ID is not configured')
    if(telegramUser?.id){
     const buyerText:Record<string,string>={ru:"Заказ №"+order.order_number+" принят. Менеджер свяжется с вами.",et:"Tellimus nr "+order.order_number+" on vastu võetud. Haldur võtab teiega ühendust.",en:"Order #"+order.order_number+" has been received. The manager will contact you."}
-    const sent=await telegramSend(telegramUser.id,buyerText[language]||buyerText.en)
-    buyerNotificationSent=sent.ok
-   }else{
-    console.info('Telegram buyer notification skipped: no verified Telegram identity is linked to this order')
-   }
+    buyerNotificationSent=await telegramSend(telegramUser.id,buyerText[language]||buyerText.en)
+   }else console.info('Telegram buyer notification skipped: no verified Telegram identity is linked to this order')
   }
   return response({orderNumber:order.order_number,totalCents:order.total_cents,status:order.status,paymentStatus:order.payment_status,managerNotificationSent,buyerNotificationSent,notificationSent:managerNotificationSent&&buyerNotificationSent})
  }catch(error){console.error('Order creation failed',error);return fail('ORDER_FAILED',500)}
