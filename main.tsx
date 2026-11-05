@@ -138,7 +138,7 @@ function App(){
  const [cart,setCart]=useState<CartLine[]>(()=>readStorage<CartLine[]>('yp-cart',[]))
  const [checkoutOpen,setCheckoutOpen]=useState(false)
  const [checkoutBusy,setCheckoutBusy]=useState(false)
- const [telegramId,setTelegramId]=useState(()=>String((window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id||''))
+ const [telegramId,setTelegramId]=useState('')
  const [orderMessage,setOrderMessage]=useState('')
  const [pendingOrderRequest,setPendingOrderRequest]=useState<{fingerprint:string;key:string}|null>(()=>readStorage('yp-pending-order-request',null))
  const activeProducts=useMemo(()=>products.filter(p=>!p.isSold),[products])
