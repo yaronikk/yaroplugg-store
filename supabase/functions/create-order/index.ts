@@ -36,7 +36,7 @@ Deno.serve(async request=>{
   const initData=typeof payload.telegramInitData==='string'?payload.telegramInitData:''
   const legacyTelegramId=typeof payload.telegramId==='string'?payload.telegramId.trim():''
   const contactType=typeof payload.contactType==='string'?payload.contactType:(legacyTelegramId?'telegram':'')
-  const contactValue=typeof payload.contactValue==='string'?payload.contactValue.trim():legacyTelegramId
+  let contactValue=typeof payload.contactValue==='string'?payload.contactValue.trim():legacyTelegramId
   const idempotencyKey=payload.idempotencyKey,inputItems=payload.items
   if(customerName.length<1||customerName.length>120||!validContact(contactType,contactValue)||(!payload.termsAccepted&&!initData)||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(idempotencyKey||'')||
@@ -49,13 +49,21 @@ Deno.serve(async request=>{
    if(!webAppBotToken||!await verifyTelegramInitData(initData,webAppBotToken))return fail('TELEGRAM_VERIFICATION_FAILED',401)
    telegramUser=telegramIdentity(initData);if(!telegramUser)return fail('TELEGRAM_VERIFICATION_FAILED',401);if(contactType==='telegram'&&/^\d{5,20}$/.test(contactValue)&&contactValue!==telegramUser.id)return fail('INVALID_ORDER',400);source='miniapp'
   }else{
-   // Keep ordinary web checkout protected until its form sends explicit terms acceptance and a valid Turnstile token.
    if(payload.termsAccepted!==true)return fail('TERMS_NOT_ACCEPTED',400)
-   const token=typeof payload.turnstileToken==='string'?payload.turnstileToken:''
-   const secret=Deno.env.get('TURNSTILE_SECRET')||'',ip=(request.headers.get('cf-connecting-ip')||'').trim()
-   if(!secret||!ip)return fail('WEB_CHECKOUT_DISABLED',503)
-   if(!token||token.length>2048||!await verifyTurnstile(token,secret,ip))return fail('CAPTCHA_FAILED',400)
-   ipHash=await hashIdentity(serviceKey,ip)
+   const authorization=request.headers.get('authorization')||''
+   const bearer=authorization.match(/^Bearer\s+(.+)$/i)?.[1]
+   if(!bearer)return fail('TELEGRAM_AUTH_REQUIRED',401)
+   const authClient=createClient(url,serviceKey,{auth:{persistSession:false,autoRefreshToken:false}})
+   const {data:authData,error:authError}=await authClient.auth.getUser(bearer)
+   if(authError||!authData?.user)return fail('TELEGRAM_AUTH_REQUIRED',401)
+   const identity=(authData.user.identities||[]).find((item:any)=>item?.provider==='custom:telegram')
+   const verifiedId=identity?.identity_data?.id
+   if(verifiedId==null||!/^\d{5,20}$/.test(String(verifiedId)))return fail('TELEGRAM_ID_UNAVAILABLE',401)
+   const username=identity?.identity_data?.preferred_username??identity?.identity_data?.username
+   telegramUser={id:String(verifiedId),username:typeof username==='string'&&/^[A-Za-z0-9_]{5,32}$/.test(username.replace(/^@/,''))?username.replace(/^@/,''):null}
+   if(contactType!=='telegram'||(/^\d{5,20}$/.test(contactValue)&&contactValue!==telegramUser.id))return fail('INVALID_ORDER',400)
+   contactValue=telegramUser.id
+   source='web'
   }
   const normalized=contactType==='telegram'&&!/^\d{5,20}$/.test(contactValue)?`@${contactValue.replace(/^@+/, '')}`:contactValue
   const contactHash=await hashIdentity(serviceKey,`${contactType}:${normalized.toLowerCase()}`)
