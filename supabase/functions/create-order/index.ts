@@ -49,6 +49,8 @@ Deno.serve(async request=>{
    if(!webAppBotToken||!await verifyTelegramInitData(initData,webAppBotToken))return fail('TELEGRAM_VERIFICATION_FAILED',401)
    telegramUser=telegramIdentity(initData);if(!telegramUser)return fail('TELEGRAM_VERIFICATION_FAILED',401);if(contactType==='telegram'&&/^\d{5,20}$/.test(contactValue)&&contactValue!==telegramUser.id)return fail('INVALID_ORDER',400);source='miniapp'
   }else{
+   // Keep ordinary web checkout protected until its form sends explicit terms acceptance and a valid Turnstile token.
+   if(payload.termsAccepted!==true)return fail('TERMS_NOT_ACCEPTED',400)
    const token=typeof payload.turnstileToken==='string'?payload.turnstileToken:''
    const secret=Deno.env.get('TURNSTILE_SECRET')||'',ip=(request.headers.get('cf-connecting-ip')||'').trim()
    if(!secret||!ip)return fail('WEB_CHECKOUT_DISABLED',503)
