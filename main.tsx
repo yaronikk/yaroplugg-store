@@ -138,7 +138,7 @@ function App(){
  const [cart,setCart]=useState<CartLine[]>(()=>readStorage<CartLine[]>('yp-cart',[]))
  const [checkoutOpen,setCheckoutOpen]=useState(false)
  const [checkoutBusy,setCheckoutBusy]=useState(false)
- const [telegramId,setTelegramId]=useState('')
+ const [telegramId,setTelegramId]=useState(()=>{const id=(window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id;return id!=null&&/^\d+$/.test(String(id))?String(id):''})
  const [orderMessage,setOrderMessage]=useState('')
  const [pendingOrderRequest,setPendingOrderRequest]=useState<{fingerprint:string;key:string}|null>(()=>readStorage('yp-pending-order-request',null))
  const activeProducts=useMemo(()=>products.filter(p=>!p.isSold),[products])
@@ -153,7 +153,7 @@ function App(){
  useEffect(()=>{localStorage.setItem('yp-cart',JSON.stringify(cart))},[cart])
  useEffect(()=>{document.documentElement.lang=language;localStorage.setItem('yp-language',language)},[language])
  useEffect(()=>{if(!supabase){setAuthLoading(false);return}let active=true;supabase.auth.getSession().then(({data}:any)=>{if(active){setAuthUser(data.session?.user??null);setAuthLoading(false)}});const {data:{subscription}}=supabase.auth.onAuthStateChange((_event:string,session:any)=>setAuthUser(session?.user??null));return()=>{active=false;subscription.unsubscribe()}},[])
- useEffect(()=>{const tg=(window as any).Telegram?.WebApp;if(!tg)return;const root=document.documentElement;root.classList.add('telegram-webapp');const syncViewport=()=>{const height=Number(tg.viewportHeight)||window.innerHeight;if(height>0)root.style.setProperty('--tg-viewport-height',String(height)+'px')};tg.ready();tg.expand();syncViewport();tg.onEvent?.('viewportChanged',syncViewport);window.addEventListener('resize',syncViewport);return()=>{tg.offEvent?.('viewportChanged',syncViewport);window.removeEventListener('resize',syncViewport);root.classList.remove('telegram-webapp');root.style.removeProperty('--tg-viewport-height')}},[])
+ useEffect(()=>{const tg=(window as any).Telegram?.WebApp;if(!tg)return;const telegramUserId=tg.initDataUnsafe?.user?.id;if(telegramUserId!=null&&/^\d+$/.test(String(telegramUserId)))setTelegramId(String(telegramUserId));const root=document.documentElement;root.classList.add('telegram-webapp');const syncViewport=()=>{const height=Number(tg.viewportHeight)||window.innerHeight;if(height>0)root.style.setProperty('--tg-viewport-height',String(height)+'px')};tg.ready();tg.expand();syncViewport();tg.onEvent?.('viewportChanged',syncViewport);window.addEventListener('resize',syncViewport);return()=>{tg.offEvent?.('viewportChanged',syncViewport);window.removeEventListener('resize',syncViewport);root.classList.remove('telegram-webapp');root.style.removeProperty('--tg-viewport-height')}},[])
  useEffect(()=>{let active=true;(async()=>{setStoreLoading(products.length===0);const items=await fetchStoreProducts();if(!active)return;setProducts(items as StoreProduct[]);setCart(current=>current.filter(line=>items.some(item=>item.id===line.productId&&!Boolean((item as StoreProduct).isSold))));setStoreError('');setStoreLoading(false)})().catch(()=>{if(active){const cached=readStoreCache();if(cached)setProducts(cached as StoreProduct[]);else setProducts([]);setStoreError(cached?'Could not refresh the catalog. Showing cached products.':'Could not load the catalog.');setStoreLoading(false)}});return()=>{active=false}},[])
  function notify(v:string){setToast(v);window.setTimeout(()=>setToast(''),1500)}
  function toggleFavorite(id:string){setFavorites(f=>f.includes(id)?f.filter(x=>x!==id):[...f,id])}
