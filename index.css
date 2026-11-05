@@ -191,7 +191,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .product-grid{perspective:1200px;perspective-origin:center}
 .product-card{transform-style:preserve-3d;backface-visibility:hidden}
 .product-media{isolation:isolate}
-.product-media:after{content:"";position:absolute;inset:-35% auto -35% -65%;width:38%;pointer-events:none;opacity:0;background:linear-gradient(100deg,transparent,rgba(255,255,255,.13),transparent);transform:translateX(-120%) rotate(12deg)}
 .product-info,.favorite-button{transition:transform .35s cubic-bezier(.2,.8,.2,1),background-color .2s ease,box-shadow .2s ease}
 .hero-card{transform-style:preserve-3d;perspective:1000px;transition:transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .45s ease}
 .hero-image-button img{transition:transform .65s cubic-bezier(.2,.8,.2,1);transform:translateZ(0)}
@@ -202,14 +201,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .product-card{transition:transform .4s cubic-bezier(.2,.8,.2,1),filter .4s ease}
  .product-card:hover{transform:translateY(-5px) rotateX(1.2deg) rotateY(-1.2deg);filter:drop-shadow(0 16px 18px rgba(0,0,0,.24))}
  .product-card:hover .product-media img{transform:scale(1.035) translateZ(8px)}
- .product-card:hover .product-media:after{opacity:1;animation:product-light-sweep .8s ease both}
  .product-card:hover .product-info{transform:translateZ(10px)}
  .product-card:hover .favorite-button{transform:translateZ(16px) scale(1.04);background:rgba(0,0,0,.68);box-shadow:0 5px 16px rgba(0,0,0,.28)}
  .hero-card:hover{transform:translateY(-3px) rotateX(1deg) rotateY(-1.5deg);box-shadow:0 22px 44px rgba(0,0,0,.35)}
  .hero-card:hover .hero-image-button img{transform:scale(1.04) translateZ(12px)}
  .primary-dark:hover,.primary-red:hover,.icon-button:hover,.bag-button:hover{transform:translateY(-2px);box-shadow:0 9px 22px rgba(245,34,34,.2);filter:brightness(1.08)}
 }
-@keyframes product-light-sweep{0%{transform:translateX(-120%) rotate(12deg)}100%{transform:translateX(460%) rotate(12deg)}}
 @media(prefers-reduced-motion:reduce){
  .sheet{animation:none}
  .product-card,.product-media img,.product-info,.favorite-button,.hero-card,.hero-image-button img,.primary-dark,.primary-red,.icon-button,.bag-button{transition:none!important}
