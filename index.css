@@ -203,7 +203,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .product-card:hover .product-media img{transform:scale(1.035) translateZ(8px)}
  .product-card:hover .product-info{transform:translateZ(10px)}
  .product-card:hover .favorite-button{transform:translateZ(16px) scale(1.04);background:rgba(0,0,0,.68);box-shadow:0 5px 16px rgba(0,0,0,.28)}
- .marketplace-card:hover .marketplace-favorite-toggle{transform:translateZ(16px) scale(1.04);background:rgba(0,0,0,.68);box-shadow:0 5px 16px rgba(0,0,0,.28)}
+ .marketplace-card:hover .favorite-button{transform:translateZ(16px) scale(1.04);background:rgba(0,0,0,.68);box-shadow:0 5px 16px rgba(0,0,0,.28)}
  .hero-card:hover{transform:translateY(-3px) rotateX(1deg) rotateY(-1.5deg);box-shadow:0 22px 44px rgba(0,0,0,.35)}
  .hero-card:hover .hero-image-button img{transform:scale(1.04) translateZ(12px)}
  .primary-dark:hover,.primary-red:hover,.icon-button:hover,.bag-button:hover{transform:translateY(-2px);box-shadow:0 9px 22px rgba(245,34,34,.2);filter:brightness(1.08)}
@@ -875,7 +875,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 /* Marketplace favorites */
 .marketplace-card{position:relative}
 .marketplace-card-open{display:block;width:100%;min-width:0;padding:0;border:0;background:none;color:inherit;text-align:left;font:inherit;cursor:pointer}
-.marketplace-favorite-toggle{position:absolute;z-index:1;top:10px;right:10px}
+.marketplace-card .favorite-button{z-index:1}
 .marketplace-detail-favorite.is-favorite{color:#f52222}
 .marketplace-saved-section{margin-top:30px;padding-top:22px;border-top:1px solid rgba(255,255,255,.1)}
 .marketplace-saved-section .catalog-head{margin-bottom:16px}
