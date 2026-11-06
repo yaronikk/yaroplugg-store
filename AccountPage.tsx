@@ -14,6 +14,28 @@ type AccountPageProps = {
   loading: boolean
   language: 'en' | 'ru' | 'et'
 }
+const TELEGRAM_LOGIN_SCRIPT = 'https://telegram.org/js/telegram-login.js?3'
+
+function loadTelegramLoginSdk(): Promise<void> {
+  if ((window as any).Telegram?.Login?.auth) return Promise.resolve()
+  return new Promise((resolve, reject) => {
+    let script = document.querySelector<HTMLScriptElement>('script[data-telegram-login-sdk]')
+    if (!script) {
+      script = document.createElement('script')
+      script.src = TELEGRAM_LOGIN_SCRIPT
+      script.async = true
+      script.dataset.telegramLoginSdk = 'true'
+      document.head.appendChild(script)
+    }
+    script.addEventListener('load', () => {
+      if ((window as any).Telegram?.Login?.auth) resolve()
+      else reject(new Error('Telegram login could not be initialized. Please reload the page.'))
+    }, { once: true })
+    script.addEventListener('error', () => reject(new Error('Could not load Telegram login. Check your connection and try again.')), { once: true })
+    if ((window as any).Telegram?.Login?.auth) resolve()
+  })
+}
+
 function metadataName(user: User) {
   return String(user.user_metadata?.full_name || user.user_metadata?.name || '').trim()
 }
@@ -62,8 +84,32 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
   const [avatarBusy, setAvatarBusy] = useState(false)
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null)
   const [pendingAvatarPreview, setPendingAvatarPreview] = useState('')
+  const [websiteNonce, setWebsiteNonce] = useState('')
+  const [telegramReady, setTelegramReady] = useState(false)
   const [removeAvatarPending, setRemoveAvatarPending] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
+
+  async function issueWebsiteChallenge() {
+    if (!supabase) return
+    setTelegramReady(false)
+    const { data, error: challengeError } = await supabase.functions.invoke('telegram-website-auth', {
+      body: { action: 'challenge' },
+    })
+    if (challengeError) throw challengeError
+    if (typeof data?.nonce !== 'string' || data.nonce.length < 20) throw new Error('Could not prepare secure Telegram login.')
+    setWebsiteNonce(data.nonce)
+    setTelegramReady(true)
+  }
+
+  useEffect(() => {
+    let active = true
+    if (loading || user || !supabase || (window as any).Telegram?.WebApp?.initData) return () => { active = false }
+    Promise.all([loadTelegramLoginSdk(), issueWebsiteChallenge()])
+      .catch(cause => {
+        if (active) setError(cause instanceof Error ? cause.message : 'Telegram login could not be prepared.')
+      })
+    return () => { active = false }
+  }, [loading, user?.id, supabase])
 
   const telegramUsername = String(
     profile?.telegram_username || user?.user_metadata?.preferred_username || user?.user_metadata?.username || ''
@@ -100,6 +146,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
     setBusy(true)
     setError('')
     setMessage('')
+    let signedIn = false
     try {
       const telegram = (window as any).Telegram?.WebApp
       const initData = typeof telegram?.initData === 'string' ? telegram.initData : ''
@@ -118,16 +165,43 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
         return
       }
 
-      // Keep the existing OIDC flow unchanged for the regular website.
-      const { error: authError } = await supabase.auth.signInWithOAuth({
-        provider: 'custom:telegram',
-        options: { redirectTo: window.location.origin },
+      // Website login uses Telegram's official OIDC SDK so the signed ID token's
+      // numeric "id" claim can be verified server-side (Supabase's stored identity
+      // currently exposes only "sub" for this provider).
+      const loginApi = (window as any).Telegram?.Login
+      if (!loginApi?.auth || !websiteNonce) throw new Error('Telegram login is still preparing. Please try again in a moment.')
+      const nonce = websiteNonce
+      setWebsiteNonce('')
+      const idToken = await new Promise<string>((resolve, reject) => {
+        loginApi.auth({
+          client_id: 8854350692,
+          scope: ['profile'],
+          nonce,
+          lang: language,
+        }, (result: any) => {
+          if (result?.error) reject(new Error(String(result.error)))
+          else if (typeof result?.id_token === 'string' && result.id_token) resolve(result.id_token)
+          else reject(new Error('Telegram did not return a valid login token. Please try again.'))
+        })
       })
-      if (authError) throw authError
+      const { data, error: exchangeError } = await supabase.functions.invoke('telegram-website-auth', {
+        body: { action: 'complete', nonce, idToken },
+      })
+      if (exchangeError) throw exchangeError
+      if (!data?.token_hash) throw new Error('Telegram sign-in could not be completed. Please try again.')
+      const { error: sessionError } = await supabase.auth.verifyOtp({
+        token_hash: data.token_hash,
+        type: 'magiclink',
+      })
+      if (sessionError) throw sessionError
+      signedIn = true
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Telegram sign-in failed. Please try again.')
     } finally {
       setBusy(false)
+      if (!signedIn && !(window as any).Telegram?.WebApp?.initData) {
+        void issueWebsiteChallenge().catch(cause => setError(cause instanceof Error ? cause.message : 'Telegram login could not be prepared.'))
+      }
     }
   }
 
@@ -215,9 +289,10 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
   const avatarUrl = pendingAvatarPreview || (removeAvatarPending ? '' : profile ? (profile.avatar_url || '') : user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? '')
   const avatarInitial = (profile?.display_name || displayName || metadataName(user || ({} as User)) || 'Y').trim().charAt(0).toUpperCase()
   const isTelegramMiniAppAccount = user?.user_metadata?.auth_method === 'telegram_miniapp'
+  const hasVerifiedTelegramId = Boolean(user?.app_metadata?.telegram_id)
   const identityProviders = Array.from(new Set((user?.identities || []).map(identity => identity.provider)))
-  const displayedIdentityProviders = isTelegramMiniAppAccount
-    ? ['custom:telegram', ...identityProviders.filter(provider => provider !== 'email')]
+  const displayedIdentityProviders = isTelegramMiniAppAccount || hasVerifiedTelegramId
+    ? ['custom:telegram', ...identityProviders.filter(provider => provider !== 'email' && provider !== 'custom:telegram')]
     : identityProviders
 
   useEffect(() => { setAvatarLoadFailed(false) }, [avatarUrl])
@@ -244,7 +319,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
               </div>
               <div className="account-profile-copy">
                 <strong>{profile?.display_name || metadataName(user) || 'Yaroplugg user'}</strong>
-                <span>{user.user_metadata?.auth_method === 'telegram_miniapp' ? 'Telegram account' : user.email || 'Telegram account'}</span>
+                <span>{user.user_metadata?.auth_method === 'telegram_miniapp' || user.app_metadata?.telegram_id ? 'Telegram account' : user.email || 'Telegram account'}</span>
                 {telegramUsername && <a href={`https://t.me/${encodeURIComponent(telegramUsername)}`} target="_blank" rel="noreferrer">@{telegramUsername}</a>}
               </div>
             </div>
@@ -258,7 +333,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
             </div>
           </div>
 
-          {!isTelegramMiniAppAccount && !identityProviders.includes('custom:telegram') && !identityProviders.includes('telegram') && (
+          {!isTelegramMiniAppAccount && !hasVerifiedTelegramId && !identityProviders.includes('custom:telegram') && !identityProviders.includes('telegram') && (
             <button className="account-telegram" type="button" onClick={linkTelegram} disabled={busy}>
               <span className="account-telegram-mark">➤</span> {t.linkTelegram}
             </button>
@@ -275,8 +350,8 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
       ) : (
         <div className="account-card account-auth-card">
           <div className="account-auth-intro"><h2>{t.welcome}</h2><p>{t.intro}</p></div>
-          <button className="account-telegram" type="button" onClick={signInWithTelegram} disabled={busy}>
-            <span className="account-telegram-mark">➤</span> {busy ? <LoaderCircle size={16} className="spin" /> : t.telegram}
+          <button className="account-telegram" type="button" onClick={signInWithTelegram} disabled={busy || !telegramReady}>
+            <span className="account-telegram-mark">➤</span> {busy || !telegramReady ? <LoaderCircle size={16} className="spin" /> : t.telegram}
           </button>
           {message && <div className="account-message"><CheckCircle2 size={16} /> {message}</div>}
           {error && <div className="account-error">{error}</div>}
