@@ -154,7 +154,7 @@ function MarketplaceCard({item,language,favorite,onFavorite,onSelect}:{item:List
    <div className="marketplace-card-media">{item.images?.[0]?<img src={marketplaceImageSrc(item.images[0],640)} alt={item.title} loading="lazy" decoding="async"/>:<span>{t.noPhoto}</span>}<span className={`marketplace-auth-badge ${item.is_legit?'is-legit':'is-rep'}`}>{item.is_legit?'LEGIT':'R3p'}</span></div>
    <div className="marketplace-card-info"><span className="marketplace-card-category">{categoryName(item.category)}</span><strong>{item.title}</strong><div><span>{item.brand||conditionName(item.item_condition)}</span><b>€{Number(item.price).toFixed(2)}</b></div></div>
   </button>
-  <button type="button" className={`marketplace-favorite-toggle ${favorite?'is-favorite':''}`} aria-label={favorite?t.removeFavorite:t.saveFavorite} aria-pressed={favorite} onClick={onFavorite}><Heart size={15} fill={favorite?'currentColor':'none'}/></button>
+  <button type="button" className={`favorite-button marketplace-favorite-toggle`} aria-label={favorite?t.removeFavorite:t.saveFavorite} aria-pressed={favorite} onClick={onFavorite}><Heart size={15} fill={favorite?'currentColor':'none'} className={favorite?'favorite-on':''}/></button>
  </article>
 }
 
