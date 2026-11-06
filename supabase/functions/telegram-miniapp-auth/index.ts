@@ -110,7 +110,7 @@ Deno.serve(async request => {
       matchedUser = users.find((user: any) =>
         user.email === syntheticEmail ||
         (user.identities || []).some((identity: any) => {
-          const identityId = String(identity.identity_data?.sub || identity.provider_id || identity.id || '')
+          const identityId = String(identity.identity_data?.sub || identity.provider_id || '')
           return ['telegram', 'custom:telegram'].includes(identity.provider) && identityId === telegramUser.id
         })
       ) || null
@@ -142,6 +142,15 @@ Deno.serve(async request => {
       } else {
         matchedUser = data.user
       }
+    }
+
+    if (matchedUser) {
+      const currentMetadata = matchedUser.user_metadata || {}
+      const { data: updatedProfile, error: profileError } = await admin.auth.admin.updateUserById(matchedUser.id, {
+        user_metadata: { ...currentMetadata, telegram_id: telegramUser.id, auth_method: 'telegram_miniapp', full_name: telegramUser.displayName, preferred_username: telegramUser.username },
+      })
+      if (profileError) throw profileError
+      matchedUser = updatedProfile.user
     }
 
     if (matchedUser && !matchedUser.email) {
