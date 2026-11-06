@@ -128,6 +128,7 @@ Deno.serve(async request => {
           telegram_id: telegramUser.id,
           auth_method: 'telegram_miniapp',
         },
+        app_metadata: { telegram_id: telegramUser.id, telegram_auth_provider: 'telegram_miniapp' },
       })
       if (error) {
         // A simultaneous first login may have created the same synthetic account.
@@ -148,6 +149,7 @@ Deno.serve(async request => {
       const currentMetadata = matchedUser.user_metadata || {}
       const { data: updatedProfile, error: profileError } = await admin.auth.admin.updateUserById(matchedUser.id, {
         user_metadata: { ...currentMetadata, telegram_id: telegramUser.id, auth_method: 'telegram_miniapp', full_name: telegramUser.displayName, preferred_username: telegramUser.username },
+        app_metadata: { ...(matchedUser.app_metadata || {}), telegram_id: telegramUser.id, telegram_auth_provider: 'telegram_miniapp' },
       })
       if (profileError) throw profileError
       matchedUser = updatedProfile.user
