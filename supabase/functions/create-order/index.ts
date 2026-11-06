@@ -59,7 +59,7 @@ Deno.serve(async request=>{
    const identity=(authData.user.identities||[]).find((item:any)=>item?.provider==='custom:telegram')
    // Telegram OIDC's stable user identifier is the subject claim. identity.id is a Supabase identity-row ID, not a Telegram ID.
    const verifiedId=identity?.identity_data?.sub??identity?.provider_id
-   if(verifiedId==null||!/^\d{5,20}$/.test(String(verifiedId)))return fail('TELEGRAM_ID_UNAVAILABLE',401)
+   if(verifiedId==null||!/^\d{5,16}$/.test(String(verifiedId))||!Number.isSafeInteger(Number(verifiedId))||Number(verifiedId)<=0)return fail('TELEGRAM_ID_UNAVAILABLE',401)
    const username=identity?.identity_data?.preferred_username??identity?.identity_data?.username
    telegramUser={id:String(verifiedId),username:typeof username==='string'&&/^[A-Za-z0-9_]{5,32}$/.test(username.replace(/^@/,''))?username.replace(/^@/,''):null}
    if(contactType!=='telegram'||(/^\d{5,20}$/.test(contactValue)&&contactValue!==telegramUser.id))return fail('INVALID_ORDER',400)
