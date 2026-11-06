@@ -202,7 +202,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .product-card:hover{transform:translateY(-5px) rotateX(1.2deg) rotateY(-1.2deg);filter:drop-shadow(0 16px 18px rgba(0,0,0,.24))}
  .product-card:hover .product-media img{transform:scale(1.035) translateZ(8px)}
  .product-card:hover .product-info{transform:translateZ(10px)}
- .product-card:hover .favorite-button,.marketplace-card:hover .favorite-button,.product-card .favorite-button:hover,.marketplace-card .favorite-button:hover{transform:translateZ(16px) scale(1.04);background:rgba(0,0,0,.68);box-shadow:0 5px 16px rgba(0,0,0,.28)}
+
  .hero-card:hover{transform:translateY(-3px) rotateX(1deg) rotateY(-1.5deg);box-shadow:0 22px 44px rgba(0,0,0,.35)}
  .hero-card:hover .hero-image-button img{transform:scale(1.04) translateZ(12px)}
  .primary-dark:hover,.primary-red:hover,.icon-button:hover,.bag-button:hover{transform:translateY(-2px);box-shadow:0 9px 22px rgba(245,34,34,.2);filter:brightness(1.08)}
@@ -949,3 +949,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 /* V33 orders counter alignment + active-order count */
 .admin-orders .admin-toolbar h2{display:flex;align-items:center;gap:10px}
 .admin-orders .admin-order-count{display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;min-width:32px;height:32px;padding:0;border-radius:50%;font-size:12px;line-height:1;font-variant-numeric:tabular-nums;vertical-align:middle}
+
+/* Favorite button hover feedback is independent of motion preference. */
+@media (hover:hover) and (pointer:fine){.product-card:hover .favorite-button,.marketplace-card:hover .favorite-button,.product-card .favorite-button:hover,.marketplace-card .favorite-button:hover{background:rgba(0,0,0,.68)!important;box-shadow:0 5px 16px rgba(0,0,0,.28)!important;transform:translateZ(16px) scale(1.04)!important}}
+@media (prefers-reduced-motion:reduce){.product-card:hover .favorite-button,.marketplace-card:hover .favorite-button,.product-card .favorite-button:hover,.marketplace-card .favorite-button:hover{transition:none!important}}
