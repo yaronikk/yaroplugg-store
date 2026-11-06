@@ -68,15 +68,26 @@ Deno.serve(async request => {
       audience: CLIENT_ID,
       algorithms: ['RS256'],
     })
-    const telegramId = claims.id
+    const telegramId = typeof claims.id === 'number' ? claims.id :
+      (typeof claims.id === 'string' && /^\d{1,20}$/.test(claims.id) ? Number(claims.id) : NaN)
     const subject = claims.sub
     const now = Math.floor(Date.now() / 1000)
-    if (!Number.isSafeInteger(telegramId) || Number(telegramId) <= 0 ||
-        typeof subject !== 'string' || !subject ||
-        claims.nonce !== nonce ||
-        typeof claims.iat !== 'number' || claims.iat > now + 60 ||
+    if (!Number.isSafeInteger(telegramId) || telegramId <= 0) {
+      console.warn('Telegram login rejected: invalid_profile_id')
+      return response({ code: 'TELEGRAM_PROFILE_ID_MISSING' }, 401, origin)
+    }
+    if (typeof subject !== 'string' || !subject) {
+      console.warn('Telegram login rejected: missing_subject')
+      return response({ code: 'TELEGRAM_SUBJECT_MISSING' }, 401, origin)
+    }
+    if (claims.nonce !== nonce) {
+      console.warn('Telegram login rejected: nonce_mismatch')
+      return response({ code: 'TELEGRAM_NONCE_MISMATCH' }, 401, origin)
+    }
+    if (typeof claims.iat !== 'number' || claims.iat > now + 60 ||
         typeof claims.exp !== 'number' || claims.exp <= now) {
-      return response({ code: 'TELEGRAM_VERIFICATION_FAILED' }, 401, origin)
+      console.warn('Telegram login rejected: token_time_invalid')
+      return response({ code: 'TELEGRAM_TOKEN_EXPIRED' }, 401, origin)
     }
 
     const { data: challenge, error: challengeError } = await admin
