@@ -289,9 +289,10 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
   const avatarUrl = pendingAvatarPreview || (removeAvatarPending ? '' : profile ? (profile.avatar_url || '') : user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? '')
   const avatarInitial = (profile?.display_name || displayName || metadataName(user || ({} as User)) || 'Y').trim().charAt(0).toUpperCase()
   const isTelegramMiniAppAccount = user?.user_metadata?.auth_method === 'telegram_miniapp'
+  const hasVerifiedTelegramId = Boolean(user?.app_metadata?.telegram_id)
   const identityProviders = Array.from(new Set((user?.identities || []).map(identity => identity.provider)))
-  const displayedIdentityProviders = isTelegramMiniAppAccount
-    ? ['custom:telegram', ...identityProviders.filter(provider => provider !== 'email')]
+  const displayedIdentityProviders = isTelegramMiniAppAccount || hasVerifiedTelegramId
+    ? ['custom:telegram', ...identityProviders.filter(provider => provider !== 'email' && provider !== 'custom:telegram')]
     : identityProviders
 
   useEffect(() => { setAvatarLoadFailed(false) }, [avatarUrl])
@@ -318,7 +319,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
               </div>
               <div className="account-profile-copy">
                 <strong>{profile?.display_name || metadataName(user) || 'Yaroplugg user'}</strong>
-                <span>{user.user_metadata?.auth_method === 'telegram_miniapp' ? 'Telegram account' : user.email || 'Telegram account'}</span>
+                <span>{user.user_metadata?.auth_method === 'telegram_miniapp' || user.app_metadata?.telegram_id ? 'Telegram account' : user.email || 'Telegram account'}</span>
                 {telegramUsername && <a href={`https://t.me/${encodeURIComponent(telegramUsername)}`} target="_blank" rel="noreferrer">@{telegramUsername}</a>}
               </div>
             </div>
@@ -332,7 +333,7 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
             </div>
           </div>
 
-          {!isTelegramMiniAppAccount && !identityProviders.includes('custom:telegram') && !identityProviders.includes('telegram') && (
+          {!isTelegramMiniAppAccount && !hasVerifiedTelegramId && !identityProviders.includes('custom:telegram') && !identityProviders.includes('telegram') && (
             <button className="account-telegram" type="button" onClick={linkTelegram} disabled={busy}>
               <span className="account-telegram-mark">➤</span> {t.linkTelegram}
             </button>
