@@ -103,7 +103,12 @@ export default function AccountPage({ supabase, user, loading, language }: Accou
 
   useEffect(() => {
     let active = true
-    if (loading || user || !supabase || (window as any).Telegram?.WebApp?.initData) return () => { active = false }
+    if (loading || user || !supabase) return () => { active = false }
+    // In a Telegram Mini App, initData is already available; don't wait for the website OIDC SDK.
+    if ((window as any).Telegram?.WebApp?.initData) {
+      setTelegramReady(true)
+      return () => { active = false }
+    }
     Promise.all([loadTelegramLoginSdk(), issueWebsiteChallenge()])
       .catch(cause => {
         if (active) setError(cause instanceof Error ? cause.message : 'Telegram login could not be prepared.')
