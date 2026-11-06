@@ -875,7 +875,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 /* Marketplace favorites */
 .marketplace-card{position:relative}
 .marketplace-card-open{display:block;width:100%;min-width:0;padding:0;border:0;background:none;color:inherit;text-align:left;font:inherit;cursor:pointer}
-.marketplace-card .favorite-button{z-index:1}
+.marketplace-card .favorite-button{z-index:1;position:absolute;top:10px;right:10px;width:34px;height:34px;min-width:34px;min-height:34px;padding:0;box-sizing:border-box;border:1px solid rgba(255,255,255,.20);border-radius:50%;background:rgba(0,0,0,.46);color:#fff;display:grid;place-items:center;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.marketplace-card .favorite-button svg{width:15px;height:15px;flex:none}
 .marketplace-detail-favorite.is-favorite{color:#f52222}
 .marketplace-saved-section{margin-top:30px;padding-top:22px;border-top:1px solid rgba(255,255,255,.1)}
 .marketplace-saved-section .catalog-head{margin-bottom:16px}
