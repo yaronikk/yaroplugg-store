@@ -39,6 +39,37 @@ function Localized({children}:{children:React.ReactNode}){const language=React.u
 function detectLanguage():Language{try{const saved=localStorage.getItem('yp-language');if(saved==='ru'||saved==='et'||saved==='en')return saved}catch{}const tg=(window as any).Telegram?.WebApp?.initDataUnsafe?.user?.language_code;const value=String(tg||navigator.language||'en').toLowerCase();return value.startsWith('ru')?'ru':value.startsWith('et')?'et':'en'}
 const instagramUrl=String(import.meta.env.VITE_INSTAGRAM_URL||'').trim()
 
+async function optimizeStorePhoto(file:File):Promise<File>{
+ if(file.size<400*1024)return file
+ let bitmap:ImageBitmap|undefined
+ let image:HTMLImageElement|undefined
+ let imageUrl=''
+ try{
+  if(typeof createImageBitmap==='function'){try{bitmap=await createImageBitmap(file)}catch{}}
+  if(!bitmap){
+   imageUrl=URL.createObjectURL(file)
+   image=await new Promise<HTMLImageElement>((resolve,reject)=>{const element=new Image();element.onload=()=>resolve(element);element.onerror=()=>reject(new Error('Could not read image'));element.src=imageUrl})
+  }
+  const source:CanvasImageSource=bitmap||image!
+  const width=bitmap?.width||image!.naturalWidth
+  const height=bitmap?.height||image!.naturalHeight
+  const scale=Math.min(1,1800/Math.max(width,height))
+  const canvas=document.createElement('canvas')
+  canvas.width=Math.max(1,Math.round(width*scale))
+  canvas.height=Math.max(1,Math.round(height*scale))
+  const context=canvas.getContext('2d')
+  if(!context)return file
+  context.drawImage(source,0,0,canvas.width,canvas.height)
+  let blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/webp',.80))
+  if(!blob||blob.type!=='image/webp')blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,file.type==='image/png'?'image/png':'image/jpeg',.82))
+  if(!blob||blob.size>=file.size)return file
+  const extension=blob.type==='image/png'?'png':blob.type==='image/webp'?'webp':'jpg'
+  const base=file.name.replace(/\\.[^.]+$/,'')
+  return new File([blob],base+'.'+extension,{type:blob.type,lastModified:file.lastModified})
+ }catch{return file}
+ finally{bitmap?.close();if(imageUrl)URL.revokeObjectURL(imageUrl)}
+}
+
 const supabaseUrl=import.meta.env.VITE_SUPABASE_URL as string|undefined
 const supabaseKey=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string|undefined
 const supabase=supabaseUrl&&supabaseKey?createClient(supabaseUrl,supabaseKey):null
@@ -441,9 +472,10 @@ function AdminApp(){
   const added:AdminImage[]=[]
   const addedUrls:string[]=[]
   for(const file of valid){
-   const ext=file.name.split('.').pop()?.toLowerCase()||'jpg'
+   const optimized=await optimizeStorePhoto(file)
+   const ext=optimized.name.split('.').pop()?.toLowerCase()||'jpg'
    const path=`${crypto.randomUUID()}.${ext}`
-   const {error}=await adminSupabase.storage.from('product-images').upload(path,file,{contentType:file.type,upsert:false})
+   const {error}=await adminSupabase.storage.from('product-images').upload(path,optimized,{contentType:optimized.type,cacheControl:'31536000',upsert:false})
    if(error){setMessage(error.message);continue}
    const {data}=adminSupabase.storage.from('product-images').getPublicUrl(path)
    added.push({url:data.publicUrl,existing:false});addedUrls.push(data.publicUrl)
