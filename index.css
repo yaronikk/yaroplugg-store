@@ -968,10 +968,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 .marketplace-contact:focus-visible,.telegram-icon-link:focus-visible,.info-support-link:focus-visible{outline:2px solid #229ed9;outline-offset:3px}
 .info-title-row .info-social{display:flex;align-items:center;gap:12px}
 .info-title-row .info-social>span{margin-right:2px}
-.telegram-icon-link{display:inline-grid;place-items:center;width:34px;height:34px;border:1px solid rgba(34,158,217,.5);border-radius:50%;color:#229ed9;background:rgba(34,158,217,.07);transition:background .2s ease,transform .2s ease}
-.telegram-icon-link:hover{background:rgba(34,158,217,.16);transform:translateY(-1px)}
+.telegram-icon-link{display:inline-grid;place-items:center;width:32px;height:32px;border:0;border-radius:50%;color:inherit;background:transparent;transition:transform .2s ease}
+.telegram-icon-link:hover{background:transparent;transform:translateY(-1px)}
 .info-support-row{display:flex;justify-content:flex-end;margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1)}
 .info-support-link{display:inline-flex;align-items:center;gap:9px;min-height:38px;padding:0 14px;border:1px solid rgba(34,158,217,.48);border-radius:999px;background:rgba(34,158,217,.08);color:#229ed9!important;font-size:10px;font-weight:750;letter-spacing:.07em;text-decoration:none;transition:background .2s ease,border-color .2s ease}
 .info-support-link:hover{background:rgba(34,158,217,.16);border-color:#229ed9}
 @media(max-width:520px){.info-support-row{justify-content:flex-start}.info-title-row .info-social{gap:8px}.telegram-icon-link{width:32px;height:32px}}
 @media(prefers-reduced-motion:reduce){.marketplace-contact,.telegram-icon-link,.info-support-link{transition:none}}
+
+/* Consistent Telegram brand mark sizing across the storefront */
+.telegram-brand-mark{display:block;width:23px;height:23px;flex:0 0 23px;object-fit:contain}
+.telegram-support-mark{width:14px;height:14px;flex-basis:14px}
+.telegram-contact-mark{width:19px;height:19px;flex-basis:19px}
+@media(max-width:520px){.telegram-brand-mark{width:22px;height:22px;flex-basis:22px}.telegram-support-mark{width:14px;height:14px;flex-basis:14px}.telegram-contact-mark{width:18px;height:18px;flex-basis:18px}}
