@@ -1,7 +1,7 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react'
 import {createRoot} from 'react-dom/client'
 import {createClient, type User} from '@supabase/supabase-js'
-import {Search,House,UserRound,Store,Info as InfoIcon,X,SlidersHorizontal,Heart,ChevronDown,ArrowUpRight,ChevronLeft,ChevronRight,Plus,Minus,Trash2,LogOut,Package,ImagePlus,Pencil,Check,Upload,LoaderCircle,ShoppingBag,ClipboardList,CheckCircle2,RotateCcw,Tag,Send} from 'lucide-react'
+import {Search,House,UserRound,Store,Info as InfoIcon,X,SlidersHorizontal,Heart,ChevronDown,ArrowUpRight,ChevronLeft,ChevronRight,Plus,Minus,Trash2,LogOut,Package,ImagePlus,Pencil,Check,Upload,LoaderCircle,ShoppingBag,ClipboardList,CheckCircle2,RotateCcw,Tag} from 'lucide-react'
 import './index.css'
 import type {Category,Product} from './types'
 import AccountPage from './AccountPage'
