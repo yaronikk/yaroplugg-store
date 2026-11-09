@@ -953,3 +953,25 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 /* Favorite button hover feedback is independent of motion preference. */
 @media (hover:hover) and (pointer:fine){.product-card:hover .favorite-button,.marketplace-card:hover .favorite-button,.product-card .favorite-button:hover,.marketplace-card .favorite-button:hover{background:rgba(0,0,0,.68)!important;box-shadow:0 5px 16px rgba(0,0,0,.28)!important;transform:translateZ(16px) scale(1.04)!important}}
 @media (prefers-reduced-motion:reduce){.product-card:hover .favorite-button,.marketplace-card:hover .favorite-button,.product-card .favorite-button:hover,.marketplace-card .favorite-button:hover{transition:none!important}}
+
+/* Telegram-first marketplace and INFO contact links */
+.marketplace-contact{
+ display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+ min-height:46px;margin-top:18px;padding:0 18px;border:1px solid #229ed9;
+ border-radius:999px;background:#229ed9;color:#fff!important;
+ font-size:10px;font-weight:800;letter-spacing:.075em;text-align:center;
+ text-decoration:none;box-shadow:0 5px 16px rgba(34,158,217,.18);
+ transition:background .2s ease,box-shadow .2s ease,transform .2s ease;
+}
+.marketplace-contact svg{flex:none;color:#fff}
+.marketplace-contact:hover{background:#168ac4;box-shadow:0 7px 20px rgba(34,158,217,.28);transform:translateY(-1px)}
+.marketplace-contact:focus-visible,.telegram-icon-link:focus-visible,.info-support-link:focus-visible{outline:2px solid #229ed9;outline-offset:3px}
+.info-title-row .info-social{display:flex;align-items:center;gap:12px}
+.info-title-row .info-social>span{margin-right:2px}
+.telegram-icon-link{display:inline-grid;place-items:center;width:34px;height:34px;border:1px solid rgba(34,158,217,.5);border-radius:50%;color:#229ed9;background:rgba(34,158,217,.07);transition:background .2s ease,transform .2s ease}
+.telegram-icon-link:hover{background:rgba(34,158,217,.16);transform:translateY(-1px)}
+.info-support-row{display:flex;justify-content:flex-end;margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1)}
+.info-support-link{display:inline-flex;align-items:center;gap:9px;min-height:38px;padding:0 14px;border:1px solid rgba(34,158,217,.48);border-radius:999px;background:rgba(34,158,217,.08);color:#229ed9!important;font-size:10px;font-weight:750;letter-spacing:.07em;text-decoration:none;transition:background .2s ease,border-color .2s ease}
+.info-support-link:hover{background:rgba(34,158,217,.16);border-color:#229ed9}
+@media(max-width:520px){.info-support-row{justify-content:flex-start}.info-title-row .info-social{gap:8px}.telegram-icon-link{width:32px;height:32px}}
+@media(prefers-reduced-motion:reduce){.marketplace-contact,.telegram-icon-link,.info-support-link{transition:none}}
