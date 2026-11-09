@@ -1,5 +1,5 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react'
-import {Search,X,Send,Package,LoaderCircle,ArrowUpRight,ChevronDown,Check,Heart,UserRound} from 'lucide-react'
+import {Search,X,Package,LoaderCircle,ArrowUpRight,ChevronDown,Check,Heart,UserRound} from 'lucide-react'
 
 type Language='en'|'ru'|'et'
 type Listing={id:string;seller_id:string;telegram_username?:string|null;title:string;description:string;price:number;category:string;brand:string;size_label:string;item_condition:string;is_legit:boolean;colors:{name:string;hex:string}[];images:string[];created_at:string;status:string}
