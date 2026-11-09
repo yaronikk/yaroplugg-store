@@ -977,7 +977,18 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 @media(prefers-reduced-motion:reduce){.marketplace-contact,.telegram-icon-link,.info-support-link{transition:none}}
 
 /* Consistent Telegram brand mark sizing across the storefront */
-.telegram-brand-mark{display:block;width:23px;height:23px;flex:0 0 23px;object-fit:contain}
+.telegram-brand-mark{display:block;width:23px;height:23px;flex:0 0 23px;object-fit:contain;overflow:visible}
 .telegram-support-mark{width:14px;height:14px;flex-basis:14px}
 .telegram-contact-mark{width:19px;height:19px;flex-basis:19px}
 @media(max-width:520px){.telegram-brand-mark{width:22px;height:22px;flex-basis:22px}.telegram-support-mark{width:14px;height:14px;flex-basis:14px}.telegram-contact-mark{width:18px;height:18px;flex-basis:18px}}
+
+/* Keep Telegram paper plane comfortably inset inside its blue brand circle */
+.telegram-brand-mark path{transform-box:fill-box}
+.telegram-icon-link .telegram-brand-mark{width:23px;height:23px;flex-basis:23px}
+.info-support-link .telegram-brand-mark{width:16px;height:16px;flex-basis:16px}
+.marketplace-contact .telegram-brand-mark{width:22px;height:22px;flex-basis:22px}
+@media(max-width:520px){
+ .telegram-icon-link .telegram-brand-mark{width:22px;height:22px;flex-basis:22px}
+ .info-support-link .telegram-brand-mark{width:15px;height:15px;flex-basis:15px}
+ .marketplace-contact .telegram-brand-mark{width:20px;height:20px;flex-basis:20px}
+}
