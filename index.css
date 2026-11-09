@@ -991,6 +991,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .telegram-icon-link .telegram-brand-mark{width:22px;height:22px;flex-basis:22px}
  .info-support-link .telegram-brand-mark{width:15px;height:15px;flex-basis:15px}
  .marketplace-contact .telegram-brand-mark{width:20px;height:20px;flex-basis:20px}
+.marketplace-contact .telegram-brand-mark path{fill:#fff}
 }
 
 /* Match Telegram's standalone mark to Instagram's icon treatment */
