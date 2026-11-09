@@ -965,11 +965,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 }
 .marketplace-contact svg{flex:none;color:#fff}
 .marketplace-contact:hover{background:#168ac4;box-shadow:0 7px 20px rgba(34,158,217,.28);transform:translateY(-1px)}
-.marketplace-contact:focus-visible,.telegram-icon-link:focus-visible,.info-support-link:focus-visible{outline:2px solid #229ed9;outline-offset:3px}
+.marketplace-contact:focus-visible,.telegram-icon-link:focus-visible{outline:2px solid #f52222;outline-offset:2px}
 .info-title-row .info-social{display:flex;align-items:center;gap:12px}
 .info-title-row .info-social>span{margin-right:2px}
-.telegram-icon-link{display:inline-grid;place-items:center;width:32px;height:32px;border:0;border-radius:50%;color:inherit;background:transparent;transition:transform .2s ease}
-.telegram-icon-link:hover{background:transparent;transform:translateY(-1px)}
+.telegram-icon-link{width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:9px;background:transparent;transition:background-color .18s ease,transform .18s ease}
+.telegram-icon-link:hover{background:rgba(255,255,255,.06);transform:translateY(-1px)}
 .info-support-row{display:flex;justify-content:flex-end;margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1)}
 .info-support-link{display:inline-flex;align-items:center;gap:9px;min-height:38px;padding:0 14px;border:1px solid rgba(34,158,217,.48);border-radius:999px;background:rgba(34,158,217,.08);color:#229ed9!important;font-size:10px;font-weight:750;letter-spacing:.07em;text-decoration:none;transition:background .2s ease,border-color .2s ease}
 .info-support-link:hover{background:rgba(34,158,217,.16);border-color:#229ed9}
@@ -978,8 +978,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
 
 /* Consistent Telegram brand mark sizing across the storefront */
 .telegram-brand-mark{display:block;width:23px;height:23px;flex:0 0 23px;object-fit:contain;overflow:visible}
-.telegram-support-mark{width:14px;height:14px;flex-basis:14px}
-.telegram-contact-mark{width:19px;height:19px;flex-basis:19px}
+.telegram-support-mark{width:16px;height:16px;flex-basis:16px}
+.telegram-contact-mark{width:20px;height:20px;flex-basis:20px}
 @media(max-width:520px){.telegram-brand-mark{width:22px;height:22px;flex-basis:22px}.telegram-support-mark{width:14px;height:14px;flex-basis:14px}.telegram-contact-mark{width:18px;height:18px;flex-basis:18px}}
 
 /* Keep Telegram paper plane comfortably inset inside its blue brand circle */
@@ -991,4 +991,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .telegram-icon-link .telegram-brand-mark{width:22px;height:22px;flex-basis:22px}
  .info-support-link .telegram-brand-mark{width:15px;height:15px;flex-basis:15px}
  .marketplace-contact .telegram-brand-mark{width:20px;height:20px;flex-basis:20px}
+}
+
+/* Match Telegram's standalone mark to Instagram's icon treatment */
+.info-title-row .telegram-icon-link{width:32px;height:32px;min-width:32px;min-height:32px;padding:0}
+.info-title-row .telegram-icon-link .telegram-brand-mark{width:23px;height:23px;flex-basis:23px}
+.info-support-link .telegram-brand-mark{width:16px;height:16px;flex-basis:16px}
+.marketplace-contact .telegram-brand-mark{width:20px;height:20px;flex-basis:20px}
+@media(max-width:520px){
+ .info-title-row .telegram-icon-link{width:32px;height:32px;min-width:32px;min-height:32px}
+ .info-title-row .telegram-icon-link .telegram-brand-mark{width:23px;height:23px;flex-basis:23px}
+ .info-support-link .telegram-brand-mark{width:16px;height:16px;flex-basis:16px}
+ .marketplace-contact .telegram-brand-mark{width:19px;height:19px;flex-basis:19px}
 }
