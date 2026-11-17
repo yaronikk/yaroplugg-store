@@ -144,10 +144,7 @@ export default function SellerPanel({supabase,user,language}:Props){
   ])
   if(noticeError)throw noticeError
   if(likeError)throw likeError
-  const actors=Array.from(new Set((noticeRows||[]).map((row:any)=>row.actor_id).filter(Boolean)))
-  const {data:actorProfiles}=actors.length?await supabase.from('profiles').select('id,display_name').in('id',actors):{data:[]}
-  const actorNames=Object.fromEntries((actorProfiles||[]).map((profile:any)=>[profile.id,profile.display_name]))
-  setNotifications((noticeRows||[]).map((row:any)=>({...row,actor_name:row.actor_name||actorNames[row.actor_id]||null})))
+  setNotifications((noticeRows||[]).map((row:any)=>({...row,actor_name:row.actor_name||null})))
   setLikeCounts((likeRows||[]).reduce((counts:Record<string,number>,row:any)=>{counts[row.listing_id]=(counts[row.listing_id]||0)+1;return counts},{}))
   // Detect an account mismatch without ever transferring listing ownership by username.
   if(!ownListings.length){
