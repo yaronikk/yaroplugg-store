@@ -44,7 +44,8 @@ create table if not exists public.marketplace_notifications (
 create index if not exists marketplace_notifications_seller_idx
   on public.marketplace_notifications(seller_id, created_at desc);
 alter table public.marketplace_notifications enable row level security;
-grant select, update on public.marketplace_notifications to authenticated;
+grant select on public.marketplace_notifications to authenticated;
+grant update (read_at) on public.marketplace_notifications to authenticated;
 drop policy if exists "Sellers can view their marketplace notifications" on public.marketplace_notifications;
 create policy "Sellers can view their marketplace notifications" on public.marketplace_notifications
 for select to authenticated using ((select auth.uid()) = seller_id);
