@@ -54,10 +54,10 @@ create policy "Sellers can mark their notifications read" on public.marketplace_
 for update to authenticated using ((select auth.uid()) = seller_id)
 with check ((select auth.uid()) = seller_id);
 
-create schema if not exists private;
-revoke all on schema private from public, anon, authenticated;
+create schema if not exists marketplace_private;
+revoke all on schema marketplace_private from public, anon, authenticated;
 
-create or replace function private.notify_marketplace_like()
+create or replace function marketplace_private.notify_marketplace_like()
 returns trigger
 language plpgsql
 security definer
@@ -81,13 +81,13 @@ begin
   return new;
 end;
 $$;
-revoke all on function private.notify_marketplace_like() from public, anon, authenticated;
+revoke all on function marketplace_private.notify_marketplace_like() from public, anon, authenticated;
 drop trigger if exists marketplace_like_notification on public.marketplace_likes;
 create trigger marketplace_like_notification
 after insert on public.marketplace_likes
-for each row execute function private.notify_marketplace_like();
+for each row execute function marketplace_private.notify_marketplace_like();
 
-create or replace function private.notify_marketplace_listing_deleted()
+create or replace function marketplace_private.notify_marketplace_listing_deleted()
 returns trigger
 language plpgsql
 security definer
@@ -107,11 +107,11 @@ begin
   return new;
 end;
 $$;
-revoke all on function private.notify_marketplace_listing_deleted() from public, anon, authenticated;
+revoke all on function marketplace_private.notify_marketplace_listing_deleted() from public, anon, authenticated;
 drop trigger if exists marketplace_listing_deleted_notification on public.marketplace_listings;
 create trigger marketplace_listing_deleted_notification
 after update of status on public.marketplace_listings
-for each row execute function private.notify_marketplace_listing_deleted();
+for each row execute function marketplace_private.notify_marketplace_listing_deleted();
 
 create index if not exists marketplace_listings_status_seller_idx
   on public.marketplace_listings(seller_id, status, created_at desc);
