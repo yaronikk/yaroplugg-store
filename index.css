@@ -1005,3 +1005,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid 
  .info-support-link .telegram-brand-mark{width:16px;height:16px;flex-basis:16px}
  .marketplace-contact .telegram-brand-mark{width:19px;height:19px;flex-basis:19px}
 }
+
+
+.seller-message-list{display:grid;gap:10px;margin-top:14px}
+.seller-message-card{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;align-items:start;padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:15px;background:#0d0d0d}
+.seller-message-card.is-unread{border-color:rgba(245,34,39,.42);background:linear-gradient(110deg,rgba(245,34,39,.07),#0d0d0d 48%)}
+.seller-message-icon{width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:rgba(245,34,39,.12);color:#f52227;font-size:16px;font-weight:800}
+.seller-message-card>div:last-child{display:grid;gap:5px;min-width:0}
+.seller-message-card strong{font-size:12px;letter-spacing:.04em}
+.seller-message-card span{color:#c7c7c4;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.seller-message-card small{color:#777;font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+.seller-listing-info>small{color:#aaa;font-size:9px;font-weight:750;letter-spacing:.08em}
+.seller-list-filters{overflow-x:auto;scrollbar-width:none}
+.seller-list-filters::-webkit-scrollbar{display:none}
